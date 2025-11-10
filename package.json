@@ -1,0 +1,19 @@
+{
+  "name": "arjs-ar-chatbot",
+  "private": true,
+  "scripts": {
+    "dev": "npx live-server apps/web --port=5173",
+    "lint": "eslint \"apps/web/**/*.{js,html}\"",
+    "format": "prettier -w .",
+    "build": "echo \"(정적 빌드 없음)\"",
+    "pages:build": "rm -rf dist && mkdir dist && cp -r apps/web/* dist",
+    "pages:deploy": "gh-pages -d dist"
+  },
+  "devDependencies": {
+    "eslint": "^9.13.0",
+    "eslint-plugin-html": "^8.1.2",
+    "gh-pages": "^6.2.0",
+    "live-server": "^1.2.2",
+    "prettier": "^3.3.3"
+  }
+}

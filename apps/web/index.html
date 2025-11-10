@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR.js (HIRO) + Chat</title>
+
+  <!-- A-Frame & AR.js -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+
+  <!-- 채팅 공용 스타일 -->
+  <link rel="stylesheet" href="./styles/chat.css" />
+
+  <style>
+    html, body { height: 100%; margin: 0; background:#000; }
+    a-scene    { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+    canvas, .a-canvas { width: 100% !important; height: 100% !important; display: block; }
+
+    /* 오버레이가 AR 위에 보이도록 */
+    #startAR, #log, #chatbar { position: fixed; z-index: 9999; }
+    #startAR{
+      left: 16px; right: 16px; bottom: 92px;
+      padding: 14px 16px; border: 0; border-radius: 12px;
+      background: #1e90ff; color: #fff; font-size: 16px;
+    }
+
+    /* 최소 오버레이 (chat.css가 있다면 겹치지 않도록 약하게 지정) */
+    #log{
+      left: 12px; right: 12px; bottom: 148px;
+      max-height: 40vh; overflow:auto; color:#fff; font:14px/1.4 system-ui;
+      pointer-events: none; /* 스크롤 필요하면 제거 */
+    }
+    #chatbar{
+      left: 0; right: 0; bottom: 0;
+      display: flex; gap: 8px; align-items: center;
+      padding: 10px 12px; background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+    }
+    #chatbar input{
+      flex:1; height:40px; border-radius:10px; border:1px solid #555; background:#111; color:#fff; padding:0 10px;
+    }
+    #chatbar button{
+      height:40px; border-radius:10px; border:0; padding:0 12px; background:#2d7eff; color:#fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AR.js: HIRO 마커 추적 -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="precision: mediump; antialias: false"
+    arjs="
+      sourceType: webcam;
+      facingMode: environment;
+      detectionMode: mono;
+      debugUIEnabled: false;
+      sourceWidth: 640;  sourceHeight: 480;
+      displayWidth: 640; displayHeight: 480;
+      videoTexture: true;
+    "
+  >
+    <!-- HIRO 마커 위에 박스 표시 -->
+    <a-marker preset="hiro">
+      <a-box position="0 0.5 0" depth="0.5" height="0.5" width="0.5" color="#4CC3D9"
+             animation="property: rotation; to: 0 405 0; loop: true; dur: 3000"></a-box>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <!-- (일부 기기용) 사용자 제스처로 시작 -->
+  <button id="startAR">AR 시작</button>
+
+  <!-- 채팅 오버레이 -->
+  <div id="log" aria-live="polite"></div>
+  <div id="chatbar">
+    <button id="mic" title="음성 입력">🎤</button>
+    <input id="msg" placeholder="AR 챗봇에게 말 걸기..." />
+    <button id="send">보내기</button>
+  </div>
+
+  <!-- 시작 스크립트 (사용자 제스처 후 카메라 시작) -->
+  <script>
+    const scene = document.querySelector('a-scene');
+    const btn   = document.getElementById('startAR');
+    const start = () => {
+      const go = () => {
+        try { scene.components?.arjs?.start?.(); } catch(e) { /* 자동시작이면 무시 */ }
+        btn.style.display = 'none';
+      };
+      scene.hasLoaded ? go() : scene.addEventListener('loaded', go, { once:true });
+    };
+    btn.addEventListener('click', start, { once:true });
+  </script>
+
+  <!-- 챗봇 로직 -->
+  <script src="./scripts/chat.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+#log{position:fixed;left:0;right:0;bottom:64px;max-height:40vh;overflow:auto;
+     background:rgba(0,0,0,.35);color:#fff;padding:8px;font:14px/1.5 system-ui}
+#log p{margin:.25rem 0}
+#chatbar{position:fixed;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);
+         padding:8px;display:flex;gap:8px;align-items:center}
+#chatbar input{flex:1;padding:10px;border-radius:8px;border:none}
+#mic,#send{padding:10px 12px;border-radius:8px;border:none;background:#1e90ff;color:#fff}
+/* 뷰포트 100% 채우기 (모바일 주소창/노치 대응) */
+html, body { height: 100%; margin: 0; background: #000; }
+a-scene { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+canvas, .a-canvas { width: 100% !important; height: 100% !important; display:block; }
+
+
+/* iOS 사파리 대체 */
+@supports (-webkit-touch-callout: none) {
+  a-scene, canvas, .a-canvas { height: -webkit-fill-available !important; }
+}
+
+
