@@ -3,3 +3,7 @@
 
 배포 명령어
 vercel --prod
+
+
+외부에서 실행 명령어
+npm run dev
