@@ -2,91 +2,235 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>AR.js (HIRO) + Chat</title>
+  <title>AR.js Chatbot (Live Server 버전)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 
-  <!-- A-Frame & AR.js -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+  <!-- A-Frame & AR.js (Hiro 마커용) -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-  <!-- 공용 스타일 -->
-  <link rel="stylesheet" href="./styles/chat.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #000;
+    }
+
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* AR 영역 (전체 배경) */
+    #ar-wrapper {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* AR.js에서 자동 생성하는 비디오 숨기기 */
+    #arjs-video {
+      display: none !important;
+    }
+
+    /* =======================
+       채팅 UI 오버레이
+    ======================== */
+    #chat-panel {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 420px;
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 16px;
+      padding: 12px;
+      backdrop-filter: blur(6px);
+      color: #fff;
+    }
+
+    #chat-messages {
+      max-height: 160px;
+      overflow-y: auto;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .chat-line + .chat-line {
+      margin-top: 4px;
+    }
+
+    .chat-line.user {
+      text-align: right;
+    }
+
+    .chat-line.bot {
+      text-align: left;
+    }
+
+    #chat-form {
+      display: flex;
+      gap: 6px;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: none;
+      font-size: 14px;
+    }
+
+    #chat-send {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #chat-send:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  </style>
 </head>
 <body>
+  <div id="app">
+    <!-- AR 씬 -->
+    <div id="ar-wrapper">
+      
+      <a-scene
+        embedded
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; antialias: true;"
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+      >
+        
+        <a-marker preset="hiro">
+          
+          <a-box
+            position="0 0.5 0"
+            depth="0.5"
+            height="0.5"
+            width="0.5"
+            color="#4CC3D9"
+          ></a-box>
 
-  <!-- AR.js: HIRO 마커 추적 (기기 비율 자동 맞춤) -->
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    renderer="precision: mediump; antialias: false; alpha: true"
-    arjs="
-      sourceType: webcam;
-      facingMode: environment;
-      detectionMode: mono;
-      debugUIEnabled: false;
-      videoTexture: true
-    "
-  >
-    <!-- HIRO 마커 위에 박스 표시 -->
-    <a-marker preset="hiro">
-      <a-box position="0 0.5 0" depth="0.5" height="0.5" width="0.5" color="#4CC3D9"
-             animation="property: rotation; to: 0 405 0; loop: true; dur: 3000"></a-box>
-    </a-marker>
+          <a-text
+            value="안녕하세요! AR 챗봇입니다."
+            position="-0.8 0.1 0"
+            rotation="-90 0 0"
+            color="#FFFFFF"
+            width="3"
+          ></a-text>
+        </a-marker>
+        <a-entity camera></a-entity>
+      </a-scene>
+    </div>
 
-    <a-entity camera></a-entity>
-  </a-scene>
-
-  <!-- (일부 기기용) 사용자 제스처로 카메라 시작 -->
-  <button id="startAR">AR 시작</button>
-
-  <!-- 대화 로그 & 챗바 -->
-  <div id="log" aria-live="polite"></div>
-  <div id="chatbar">
-    <button id="mic" title="음성 입력">🎤</button>
-    <input id="msg" placeholder="AR 챗봇에게 말 걸기..." />
-    <button id="send">보내기</button>
-  </div>
-
-  <!-- 음성 인식 모달 -->
-  <div id="voiceModal" class="voicemodal hidden">
-    <div class="panel">
-      <div class="header">
-        <strong>음성 인식</strong>
-        <button id="voiceClose" aria-label="닫기">✕</button>
+    <!-- 채팅 UI -->
+    <div id="chat-panel">
+      <div id="chat-messages">
+        <div class="chat-line bot">
+          Hiro 마커를 웹캠에 비추면 상자가 보여요. 궁금한 걸 물어보세요!
+        </div>
       </div>
-
-      <div id="voiceStatus" class="status">대기 중</div>
-      <textarea id="voiceText" rows="4" placeholder="여기에 인식 결과가 표시됩니다."></textarea>
-
-      <div class="actions">
-        <button id="voiceStart">시작</button>
-        <button id="voiceStop" disabled>중지</button>
-        <button id="voiceApply">적용</button>
-      </div>
+      <form id="chat-form">
+        <input
+          id="chat-input"
+          type="text"
+          autocomplete="off"
+          placeholder="메시지를 입력하세요..."
+        />
+        <button id="chat-send" type="submit">전송</button>
+      </form>
     </div>
   </div>
 
-  <!-- AR 시작 버튼 로직 + 높이 보정(일부 기기) -->
   <script>
-    const scene = document.querySelector('a-scene');
-    const btn   = document.getElementById('startAR');
-    const start = () => {
-      const go = () => {
-        try { scene.components?.arjs?.start?.(); } catch(e) { /* 자동시작이면 무시 */ }
-        btn.style.display = 'none';
-      };
-      scene.hasLoaded ? go() : scene.addEventListener('loaded', go, { once:true });
-    };
-    btn.addEventListener('click', start, { once:true });
+    // AR.js 비디오 DOM이 생기면 자동으로 숨기기
+    new MutationObserver(() => {
+      const v = document.getElementById("arjs-video");
+      if (v && v.style.display !== "none") {
+        v.style.display = "none";
+      }
+    }).observe(document.body, { childList: true, subtree: true });
 
-    // 일부 모바일 기기 초기 높이 보정
-    const fixSize = () => { scene.style.height = window.innerHeight + 'px'; };
-    window.addEventListener('load', fixSize);
-    window.addEventListener('resize', fixSize);
+    // ======= 채팅 클라이언트 (Live Server + 로컬 백엔드용) =======
+    const messagesEl = document.getElementById("chat-messages");
+    const formEl = document.getElementById("chat-form");
+    const inputEl = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("chat-send");
+
+    // ▶ 현재 페이지를 연 호스트(PC IP 또는 127.0.0.1)를 기준으로 백엔드 주소 설정
+    const backendHost = window.location.hostname;  // 예: 127.0.0.1, 192.168.x.x
+    const API_BASE_URL = `http://${backendHost}:8000/chat`;
+
+    function appendMessage(text, role) {
+      const div = document.createElement("div");
+      div.className = "chat-line " + role;
+      div.textContent = text;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    formEl.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      appendMessage(text, "user");
+      inputEl.value = "";
+      sendBtn.disabled = true;
+
+      try {
+        const resp = await fetch(API_BASE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: text,
+            model: "gpt-4.1",
+            max_tokens: 500,
+            temperature: 0.9,
+          }),
+        });
+
+        if (!resp.ok) {
+          throw new Error("HTTP " + resp.status);
+        }
+
+        const data = await resp.json();
+
+        // 백엔드 응답 형식에 맞춰서 골라 쓰기
+        const reply =
+          data.message ||
+          data.reply ||
+          data.answer ||
+          JSON.stringify(data);
+
+        appendMessage(reply, "bot");
+      } catch (err) {
+        console.error(err);
+        appendMessage(
+          `백엔드 서버에 연결할 수 없어요. (http://${backendHost}:8000/chat 확인)`,
+          "bot"
+        );
+      } finally {
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+    });
   </script>
-
-  <!-- 챗봇 + 음성 모달 로직 -->
-  <script src="./scripts/chat.js" type="module"></script>
 </body>
 </html>
-
