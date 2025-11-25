@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>AR.js Chatbot (three.js 버전)</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+
+    <!-- three.js & AR.js (three.js 버전) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.2/three.js/build/ar-threex.min.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: #000;
+      }
+
+      /* three.js 렌더러(canvas)는 화면 전체에 */
+      #ar-container canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* 채팅 UI 오버레이 */
+      #chat-panel {
+        position: fixed;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 420px;
+        background: rgba(0, 0, 0, 0.65);
+        border-radius: 16px;
+        padding: 12px;
+        backdrop-filter: blur(6px);
+        color: #fff;
+        z-index: 10;
+      }
+
+      #chat-messages {
+        max-height: 160px;
+        overflow-y: auto;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .chat-line + .chat-line {
+        margin-top: 4px;
+      }
+
+      .chat-line.user {
+        text-align: right;
+      }
+
+      .chat-line.bot {
+        text-align: left;
+      }
+
+      #chat-form {
+        display: flex;
+        gap: 6px;
+      }
+
+      #chat-input {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: none;
+        font-size: 14px;
+      }
+
+      #chat-send {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      #chat-send:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- three.js 렌더러가 붙을 자리 -->
+    <div id="ar-container"></div>
+
+    <!-- 채팅 UI -->
+    <div id="chat-panel">
+      <div id="chat-messages">
+        <div class="chat-line bot">
+          Hiro 마커를 카메라에 비추면 상자가 보여요. 궁금한 걸 물어보세요!
+        </div>
+      </div>
+      <form id="chat-form">
+        <input
+          id="chat-input"
+          type="text"
+          autocomplete="off"
+          placeholder="메시지를 입력하세요..."
+        />
+        <button id="chat-send" type="submit">전송</button>
+      </form>
+    </div>
+
+    <script>
+      // =========================
+      // AR.js (three.js) 초기화
+      // =========================
+      let renderer, scene, camera;
+      let arToolkitSource, arToolkitContext;
+      let markerRoot;
+
+      function initAR() {
+        const container = document.getElementById("ar-container");
+
+        // renderer
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+        });
+        renderer.setClearColor(new THREE.Color("black"), 0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.position = "absolute";
+        renderer.domElement.style.top = "0px";
+        renderer.domElement.style.left = "0px";
+        container.appendChild(renderer.domElement);
+
+        // scene & camera
+        scene = new THREE.Scene();
+
+        camera = new THREE.Camera();
+        scene.add(camera);
+
+        // light
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(1, 1, 1).normalize();
+        scene.add(light);
+
+        // source (웹캠)
+        arToolkitSource = new THREEx.ArToolkitSource({
+          sourceType: "webcam",
+        });
+
+        arToolkitSource.init(function onReady() {
+          onResize();
+        });
+
+        window.addEventListener("resize", onResize);
+
+        // context
+        arToolkitContext = new THREEx.ArToolkitContext({
+          cameraParametersUrl:
+            "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.2/data/data/camera_para.dat",
+          detectionMode: "mono",
+        });
+
+        arToolkitContext.init(function onCompleted() {
+          camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+        });
+
+        // marker
+        markerRoot = new THREE.Group();
+        scene.add(markerRoot);
+
+        const markerControls = new THREEx.ArMarkerControls(
+          arToolkitContext,
+          markerRoot,
+          {
+            type: "pattern",
+            patternUrl:
+              "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.2/data/data/patt.hiro",
+          }
+        );
+
+        // 간단한 큐브
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshNormalMaterial();
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.y = 0.5;
+        markerRoot.add(cube);
+
+        // 렌더 루프
+        requestAnimationFrame(animate);
+      }
+
+      function onResize() {
+        if (!arToolkitSource) return;
+        arToolkitSource.onResizeElement();
+        arToolkitSource.copyElementSizeTo(renderer.domElement);
+        if (arToolkitContext && arToolkitContext.arController !== null) {
+          arToolkitSource.copyElementSizeTo(
+            arToolkitContext.arController.canvas
+          );
+        }
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        if (arToolkitSource && arToolkitSource.ready) {
+          arToolkitContext.update(arToolkitSource.domElement);
+        }
+
+        if (renderer && scene && camera) {
+          renderer.render(scene, camera);
+        }
+      }
+
+      initAR();
+
+      // =========================
+      // 채팅 클라이언트
+      // =========================
+      const messagesEl = document.getElementById("chat-messages");
+      const formEl = document.getElementById("chat-form");
+      const inputEl = document.getElementById("chat-input");
+      const sendBtn = document.getElementById("chat-send");
+
+      // ⚠ 여기다 나중에 ngrok https URL + /chat 을 넣기
+      // 예) "https://abcd-1234.ngrok-free.dev/chat"
+      const API_BASE_URL = "YOUR_NGROK_HTTPS_URL";
+
+      function appendMessage(text, role) {
+        const div = document.createElement("div");
+        div.className = "chat-line " + role;
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      formEl.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = inputEl.value.trim();
+        if (!text) return;
+
+        appendMessage(text, "user");
+        inputEl.value = "";
+        sendBtn.disabled = true;
+
+        try {
+          const resp = await fetch(API_BASE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: text,
+              model: "gpt-4.1-mini",
+              max_tokens: 500,
+              temperature: 0.8,
+            }),
+          });
+
+          if (!resp.ok) {
+            throw new Error("HTTP " + resp.status);
+          }
+
+          const data = await resp.json();
+
+          const reply =
+            data.message || data.reply || data.answer || JSON.stringify(data);
+
+          appendMessage(reply, "bot");
+        } catch (err) {
+          console.error(err);
+          appendMessage("백엔드 서버에 연결할 수 없어요.", "bot");
+        } finally {
+          sendBtn.disabled = false;
+          inputEl.focus();
+        }
+      });
+    </script>
+  </body>
+</html>
