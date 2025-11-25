@@ -14,24 +14,42 @@
   padding:8px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   display:flex; gap:8px; align-items:center;
-  z-index:9999;
+  z-index:10000;
+  box-sizing:border-box;
 }
-#msg{
-  flex:1; border-radius:999px; border:1px solid #444;
-  padding:8px 12px; font:14px system-ui;
-}
-#send, #mic{
-  border-radius:999px; border:0; padding:8px 12px;
-  font:14px system-ui; cursor:pointer;
-}
-#send{ background:#19c37d; color:#08120d; }
-#mic{ background:#2d7eff; color:#fff; }
 
-/* 기본 레이아웃: AR 씬이 전체 화면 */
-html, body{
-  margin:0; height:100%;
-  overflow:hidden;
-  background:#000;
+/* 입력창 */
+#msg{
+  flex:1 1 auto;
+  min-width:0;
+  resize:none;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:8px 10px;
+  font:14px/1.4 system-ui;
+  max-height:80px;
+  overflow-y:auto;
+}
+
+/* 보내기/마이크 버튼 */
+#send, #mic{
+  flex:0 0 auto;
+  height:40px;
+  padding:0 14px;
+  border-radius:999px;
+  border:0;
+  cursor:pointer;
+  font:14px system-ui;
+}
+#send{
+  background:#19c37d;
+  color:#08110b;
+}
+#mic{
+  background:#2d7eff;
+  color:#fff;
 }
 
 /* A-Frame 씬 전체화면 */
@@ -39,23 +57,18 @@ a-scene{
   position:fixed;
   inset:0;
   width:100vw;
-  height:100dvh !important;
+  height:100vh !important; /* 100dvh → 100vh */
 }
 
 /* 캔버스도 전체화면 */
 canvas, .a-canvas{
   width:100vw !important;
-  height:100dvh !important;
+  height:100vh !important;  /* 100dvh → 100vh */
   display:block;
 }
 
-/* iOS용 높이 보정 */
-@supports (-webkit-touch-callout: none){
-  a-scene,
-  canvas, .a-canvas{
-    height:-webkit-fill-available !important;
-  }
-}
+/* iOS용 높이 보정은 GitHub Pages에서는 비활성화 (100vh 그대로 사용) */
+
 
 /* 음성 모달 */
 .voicemodal{
@@ -65,10 +78,12 @@ canvas, .a-canvas{
   z-index:10000;
 }
 .voicemodal.hidden{ display:none; }
+
 .voicemodal .panel{
-  width:90%; max-width:420px;
-  background:#111827; color:#fff;
-  border-radius:16px; padding:16px;
+  width:min(420px, 90vw);
+  background:#111827;
+  border-radius:16px;
+  padding:16px 18px 14px;
   box-shadow:0 10px 30px rgba(0,0,0,.7);
 }
 .voicemodal .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
