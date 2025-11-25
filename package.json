@@ -9,15 +9,15 @@
     "lint": "eslint \"apps/web/**/*.{js,html}\""
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
     "cors": "^2.8.5",
-    "openai": "^4.56.0"
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "openai": "^4.104.0"
   },
   "devDependencies": {
-    "live-server": "^1.2.2",
-    "prettier": "^3.3.3",
     "eslint": "^9.13.0",
-    "eslint-plugin-html": "^8.1.2"
+    "eslint-plugin-html": "^8.1.2",
+    "live-server": "^1.2.2",
+    "prettier": "^3.3.3"
   }
 }
