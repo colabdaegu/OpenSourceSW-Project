@@ -8,3 +8,5 @@
 *.rar
 
 .env
+node_modules/
+ngrok/
