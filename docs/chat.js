@@ -6,12 +6,26 @@ const msg  = document.getElementById("msg");
 const send = document.getElementById("send");
 const mic  = document.getElementById("mic");
 
+// 지금 인식된 AR 대상(마커) 이름/설명
+// 나중에 index.html 쪽에서 window.currentARTarget 에 값을 넣어주면 됨.
+if (!("currentARTarget" in window)) {
+  window.currentARTarget = null;
+}
+
 // =======================
 // 공용 UI 함수
 // =======================
 function append(role, text) {
   const p = document.createElement("p");
-  p.textContent = (role === "user" ? "🧑 " : "🤖 ") + text;
+
+  if (role === "user") {
+    p.textContent = "🧑 " + text;
+    p.classList.add("msg-user");
+  } else {
+    p.textContent = "🟢 두두: " + text;
+    p.classList.add("msg-bot");
+  }
+
   log.appendChild(p);
   log.scrollTop = log.scrollHeight;
 }
@@ -24,16 +38,16 @@ function localBotReply(text) {
     return "안녕하세요! Hiro 마커를 비추고 질문해 보세요 📷";
   }
   if (t.includes("도움") || t.includes("help")) {
-    return "카메라로 마커를 비추면서 궁금한 걸 물어보면 대답해 드릴게요!";
+    return "카메라로 마커를 비추면서 궁금한 걸 물어보면 두두가 설명해 줄게요!";
   }
-  return "지금은 로컬 기본응답 모드예요. 서버가 연결되면 더 똑똑해져요 🙂";
+  return "지금은 로컬 기본응답 모드예요. 서버가 연결되면 두두가 더 똑똑해져요 🙂";
 }
 
 // =======================
-// 백엔드 API 주소 (FastAPI + ngrok)
+// 백엔드 API 주소 (ngrok)
 // =======================
-// 예시: const CHAT_API = "https://xxxx-xxxx.ngrok-free.dev/chat";
-const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat"; // <- 여기 본인 주소로 수정 가능
+const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat"; 
+// ↑ ngrok 주소 바뀌면 여기만 새 주소로 교체 + /chat 붙이기
 
 // =======================
 // 메시지 전송 로직
@@ -51,13 +65,24 @@ async function sendMessage() {
   send.disabled = true;
   mic.disabled  = true;
 
+  // 👇 서버로 보낼 실제 메시지 구성 (AR 대상 포함)
+  let messageForServer = text;
+
+  const artTarget = window.currentARTarget;
+  if (artTarget) {
+    // AR에서 인식된 대상이 있으면, 두두에게 그걸 중심으로 설명해 달라고 요청
+    messageForServer =
+      `지금 AR에서 인식된 대상은 "${artTarget}"이야.\n` +
+      `대구대학교 마스코트 두두가 이 대상을 중심으로 학생에게 친근하게 설명해 줘.\n` +
+      `학생 질문: ${text}`;
+  }
+
   try {
-    // FastAPI/Node 백엔드로 POST
     const resp = await fetch(CHAT_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: text,
+        message: messageForServer,
         model: "gpt-4.1-mini",
         max_tokens: 500,
         temperature: 0.8,
@@ -80,7 +105,7 @@ async function sendMessage() {
     append("bot", reply);
   } catch (err) {
     console.error("Chat API error:", err);
-    // 실패 시 로컬 기본 답변
+    // 실패 시 로컬 기본 답변 (두두 버전)
     append("bot", localBotReply(text));
   } finally {
     send.disabled = false;
@@ -199,3 +224,4 @@ if (!SR) {
     listening = false;
   };
 }
+
