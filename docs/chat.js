@@ -6,15 +6,6 @@ const msg  = document.getElementById("msg");
 const send = document.getElementById("send");
 const mic  = document.getElementById("mic");
 
-// 음성 인식 모달 관련
-const voiceModal  = document.getElementById("voiceModal");
-const voiceStatus = document.getElementById("voiceStatus");
-const voiceText   = document.getElementById("voiceText");
-const btnVClose   = document.getElementById("voiceClose");
-const btnVStart   = document.getElementById("voiceStart");
-const btnVStop    = document.getElementById("voiceStop");
-const btnVApply   = document.getElementById("voiceApply");
-
 // =======================
 // 공용 UI 함수
 // =======================
@@ -61,7 +52,7 @@ async function sendMessage() {
   mic.disabled  = true;
 
   try {
-    // FastAPI 백엔드로 POST
+    // FastAPI/Node 백엔드로 POST
     const resp = await fetch(CHAT_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -108,103 +99,103 @@ msg.addEventListener("keydown", (e) => {
 });
 
 // =======================
-// 음성 입력 모달 관련
+// 음성 인식: 구글 번역처럼 "꾹 누르고 말하기"
 // =======================
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let rec = null;
+let listening = false;
 let finalText = "";
+let tempText  = "";
 
 // 브라우저에서 음성 인식 객체 지원 확인
-function getSpeechRecognition() {
-  const SR =
-    window.SpeechRecognition || window.webkitSpeechRecognition || null;
-  return SR ? new SR() : null;
-}
+if (!SR) {
+  // 지원 안 하면 마이크 비활성화
+  mic.disabled = true;
+  mic.title = "이 브라우저는 음성 인식을 지원하지 않습니다 😢";
+} else {
+  rec = new SR();
+  rec.lang = "ko-KR";          // 한국어
+  rec.interimResults = true;   // 말하는 동안 중간 결과도 받기
+  rec.maxAlternatives = 1;
 
-// 모달 열기
-mic.addEventListener("click", () => {
-  voiceModal.classList.remove("hidden");
-  voiceStatus.textContent = "대기 중";
-  voiceText.value = "";
-});
+  // 음성 인식 시작 (버튼 누를 때)
+  const startListen = (ev) => {
+    ev.preventDefault();
+    if (!rec || listening) return;
 
-// 모달 닫기
-btnVClose.addEventListener("click", () => {
-  if (rec) {
-    rec.stop();
-    rec = null;
-  }
-  voiceModal.classList.add("hidden");
-});
+    listening = true;
+    finalText = "";
+    tempText  = "";
 
-// 음성 -> 텍스트 적용
-btnVApply.addEventListener("click", () => {
-  msg.value = voiceText.value.trim();
-  voiceModal.classList.add("hidden");
-  msg.focus();
-});
+    mic.classList.add("recording");
+    mic.textContent = "🎙️ 말하는 중…";
 
-// 음성 인식 시작
-btnVStart.addEventListener("click", () => {
-  const SR = getSpeechRecognition();
-  if (!SR) {
-    alert("이 브라우저는 음성 인식을 지원하지 않습니다 😢");
-    return;
-  }
+    try {
+      rec.start();
+    } catch (e) {
+      console.warn("rec.start error:", e);
+    }
+  };
 
-  if (rec) {
-    rec.stop();
-    rec = null;
-  }
+  // 음성 인식 중지 (버튼에서 손 뗄 때)
+  const stopListen = (ev) => {
+    ev.preventDefault();
+    if (!rec || !listening) return;
 
-  rec = SR;
-  rec.lang = "ko-KR";       // 한국어
-  rec.interimResults = true;
-  rec.continuous = true;
+    listening = false;
 
-  finalText = "";
-  voiceText.value = "";
-  voiceStatus.textContent = "🎙 듣는 중...";
+    try {
+      rec.stop();
+    } catch (e) {
+      console.warn("rec.stop error:", e);
+    }
+  };
 
-  btnVStart.disabled = true;
-  btnVStop.disabled  = false;
+  // PC 마우스 + 모바일 터치 둘 다 지원
+  mic.addEventListener("mousedown", startListen);
+  mic.addEventListener("touchstart", startListen);
+  mic.addEventListener("mouseup", stopListen);
+  mic.addEventListener("mouseleave", stopListen);
+  mic.addEventListener("touchend", stopListen);
+  mic.addEventListener("touchcancel", stopListen);
 
-  rec.onstart = () => {
-    voiceStatus.textContent = "🎙 듣는 중...";
+  // 인식 결과 처리
+  rec.onresult = (e) => {
+    let stable = "";
+    let temp   = "";
+
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) stable += t;
+      else temp += t;
+    }
+
+    finalText += stable;
+    tempText   = temp;
+  };
+
+  // 인식이 끝났을 때(손 뗀 후 + 처리 완료)
+  rec.onend = () => {
+    mic.classList.remove("recording");
+    mic.textContent = "🎤";
+
+    const text = (finalText + " " + tempText).trim();
+    if (text) {
+      // 👉 인식된 문장을 바로 채팅 입력칸에 적용
+      msg.value = text;
+      msg.focus();
+    }
+
+    listening = false;
+    finalText = "";
+    tempText  = "";
   };
 
   rec.onerror = (e) => {
     console.error("Speech error:", e);
-    voiceStatus.textContent = `⚠️ 오류: ${e.error || "unknown"}`;
-    btnVStart.disabled = false;
-    btnVStop.disabled  = true;
+    mic.classList.remove("recording");
+    mic.textContent = "🎤";
+    listening = false;
   };
-
-  rec.onend = () => {
-    voiceStatus.textContent = "🛑 중지됨";
-    btnVStart.disabled = false;
-    btnVStop.disabled  = true;
-  };
-
-  rec.onresult = (e) => {
-    let temp = "";
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalText += t;
-      else temp += t;
-    }
-    voiceText.value = (finalText + (temp ? " " + temp : "")).trim();
-  };
-
-  rec.start();
-});
-
-// 음성 인식 중지
-btnVStop.addEventListener("click", () => {
-  if (rec) {
-    rec.stop();
-    rec = null;
-  }
-  voiceStatus.textContent = "🛑 중지됨";
-  btnVStart.disabled = false;
-  btnVStop.disabled  = true;
-});
+}

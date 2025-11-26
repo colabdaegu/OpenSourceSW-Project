@@ -99,3 +99,9 @@ canvas, .a-canvas{
 #voiceStart{ background:#2d7eff; color:#fff; }
 #voiceStop{ background:#444; color:#fff; }
 #voiceApply{ background:#19c37d; color:#08120d; }
+
+/* 말하는 중일 때 마이크 버튼이 살짝 강조 */
+#mic.recording{
+  opacity: 0.8;
+  transform: scale(1.05);
+}
