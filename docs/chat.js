@@ -46,7 +46,7 @@ function localBotReply(text) {
 // =======================
 // 백엔드 API 주소 (ngrok)
 // =======================
-const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat"; 
+const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat";
 // ↑ ngrok 주소 바뀌면 여기만 새 주소로 교체 + /chat 붙이기
 
 // =======================
@@ -62,7 +62,6 @@ async function sendMessage() {
   // 사용자 메세지 로그에 추가
   append("user", text);
   msg.value = "";
-  msg.focus();
 
   // 전송 버튼 잠깐 비활성화
   send.disabled = true;
@@ -116,7 +115,7 @@ async function sendMessage() {
   }
 }
 
-// 버튼/엔터키 바인딩 (텍스트 직접 칠 때는 그대로 사용 가능)
+// 버튼/엔터키 바인딩 (텍스트 입력용)
 send.addEventListener("click", sendMessage);
 
 msg.addEventListener("keydown", (e) => {
@@ -127,7 +126,7 @@ msg.addEventListener("keydown", (e) => {
 });
 
 // =======================
-// 음성 인식: 구글 번역처럼 "말하는 대로 바로 입력 + 자동 전송"
+// 음성 인식: "토글 방식 + 말하는 대로 바로 입력"
 // =======================
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -154,10 +153,15 @@ if (!SR) {
   rec.maxAlternatives = 1;
   rec.continuous = false;      // 한 번에 한 문장
 
-  // 음성 인식 시작 (버튼 토글: 한 번 누르면 시작)
+  // 음성 인식 시작 (토글: 듣기 시작)
   const startListen = (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec) return;
+
+    // 🔹 혹시 다른 입력에 포커스 있으면 먼저 blur (모바일 키보드 내리기)
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
 
     // 이미 듣는 중이면 무시
     if (listening) {
@@ -181,7 +185,7 @@ if (!SR) {
     }
   };
 
-  // 음성 인식 중지 (버튼 다시 누르면 종료)
+  // 음성 인식 중지 (토글: 듣기 종료)
   const stopListen = (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec) return;
@@ -213,12 +217,12 @@ if (!SR) {
     }
   });
 
-  // ✅ 인식 결과 처리: 말하면서 바로 입력창에 반영
+  // ✅ 인식 결과 처리: 말하는 대로 바로 입력창에 반영
   rec.onresult = (e) => {
     let stable = "";
     let temp   = "";
 
-    // 지금까지의 전체 결과를 다시 조합
+    // 전체 결과 다시 조합 (구글 번역 스타일)
     for (let i = 0; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
       if (e.results[i].isFinal) {
@@ -233,11 +237,9 @@ if (!SR) {
 
     const combined = (finalText + " " + tempText).trim();
 
-    // 🔹 구글 번역처럼: 말하는 대로 바로 입력칸에 표시
+    // 🔹 말하는 대로 바로 입력칸에 표시
     msg.value = combined;
-    // 커서 항상 맨 뒤로
-    const len = combined.length;
-    msg.setSelectionRange(len, len);
+    // ⚠ focus를 주지 않아야 모바일 키보드가 튀어나오지 않음
   };
 
   // 인식이 끝났을 때(조용해지거나 stopListen 호출 후)
@@ -246,14 +248,8 @@ if (!SR) {
 
     const combined = (finalText + " " + tempText).trim();
     if (combined) {
-      // 최종 텍스트를 입력칸에 확정
+      // 최종 텍스트를 입력칸에 그대로 둠 (사용자는 직접 전송 버튼/엔터를 눌러야 함)
       msg.value = combined;
-      const len = combined.length;
-      msg.setSelectionRange(len, len);
-      msg.focus();
-
-      // 🎯 엔터 안 쳐도 자동으로 두두에게 보내기
-      sendMessage();
     }
 
     listening = false;
