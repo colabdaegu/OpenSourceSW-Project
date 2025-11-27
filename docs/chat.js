@@ -46,7 +46,7 @@ function localBotReply(text) {
 // =======================
 // 백엔드 API 주소 (ngrok)
 // =======================
-const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat"; 
+const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat";
 // ↑ ngrok 주소 바뀌면 여기만 새 주소로 교체 + /chat 붙이기
 
 // =======================
@@ -146,7 +146,7 @@ if (!SR) {
 
   // 음성 인식 시작 (버튼 누를 때)
   const startListen = (ev) => {
-    ev.preventDefault();
+    if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec || listening) return;
 
     listening = true;
@@ -165,10 +165,14 @@ if (!SR) {
 
   // 음성 인식 중지 (버튼에서 손 뗄 때)
   const stopListen = (ev) => {
-    ev.preventDefault();
+    if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec || !listening) return;
 
     listening = false;
+
+    // 🔹 UI를 여기서 바로 원래 상태로 되돌림
+    mic.classList.remove("recording");
+    mic.textContent = "🎤";
 
     try {
       rec.stop();
@@ -177,13 +181,26 @@ if (!SR) {
     }
   };
 
-  // PC 마우스 + 모바일 터치 둘 다 지원
-  mic.addEventListener("mousedown", startListen);
-  mic.addEventListener("touchstart", startListen);
-  mic.addEventListener("mouseup", stopListen);
-  mic.addEventListener("mouseleave", stopListen);
-  mic.addEventListener("touchend", stopListen);
-  mic.addEventListener("touchcancel", stopListen);
+  // PC + 모바일 공통: Pointer 이벤트로 통합해서
+  // start() / stop() 이 중복 호출되지 않도록 함
+  mic.addEventListener("pointerdown", (ev) => {
+    // 마우스면 왼쪽 버튼만 허용
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    startListen(ev);
+  });
+
+  mic.addEventListener("pointerup", (ev) => {
+    stopListen(ev);
+  });
+
+  mic.addEventListener("pointercancel", (ev) => {
+    stopListen(ev);
+  });
+
+  mic.addEventListener("pointerleave", (ev) => {
+    // 누른 상태로 밖으로 나갔을 때도 안전하게 정지
+    if (listening) stopListen(ev);
+  });
 
   // 인식 결과 처리
   rec.onresult = (e) => {
@@ -202,9 +219,6 @@ if (!SR) {
 
   // 인식이 끝났을 때(손 뗀 후 + 처리 완료)
   rec.onend = () => {
-    mic.classList.remove("recording");
-    mic.textContent = "🎤";
-
     const text = (finalText + " " + tempText).trim();
     if (text) {
       // 👉 인식된 문장을 바로 채팅 입력칸에 적용
@@ -212,6 +226,7 @@ if (!SR) {
       msg.focus();
     }
 
+    // 상태 초기화
     listening = false;
     finalText = "";
     tempText  = "";
@@ -224,4 +239,3 @@ if (!SR) {
     listening = false;
   };
 }
-
