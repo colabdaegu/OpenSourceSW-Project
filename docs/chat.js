@@ -56,6 +56,9 @@ async function sendMessage() {
   const text = msg.value.trim();
   if (!text) return;
 
+  // 🔹 새 질문 보낼 때마다 이전 로그 지우기 (항상 최신 대화만 보이게)
+  log.innerHTML = "";
+
   // 사용자 메세지 로그에 추가
   append("user", text);
   msg.value = "";
@@ -133,6 +136,12 @@ let listening = false;
 let finalText = "";
 let tempText  = "";
 
+// 공통: 마이크 버튼 UI 리셋
+function resetMicUI() {
+  mic.classList.remove("recording");
+  mic.textContent = "🎤";
+}
+
 // 브라우저에서 음성 인식 객체 지원 확인
 if (!SR) {
   // 지원 안 하면 마이크 비활성화
@@ -143,13 +152,19 @@ if (!SR) {
   rec.lang = "ko-KR";          // 한국어
   rec.interimResults = true;   // 말하는 동안 중간 결과도 받기
   rec.maxAlternatives = 1;
+  rec.continuous = false;      // 한 번에 한 문장
 
   // 음성 인식 시작 (버튼 누를 때)
   const startListen = (ev) => {
-    ev.preventDefault();
-    if (!rec || listening) return;
+    if (ev && ev.preventDefault) ev.preventDefault();
+    if (!rec) return;
 
-    listening = true;
+    // 이미 듣는 중이면 무시
+    if (listening) {
+      console.log("이미 듣는 중이라 start 무시");
+      return;
+    }
+
     finalText = "";
     tempText  = "";
 
@@ -158,15 +173,23 @@ if (!SR) {
 
     try {
       rec.start();
+      listening = true; // start 성공했다고 가정
     } catch (e) {
       console.warn("rec.start error:", e);
+      listening = false;
+      resetMicUI();
     }
   };
 
   // 음성 인식 중지 (버튼에서 손 뗄 때)
   const stopListen = (ev) => {
-    ev.preventDefault();
-    if (!rec || !listening) return;
+    if (ev && ev.preventDefault) ev.preventDefault();
+    if (!rec) return;
+
+    // UI는 항상 먼저 복구
+    resetMicUI();
+
+    if (!listening) return;
 
     listening = false;
 
@@ -177,13 +200,24 @@ if (!SR) {
     }
   };
 
-  // PC 마우스 + 모바일 터치 둘 다 지원
-  mic.addEventListener("mousedown", startListen);
-  mic.addEventListener("touchstart", startListen);
-  mic.addEventListener("mouseup", stopListen);
-  mic.addEventListener("mouseleave", stopListen);
-  mic.addEventListener("touchend", stopListen);
-  mic.addEventListener("touchcancel", stopListen);
+  // PC + 모바일 공통: Pointer 이벤트로 통합
+  mic.addEventListener("pointerdown", (ev) => {
+    // 마우스면 왼쪽 버튼만 허용
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    startListen(ev);
+  });
+
+  mic.addEventListener("pointerup", (ev) => {
+    stopListen(ev);
+  });
+
+  mic.addEventListener("pointercancel", (ev) => {
+    stopListen(ev);
+  });
+
+  mic.addEventListener("pointerleave", (ev) => {
+    if (listening) stopListen(ev);
+  });
 
   // 인식 결과 처리
   rec.onresult = (e) => {
@@ -202,9 +236,7 @@ if (!SR) {
 
   // 인식이 끝났을 때(손 뗀 후 + 처리 완료)
   rec.onend = () => {
-    mic.classList.remove("recording");
-    mic.textContent = "🎤";
-
+    console.log("rec.onend");
     const text = (finalText + " " + tempText).trim();
     if (text) {
       // 👉 인식된 문장을 바로 채팅 입력칸에 적용
@@ -215,12 +247,12 @@ if (!SR) {
     listening = false;
     finalText = "";
     tempText  = "";
+    resetMicUI();  // 혹시 모를 상태 꼬임 방지
   };
 
   rec.onerror = (e) => {
     console.error("Speech error:", e);
-    mic.classList.remove("recording");
-    mic.textContent = "🎤";
     listening = false;
+    resetMicUI();
   };
 }
