@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera Test</title>
+<style>html,body{margin:0;height:100%;background:#000} video{width:100vw;height:100vh;object-fit:cover}</style>
+</head><body>
+<video id="v" autoplay playsinline muted></video>
+<script>
+(async()=>{
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    v.srcObject=s;
+  }catch(e){ alert('getUserMedia 오류: '+e.message); console.error(e); }
+})();
+</script>
+</body></html>
