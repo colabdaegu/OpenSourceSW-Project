@@ -27,6 +27,13 @@ function append(role, text) {
   }
 
   log.appendChild(p);
+
+  // 🔹 최근 N개만 유지 (유저+두두 1세트 = 2개이니까 8개면 최근 4번 대화 정도)
+  const MAX_MESSAGES = 8;
+  while (log.children.length > MAX_MESSAGES) {
+    log.removeChild(log.firstChild);
+  }
+
   log.scrollTop = log.scrollHeight;
 }
 
@@ -56,8 +63,8 @@ async function sendMessage() {
   const text = msg.value.trim();
   if (!text) return;
 
-  // 🔹 새 질문 보낼 때마다 이전 로그 지우기 (항상 최신 대화만 보이게)
-  log.innerHTML = "";
+  // ❌ 예전: log.innerHTML = "";  // 전체 삭제
+  // ✅ 이제는 append()에서 오래된 것만 잘라내므로 여기서는 건드리지 않음
 
   // 사용자 메세지 로그에 추가
   append("user", text);
