@@ -116,7 +116,7 @@ async function sendMessage() {
   }
 }
 
-// 버튼/엔터키 바인딩
+// 버튼/엔터키 바인딩 (텍스트 직접 칠 때는 그대로 사용 가능)
 send.addEventListener("click", sendMessage);
 
 msg.addEventListener("keydown", (e) => {
@@ -127,7 +127,7 @@ msg.addEventListener("keydown", (e) => {
 });
 
 // =======================
-// 음성 인식: 구글 번역처럼 "꾹 누르고 말하기"
+// 음성 인식: 구글 번역처럼 "말하는 대로 바로 입력 + 자동 전송"
 // =======================
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -154,7 +154,7 @@ if (!SR) {
   rec.maxAlternatives = 1;
   rec.continuous = false;      // 한 번에 한 문장
 
-  // 음성 인식 시작 (버튼 누를 때)
+  // 음성 인식 시작 (버튼 토글: 한 번 누르면 시작)
   const startListen = (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec) return;
@@ -181,12 +181,11 @@ if (!SR) {
     }
   };
 
-  // 음성 인식 중지 (버튼에서 손 뗄 때)
+  // 음성 인식 중지 (버튼 다시 누르면 종료)
   const stopListen = (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec) return;
 
-    // UI는 항상 먼저 복구
     resetMicUI();
 
     if (!listening) return;
@@ -200,48 +199,61 @@ if (!SR) {
     }
   };
 
-  // PC + 모바일 공통: Pointer 이벤트로 통합
+  // 👉 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
   mic.addEventListener("pointerdown", (ev) => {
     // 마우스면 왼쪽 버튼만 허용
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
-    startListen(ev);
+
+    if (!listening) {
+      // 듣기 시작
+      startListen(ev);
+    } else {
+      // 듣기 종료
+      stopListen(ev);
+    }
   });
 
-  mic.addEventListener("pointerup", (ev) => {
-    stopListen(ev);
-  });
-
-  mic.addEventListener("pointercancel", (ev) => {
-    stopListen(ev);
-  });
-
-  mic.addEventListener("pointerleave", (ev) => {
-    if (listening) stopListen(ev);
-  });
-
-  // 인식 결과 처리
+  // ✅ 인식 결과 처리: 말하면서 바로 입력창에 반영
   rec.onresult = (e) => {
     let stable = "";
     let temp   = "";
 
-    for (let i = e.resultIndex; i < e.results.length; i++) {
+    // 지금까지의 전체 결과를 다시 조합
+    for (let i = 0; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) stable += t;
-      else temp += t;
+      if (e.results[i].isFinal) {
+        stable += t;
+      } else {
+        temp += t;
+      }
     }
 
-    finalText += stable;
-    tempText   = temp;
+    finalText = stable;
+    tempText  = temp;
+
+    const combined = (finalText + " " + tempText).trim();
+
+    // 🔹 구글 번역처럼: 말하는 대로 바로 입력칸에 표시
+    msg.value = combined;
+    // 커서 항상 맨 뒤로
+    const len = combined.length;
+    msg.setSelectionRange(len, len);
   };
 
-  // 인식이 끝났을 때(손 뗀 후 + 처리 완료)
+  // 인식이 끝났을 때(조용해지거나 stopListen 호출 후)
   rec.onend = () => {
     console.log("rec.onend");
-    const text = (finalText + " " + tempText).trim();
-    if (text) {
-      // 👉 인식된 문장을 바로 채팅 입력칸에 적용
-      msg.value = text;
+
+    const combined = (finalText + " " + tempText).trim();
+    if (combined) {
+      // 최종 텍스트를 입력칸에 확정
+      msg.value = combined;
+      const len = combined.length;
+      msg.setSelectionRange(len, len);
       msg.focus();
+
+      // 🎯 엔터 안 쳐도 자동으로 두두에게 보내기
+      sendMessage();
     }
 
     listening = false;
