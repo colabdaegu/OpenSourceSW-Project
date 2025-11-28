@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>AR.js Chatbot (GitHub Pages)</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+
+    <!-- A-Frame & AR.js (Hiro 마커용) -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+    <!-- AR + 채팅 레이아웃 CSS -->
+    <link rel="stylesheet" href="chat.css" />
+  </head>
+  <body>
+    <!-- AR 씬 -->
+    <a-scene
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="logarithmicDepthBuffer: true; antialias: true;"
+      arjs="sourceType: webcam; debugUIEnabled: false;"
+    >
+      <!-- Hiro 마커 -->
+      <a-marker preset="hiro">
+        <a-box
+          position="0 0.5 0"
+          depth="0.5"
+          height="0.5"
+          width="0.5"
+          color="#4CC3D9"
+        ></a-box>
+
+        <a-text
+          value="안녕하세요! AR 챗봇입니다."
+          position="-0.8 0.1 0"
+          rotation="-90 0 0"
+          color="#FFFFFF"
+          width="3"
+        ></a-text>
+      </a-marker>
+
+      <!-- 카메라 엔티티 -->
+      <a-entity camera></a-entity>
+    </a-scene>
+
+
+    
+   <!-- 왼쪽 위 채팅창 토글 버튼 -->
+    <button id="chatToggle" class="chat-toggle-btn" type="button">
+    💬
+    </button>
+
+
+
+
+
+
+
+    <!-- 🔹 오른쪽 위: 컴퓨터소프트웨어전공 학과 소개 버튼 -->
+    <button id="deptInfoBtn" class="floating-dept-btn" type="button">
+      학과 소개
+    </button>
+
+    <!-- ====== 채팅 UI ====== -->
+
+    <!-- 대화 로그 영역 -->
+    <div id="log"></div>
+
+    <!-- 하단 채팅 바 -->
+    <div id="chatbar">
+      <input
+        id="msg"
+        type="text"
+        autocomplete="off"
+        placeholder="메시지를 입력하세요..."
+      />
+      <button id="mic" type="button">🎙</button>
+      <button id="send" type="button">전송</button>
+    </div>
+
+    <!-- 음성 인식 모달 (지금은 안 써도 됨, 기존 그대로 유지) -->
+    <div id="voiceModal" class="voicemodal hidden">
+      <div class="panel">
+        <div class="header">
+          <span>음성 입력</span>
+          <button id="voiceClose" type="button">✕</button>
+        </div>
+        <div class="status" id="voiceStatus">대기 중</div>
+        <textarea
+          id="voiceText"
+          rows="3"
+          placeholder="인식된 음성이 여기에 표시됩니다."
+        ></textarea>
+        <div class="actions">
+          <button id="voiceStart" type="button">시작</button>
+          <button id="voiceStop" type="button">중지</button>
+          <button id="voiceApply" type="button">텍스트 적용</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 채팅/음성 JS -->
+    <script src="chat.js"></script>
+  </body>
+</html>
+
