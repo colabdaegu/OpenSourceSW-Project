@@ -51,6 +51,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       import {vec3} from '../js/render/math/gl-matrix.js';
       import {Ray} from '../js/render/math/ray.js';
 
+
       // XR globals.
       let xrButton = null;
       let xrRefSpace = null;
@@ -66,9 +67,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let arObject = new Node();
       arObject.visible = false;
       scene.addNode(arObject);
-
-      let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
+      
+      //let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
+      let dudu = new Gltf2Node({url: '../media/gltf/dudu/dudu.gltf'});
+      dudu.scale = [0.4, 0.4, 0.4];
       arObject.addNode(dudu);
+
 
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
       reticle.visible = false;
