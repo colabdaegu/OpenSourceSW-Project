@@ -67,7 +67,7 @@ function localBotReply(text) {
 // =======================
 // 백엔드 API 주소 (ngrok)
 // =======================
-const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat";
+const CHAT_API = "https://wilson-unscented-dissidently.ngrok-free.dev/chat";
 // ↑ ngrok 주소 바뀌면 여기만 새 주소로 교체 + /chat 붙이기
 
 // =======================
