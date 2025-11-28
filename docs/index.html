@@ -12,7 +12,7 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-    <!-- Vercel 때 쓰던 AR+채팅 레이아웃 CSS -->
+    <!-- AR + 채팅 레이아웃 CSS -->
     <link rel="stylesheet" href="chat.css" />
   </head>
   <body>
@@ -46,15 +46,30 @@
       <a-entity camera></a-entity>
     </a-scene>
 
-        <!-- ====== 채팅 UI 전체 ====== -->
 
-    <!-- 위쪽 대화 로그만 chat-panel 안에 넣기 -->
-    <div id="chat-panel">
-      <!-- 대화 로그 영역 -->
-      <div id="log"></div>
-    </div>
+    
+   <!-- 왼쪽 위 채팅창 토글 버튼 -->
+    <button id="chatToggle" class="chat-toggle-btn" type="button">
+    💬
+    </button>
 
-    <!-- 아래쪽 채팅 입력 바는 panel 바깥에 둔다 (항상 보이게) -->
+
+
+
+
+
+
+    <!-- 🔹 오른쪽 위: 컴퓨터소프트웨어전공 학과 소개 버튼 -->
+    <button id="deptInfoBtn" class="floating-dept-btn" type="button">
+      학과 소개
+    </button>
+
+    <!-- ====== 채팅 UI ====== -->
+
+    <!-- 대화 로그 영역 -->
+    <div id="log"></div>
+
+    <!-- 하단 채팅 바 -->
     <div id="chatbar">
       <input
         id="msg"
@@ -66,7 +81,7 @@
       <button id="send" type="button">전송</button>
     </div>
 
-    <!-- 음성 인식 모달 (예전 그대로 유지) -->
+    <!-- 음성 인식 모달 (지금은 안 써도 됨, 기존 그대로 유지) -->
     <div id="voiceModal" class="voicemodal hidden">
       <div class="panel">
         <div class="header">
@@ -91,3 +106,4 @@
     <script src="chat.js"></script>
   </body>
 </html>
+

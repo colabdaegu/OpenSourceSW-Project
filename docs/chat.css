@@ -105,3 +105,74 @@ canvas, .a-canvas{
   opacity: 0.8;
   transform: scale(1.05);
 }
+
+/* 🔹 왼쪽 위: 채팅창 열기/닫기 버튼 (흰 동그라미 + 💬 이모지) */
+.chat-toggle-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 26px;   /* 💬 크기 */
+  line-height: 1;
+  color: #222222;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  outline: none;
+}
+
+.chat-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+
+
+
+/* 대화 로그만 숨기기 (입력창은 그대로) */
+.chat-log-hidden #log {
+  display: none;
+}
+
+/* 🔸 오른쪽 위: '학과 소개' 플로팅 버튼 */
+.floating-dept-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1001;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #2ecc71;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+.floating-dept-btn:active,
+.chat-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.floating-dept-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}

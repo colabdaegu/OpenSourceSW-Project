@@ -1,54 +1,28 @@
 // =======================
+// 설정 값
+// =======================
+
+// 화면에 유지할 최대 메시지 수 (원하면 6 대신 4, 8 등으로 조정)
+const MAX_LOG_MESSAGES = 6;
+
+// 학과 소개 버튼이 보낼 숨겨진 질문
+//  '3줄 정도' 부분을 '2줄 정도', '4줄 정도' 등으로 바꾸면 길이 조절 가능
+const DEPT_SUMMARY_PROMPT =
+  "대구대학교 컴퓨터정보공학부 컴퓨터소프트웨어전공에 대해 2줄 정도로 짧게 소개해줘. " +
+  "무엇을 배우는 학과인지와 졸업 후 진로를 중심으로 설명해줘.";
+
+// =======================
 // DOM 요소 가져오기
 // =======================
 const log  = document.getElementById("log");
 const msg  = document.getElementById("msg");
 const send = document.getElementById("send");
 const mic  = document.getElementById("mic");
-const chatPanel = document.getElementById("chat-panel");
-
-// =======================
-// 채팅 아이콘 버튼 생성 (좌측 상단 토글 버튼)
-// =======================
-if (chatPanel) {
-  let chatOpen = true;
-
-  const chatToggleBtn = document.createElement("button");
-  chatToggleBtn.id = "chat-toggle-btn";
-  chatToggleBtn.type = "button";
-  chatToggleBtn.textContent = "💬";
-  chatToggleBtn.title = "채팅 열기/닫기";
-
-  Object.assign(chatToggleBtn.style, {
-    position: "fixed",
-    top: "12px",
-    left: "12px",
-    width: "40px",
-    height: "40px",
-    borderRadius: "50%",
-    border: "none",
-    fontSize: "22px",
-    cursor: "pointer",
-    zIndex: "9999",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-    backgroundColor: "white"
-  });
-
-  chatToggleBtn.addEventListener("click", () => {
-    chatOpen = !chatOpen;
-    if (chatOpen) {
-      chatPanel.style.display = "";
-      chatToggleBtn.title = "채팅 숨기기";
-    } else {
-      chatPanel.style.display = "none";
-      chatToggleBtn.title = "채팅 보이기";
-    }
-  });
-
-  document.body.appendChild(chatToggleBtn);
-}
+const deptBtn = document.getElementById("deptInfoBtn");
+const chatToggle = document.getElementById("chatToggle");
 
 // 지금 인식된 AR 대상(마커) 이름/설명
+// 나중에 index.html 쪽에서 window.currentARTarget 에 값을 넣어주면 됨.
 if (!("currentARTarget" in window)) {
   window.currentARTarget = null;
 }
@@ -69,9 +43,8 @@ function append(role, text) {
 
   log.appendChild(p);
 
-  // 🔹 최근 N개만 유지 (유저+두두 1세트 = 2개이니까 8개면 최근 4번 대화 정도)
-  const MAX_MESSAGES = 8;
-  while (log.children.length > MAX_MESSAGES) {
+  // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
+  while (log.children.length > MAX_LOG_MESSAGES) {
     log.removeChild(log.firstChild);
   }
 
@@ -95,25 +68,43 @@ function localBotReply(text) {
 // 백엔드 API 주소 (ngrok)
 // =======================
 const CHAT_API = "https://largando-conner-unprecedented.ngrok-free.dev/chat";
+// ↑ ngrok 주소 바뀌면 여기만 새 주소로 교체 + /chat 붙이기
 
 // =======================
 // 메시지 전송 로직
 // =======================
-async function sendMessage() {
-  const text = msg.value.trim();
+// overrideText : 버튼 등에서 강제로 보낼 텍스트 (null이면 입력창 내용 사용)
+// options.skipUserLog  : true면 유저 메시지를 로그에 표시하지 않음
+// options.ignoreARTarget : true면 AR 대상 정보 붙이지 않음
+async function sendMessage(overrideText = null, options = {}) {
+  const { skipUserLog = false, ignoreARTarget = false } = options;
+
+  const text = (overrideText !== null && overrideText !== undefined)
+    ? String(overrideText).trim()
+    : msg.value.trim();
+
   if (!text) return;
 
-  // 최근 대화 여러 개 유지 (전체 삭제 안 함)
-  append("user", text);
-  msg.value = "";
+  // 사용자 메세지 로그에 추가
+  if (!skipUserLog) {
+    append("user", text);
+  }
 
+  // 입력창에서 보낸 경우에만 입력창 비우기
+  if (overrideText === null || overrideText === undefined) {
+    msg.value = "";
+    msg.focus();
+  }
+
+  // 전송 버튼 잠깐 비활성화
   send.disabled = true;
   mic.disabled  = true;
 
+  // 👇 서버로 보낼 실제 메시지 구성 (AR 대상 포함 여부 선택)
   let messageForServer = text;
-
   const artTarget = window.currentARTarget;
-  if (artTarget) {
+
+  if (!ignoreARTarget && artTarget) {
     messageForServer =
       `지금 AR에서 인식된 대상은 "${artTarget}"이야.\n` +
       `대구대학교 마스코트 두두가 이 대상을 중심으로 학생에게 친근하게 설명해 줘.\n` +
@@ -138,6 +129,7 @@ async function sendMessage() {
 
     const data = await resp.json();
 
+    // 서버에서 오는 필드명에 따라 선택
     const reply =
       data.message ||
       data.reply ||
@@ -147,6 +139,7 @@ async function sendMessage() {
     append("bot", reply);
   } catch (err) {
     console.error("Chat API error:", err);
+    // 실패 시 로컬 기본 답변 (두두 버전)
     append("bot", localBotReply(text));
   } finally {
     send.disabled = false;
@@ -154,8 +147,8 @@ async function sendMessage() {
   }
 }
 
-// 버튼/엔터키 바인딩
-send.addEventListener("click", sendMessage);
+// 버튼/엔터키 바인딩 (텍스트 입력용)
+send.addEventListener("click", () => sendMessage());
 
 msg.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -163,6 +156,23 @@ msg.addEventListener("keydown", (e) => {
     sendMessage();
   }
 });
+
+// 🔸 왼쪽 위 '채팅창 열고닫기' 버튼 → 로그만 숨기기/보이기
+if (chatToggle) {
+  chatToggle.addEventListener("click", () => {
+    document.body.classList.toggle("chat-log-hidden");
+  });
+}
+
+// 🔸 오른쪽 위 '학과 소개' 버튼 → 숨겨진 질문으로 학과 설명 받기
+if (deptBtn) {
+  deptBtn.addEventListener("click", () => {
+    sendMessage(DEPT_SUMMARY_PROMPT, {
+      skipUserLog: true,      // 유저 질문은 로그에 안 보이게
+      ignoreARTarget: true,   // AR 마커 문구도 붙이지 않게
+    });
+  });
+}
 
 // =======================
 // 음성 인식: "토글 방식 + 말하는 대로 바로 입력"
@@ -174,29 +184,35 @@ let listening = false;
 let finalText = "";
 let tempText  = "";
 
+// 공통: 마이크 버튼 UI 리셋
 function resetMicUI() {
   mic.classList.remove("recording");
   mic.textContent = "🎤";
 }
 
+// 브라우저에서 음성 인식 객체 지원 확인
 if (!SR) {
+  // 지원 안 하면 마이크 비활성화
   mic.disabled = true;
   mic.title = "이 브라우저는 음성 인식을 지원하지 않습니다 😢";
 } else {
   rec = new SR();
-  rec.lang = "ko-KR";
-  rec.interimResults = true;
+  rec.lang = "ko-KR";          // 한국어
+  rec.interimResults = true;   // 말하는 동안 중간 결과도 받기
   rec.maxAlternatives = 1;
-  rec.continuous = false;
+  rec.continuous = false;      // 한 번에 한 문장
 
+  // 음성 인식 시작 (토글: 듣기 시작)
   const startListen = (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec) return;
 
+    // 🔹 다른 입력에 포커스 있으면 먼저 blur (모바일 키보드 내리기)
     if (document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
     }
 
+    // 이미 듣는 중이면 무시
     if (listening) {
       console.log("이미 듣는 중이라 start 무시");
       return;
@@ -210,7 +226,7 @@ if (!SR) {
 
     try {
       rec.start();
-      listening = true;
+      listening = true; // start 성공했다고 가정
     } catch (e) {
       console.warn("rec.start error:", e);
       listening = false;
@@ -218,6 +234,7 @@ if (!SR) {
     }
   };
 
+  // 음성 인식 중지 (토글: 듣기 종료)
   const stopListen = (ev) => {
     if (ev && ev.preventDefault) ev.preventDefault();
     if (!rec) return;
@@ -225,6 +242,7 @@ if (!SR) {
     resetMicUI();
 
     if (!listening) return;
+
     listening = false;
 
     try {
@@ -234,20 +252,26 @@ if (!SR) {
     }
   };
 
+  // 👉 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
   mic.addEventListener("pointerdown", (ev) => {
+    // 마우스면 왼쪽 버튼만 허용
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
 
     if (!listening) {
+      // 듣기 시작
       startListen(ev);
     } else {
+      // 듣기 종료
       stopListen(ev);
     }
   });
 
+  // ✅ 인식 결과 처리: 말하는 대로 바로 입력창에 반영
   rec.onresult = (e) => {
     let stable = "";
     let temp   = "";
 
+    // 전체 결과 다시 조합 (구글 번역 스타일)
     for (let i = 0; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
       if (e.results[i].isFinal) {
@@ -261,21 +285,26 @@ if (!SR) {
     tempText  = temp;
 
     const combined = (finalText + " " + tempText).trim();
-    msg.value = combined; // 실시간으로 입력칸에만 반영 (focus 안 줌)
+
+    // 🔹 말하는 대로 바로 입력칸에 표시
+    msg.value = combined;
+    // ⚠ focus를 주지 않아야 모바일 키보드가 튀어나오지 않음
   };
 
+  // 인식이 끝났을 때(조용해지거나 stopListen 호출 후)
   rec.onend = () => {
     console.log("rec.onend");
 
     const combined = (finalText + " " + tempText).trim();
     if (combined) {
-      msg.value = combined; // 최종 문장 유지, 전송은 직접 버튼/엔터
+      // 최종 텍스트를 입력칸에 그대로 둠 (사용자는 직접 전송 버튼/엔터를 눌러야 함)
+      msg.value = combined;
     }
 
     listening = false;
     finalText = "";
     tempText  = "";
-    resetMicUI();
+    resetMicUI();  // 혹시 모를 상태 꼬임 방지
   };
 
   rec.onerror = (e) => {
