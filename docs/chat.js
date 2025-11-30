@@ -1,6 +1,5 @@
 if (
-  window.location.pathname.startsWith("/docs/") ||
-  window.location.pathname.startsWith("/webxr-samples/")
+  window.location.pathname.startsWith("/docs/")
 ) {
   console.log("✅ Chat/AR page detected → chatbot script activated");
 

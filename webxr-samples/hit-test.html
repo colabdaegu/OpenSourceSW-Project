@@ -34,7 +34,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <title>Hit Test</title>
   </head>
   <body>
-    <header>
+    <header id="ui-box">
       <details open>
         <summary>DU AR-Chat</summary>
         <p>
@@ -43,6 +43,40 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         </p>
       </details>
     </header>
+
+
+
+    <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
+    <button id="listeningBtn" class="listening-btn" type="button">🔊</button>
+    <button id="guitarBtn" class="guitar-btn" type="button">🎵</button>
+
+
+    <style>
+      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn {
+        display: none; /* 🔥🔥🔥 AR 시작 이후에만 UI가 나타나게 하기 위함 🔥🔥🔥 */
+      }
+    </style>
+
+    <!-- ✅ 아래 코드는 index.html에서 가져온 채팅 UI 그대로 유지됨 (기능, 위치 CSS는 이미 존재) -->
+    <!-- ====== 채팅 UI ====== -->
+    <!-- 대화 로그 영역 -->
+    <div id="log"></div>
+
+    <!-- 하단 채팅 바 -->
+    <div id="chatbar">
+      <input
+        id="msg"
+        type="text"
+        autocomplete="off"
+        placeholder="메시지를 입력하세요..."
+      />
+      <button id="mic" type="button">🎙</button>
+      <button id="send" type="button">전송</button>
+    </div>
+
+    <script src="chat.js"></script>
+
+
     <script type="module">
       import {WebXRButton} from '../js/util/webxr-button.js';
       import {Scene} from '../js/render/scenes/scene.js';
@@ -52,6 +86,33 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       import {DropShadowNode} from '../js/render/nodes/drop-shadow.js';
       import {vec3} from '../js/render/math/gl-matrix.js';
       import {Ray} from '../js/render/math/ray.js';
+
+
+
+      // 최근에 UI를 탭한 시점 (ms 기준)
+      let lastUiTapTime = 0;
+      const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
+
+      // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box';
+
+      window.addEventListener('pointerdown', (ev) => {
+        const target = ev.target;
+        if (!target) return;
+
+        // 위에서 정한 UI 영역 안에 있는지 확인
+        if (target.closest(UI_ROOT_SELECTOR)) {
+          lastUiTapTime = performance.now();
+          // console.log('UI tapped, suppress next XR select');
+        }
+      });
+
+      
+
+
+      /* =========================
+        버튼 배치
+        ========================= */
 
 
       // XR globals.
@@ -111,14 +172,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
 
       function onRequestSession() {
-        return navigator.xr.requestSession('immersive-ar', {requiredFeatures: ['local', 'hit-test']})
-                           .then((session) => {
+        return navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['local', 'hit-test', 'dom-overlay'], // ✅ 추가
+          domOverlay: { root: document.body }, // ✅ 추가
+        }).then((session) => {
           xrButton.setSession(session);
           onSessionStarted(session);
         });
       }
 
       function onSessionStarted(session) {
+        /* AR 카메라 화면에서는 WebXRButton UI 숨김 */
+        xrButton.domElement.style.display = 'none';
+
+        document.getElementById('ui-box').style.display = 'none';
+
+
         // 아래부터 기존 오픈소스 내용
         session.addEventListener('end', onSessionEnded);
         session.addEventListener('select', onSelect);
@@ -133,7 +202,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           scene.setRenderer(renderer);
         }
 
-        session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+        session.updateRenderState({ 
+          baseLayer: new XRWebGLLayer(session, gl),
+          domOverlay: { root: document.body }, // 2D UI overlay 권한 획득
+        });
 
         // In this sample we want to cast a ray straight out from the viewer's
         // position and render a reticle where it intersects with a real world
@@ -151,16 +223,75 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
           session.requestAnimationFrame(onXRFrame);
         });
+
+        /* AR 진입 시 UI 표시 */
+
+
+        document.getElementById("log").style.display = "block";         // 🔥 로그 표시 ON
+        document.getElementById("chatbar").style.display = "flex";      // 🔥 채팅바 표시 ON
+
+        const chatToggle = document.getElementById("chatToggle");
+        const listeningBtn = document.getElementById("listeningBtn");
+        const guitarBtn = document.getElementById("guitarBtn");
+
+        if (chatToggle)   chatToggle.style.display   = "block";
+        if (listeningBtn) listeningBtn.style.display = "block";
+        if (guitarBtn)    guitarBtn.style.display    = "block";
       }
 
       function onEndSession(session) {
         xrHitTestSource.cancel();
         xrHitTestSource = null;
         session.end();
+
+        /* AR 종료 시 UI 숨김 */
+
+        document.getElementById("log").style.display = "none";         // 로그 OFF
+        document.getElementById("chatbar").style.display = "none";     // 채팅바 OFF
+
+        const chatToggle = document.getElementById("chatToggle");
+        const listeningBtn = document.getElementById("listeningBtn");
+        const guitarBtn = document.getElementById("guitarBtn");
+
+        if (chatToggle)   chatToggle.style.display   = "none";
+        if (listeningBtn) listeningBtn.style.display = "none";
+        if (guitarBtn)    guitarBtn.style.display    = "none";
+
+        /* AR 종료되면 WebXRButton UI 복원 */
+        xrButton.domElement.style.display = 'inline-flex';
+        document.getElementById('ui-box').style.display = 'block';
       }
 
       function onSessionEnded(event) {
+
+        // WebXRButton 내부 상태 정리
         xrButton.setSession(null);
+
+        // AR 오버레이(기타 버튼) 숨김
+
+
+        // 채팅창 제거
+        const log = document.getElementById("log");
+        const chatbar = document.getElementById("chatbar");
+        const chatToggle = document.getElementById("chatToggle");
+        const listeningBtn = document.getElementById("listeningBtn");
+        const guitarBtn = document.getElementById("guitarBtn");
+
+        if (log) log.style.display = "none";
+        if (chatbar) chatbar.style.display = "none";
+        if (chatToggle)  chatToggle.style.display  = "none";
+        if (listeningBtn)listeningBtn.style.display= "none";
+        if (guitarBtn)   guitarBtn.style.display   = "none";
+
+        // 위에 설명 박스 다시 보이게
+        document.getElementById('ui-box').style.display = 'block';
+
+        // WebXRButton 다시 보여주기
+        if (xrButton && xrButton.domElement) {
+          xrButton.domElement.style.display = 'inline-flex';
+        }
+
+        window.location.href = "/index.html";
       }
 
       // Adds a new object to the scene at the
@@ -186,6 +317,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let rayDirection = vec3.create();
       function onSelect(event) {
         if (reticle.visible) {
+          // 🔹 최근에 UI를 탭했다면 이 select는 무시
+          const now = performance.now();
+          if (now - lastUiTapTime < UI_TAP_IGNORE_WINDOW) {
+            // console.log('Ignoring XR select caused by UI tap');
+            return;
+          }
+
           // The reticle should already be positioned at the latest hit point, 
           // so we can just use it's matrix to save an unnecessary call to 
           // event.frame.getHitTestResults.
