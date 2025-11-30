@@ -4,11 +4,42 @@ if (
   console.log("✅ Chat/AR page detected → chatbot script activated");
 
 
+  // 공용 BGM 설정
+  const SOUND_FILES = {
+    1: "../media/sound/click.ogg",   // 기본 클릭음
+    2: "../media/sound/click-2.ogg",
+    3: "../media/sound/enter.ogg",
+    5: "../media/sound/entrance.ogg",
+  };
+
+  const soundPlayers = {};
+
+  // Audio 객체
+  Object.keys(SOUND_FILES).forEach((id) => {
+    const audio = new Audio(SOUND_FILES[id]);
+    audio.preload = "auto";
+    soundPlayers[id] = audio;
+  });
+
+  // 번호로 사운드 재생
+  function playUiSound(id) {
+    const audio = soundPlayers[id];
+    if (!audio) return;
+
+    try {
+      audio.currentTime = 0;
+      audio.play();
+    } catch (e) {
+      console.warn("UI sound play error:", e);
+    }
+  }
+
+
   // =======================
   // 설정 값
   // =======================
 
-  // 화면에 유지할 최대 메시지 수 (원하면 6 대신 4, 8 등으로 조정)
+  // 화면에 유지할 최대 메시지 수
   const MAX_LOG_MESSAGES = 6;
 
   // 학과 소개 버튼이 보낼 숨겨진 질문
@@ -28,6 +59,7 @@ if (
   const chatToggle = document.getElementById("chatToggle");
   const listeningBtn = document.getElementById("listeningBtn");
   const guitarBtn = document.getElementById("guitarBtn");
+  const duduLabel = document.getElementById("dudu-label");
 
   // 지금 인식된 AR 대상(마커) 이름/설명
   // 나중에 index.html 쪽에서 window.currentARTarget 에 값을 넣어주면 됨.
@@ -42,7 +74,7 @@ if (
     const p = document.createElement("p");
 
     if (role === "user") {
-      p.textContent = "🧑 " + text;
+      p.textContent = "🎓 " + text;
       p.classList.add("msg-user");
     } else {
       p.textContent = "🟢 두두: " + text;
@@ -101,14 +133,17 @@ if (
     // 입력창에서 보낸 경우에만 입력창 비우기
     if (overrideText === null || overrideText === undefined) {
       msg.value = "";
-      msg.focus();
+      // 모바일 키보드 닫기 위해 포커스 제거
+      if (document.activeElement === msg) {
+        msg.blur();
+      }
     }
 
     // 전송 버튼 잠깐 비활성화
     send.disabled = true;
     mic.disabled  = true;
 
-    // 👇 서버로 보낼 실제 메시지 구성 (AR 대상 포함 여부 선택)
+    // 서버로 보낼 실제 메시지 구성 (AR 대상 포함 여부 선택)
     let messageForServer = text;
     const artTarget = window.currentARTarget;
 
@@ -145,6 +180,18 @@ if (
         (typeof data === "string" ? data : JSON.stringify(data));
 
       append("bot", reply);
+
+      
+      // !!!!! 두두 머리 위 말풍선에도 같은 텍스트 표시
+      if (duduLabel) {
+        if (window.hasDuduPlaced) {
+          duduLabel.textContent = reply;
+          duduLabel.style.display = "block";
+        } else {
+          // 두두가 없으면 중앙에 뜨지 않도록 강제 숨김
+          duduLabel.style.display = "none";
+        }
+      }
     } catch (err) {
       console.error("Chat API error:", err);
       // 실패 시 로컬 기본 답변 (두두 버전)
@@ -156,18 +203,31 @@ if (
   }
 
   // 버튼/엔터키 바인딩 (텍스트 입력용)
-  send.addEventListener("click", () => sendMessage());
+  send.addEventListener("click", () => {
+    if (msg.value.trim().length > 0) {
+      playUiSound(3);
+      sendMessage();
+    }
+
+    if (duduLabel) duduLabel.style.display = "none";
+  });
 
   msg.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+    if (msg.value.trim().length > 0) {
+      playUiSound(3);
       sendMessage();
+    }
+
+      if (duduLabel) duduLabel.style.display = "none";
     }
   });
 
-  // 🔸 왼쪽 위 '채팅창 열고닫기' 버튼 → 로그만 숨기기/보이기
+  // 왼쪽 위 '채팅창 열고닫기' 버튼 → 로그만 숨기기/보이기
   if (chatToggle) {
     chatToggle.addEventListener("click", () => {
+      playUiSound(1);
       const logEl = document.getElementById("log");
       if (!logEl) return;
 
@@ -184,9 +244,10 @@ if (
     });
   }
 
-  // 🔸 오른쪽 위 '학과 소개' 버튼 → 숨겨진 질문으로 학과 설명 받기
+  // 오른쪽 위 '학과 소개' 버튼 → 숨겨진 질문으로 학과 설명 받기
   if (deptBtn) {
     deptBtn.addEventListener("click", () => {
+      playUiSound(1);
       sendMessage(DEPT_SUMMARY_PROMPT, {
         skipUserLog: true,      // 유저 질문은 로그에 안 보이게
         ignoreARTarget: true,   // AR 마커 문구도 붙이지 않게
@@ -214,7 +275,7 @@ if (
   if (!SR) {
     // 지원 안 하면 마이크 비활성화
     mic.disabled = true;
-    mic.title = "이 브라우저는 음성 인식을 지원하지 않습니다 😢";
+    mic.title = "이 브라우저는 음성 인식을 지원하지 않습니다!";
   } else {
     rec = new SR();
     rec.lang = "ko-KR";          // 한국어
@@ -277,6 +338,9 @@ if (
       // 마우스면 왼쪽 버튼만 허용
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
 
+      // 마이크 누르면 두두 라벨 숨김
+      if (duduLabel) duduLabel.style.display = "none";
+
       if (!listening) {
         // 듣기 시작
         startListen(ev);
@@ -286,7 +350,7 @@ if (
       }
     });
 
-    // ✅ 인식 결과 처리: 말하는 대로 바로 입력창에 반영
+    // 인식 결과 처리: 말하는 대로 바로 입력창에 반영
     rec.onresult = (e) => {
       let stable = "";
       let temp   = "";
@@ -308,7 +372,7 @@ if (
 
       // 🔹 말하는 대로 바로 입력칸에 표시
       msg.value = combined;
-      // ⚠ focus를 주지 않아야 모바일 키보드가 튀어나오지 않음
+      // 경고) focus를 주지 않아야 모바일 키보드가 튀어나오지 않음
     };
 
     // 인식이 끝났을 때(조용해지거나 stopListen 호출 후)
@@ -342,13 +406,13 @@ if (
       listeningBtn.addEventListener("click", () => {
         // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
         if (listeningOn) {
-
           listeningBtn.textContent = "🔈";
           listeningOn = false;
+          playUiSound(1);
         } else {
-
           listeningBtn.textContent = "🔊";
           listeningOn = true;
+          playUiSound(2);
         }
       });
     }
@@ -382,7 +446,7 @@ if (
         bgm
           .play()
           .then(() => {
-            // 재생 성공하면 버튼 아이콘 바꾸기 (원하면)
+            // 재생 성공하면 버튼 아이콘 바꾸기
             guitarBtn.textContent = "⏹️";
           })
           .catch((err) => {
@@ -390,6 +454,7 @@ if (
           });
       } else {
         // 재생 중이면 → 일시정지
+        playUiSound(1);
         bgm.pause();
         guitarBtn.textContent = "🎵"; // 다시 기타 아이콘
       }
