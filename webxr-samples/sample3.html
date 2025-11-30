@@ -45,7 +45,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </header>
 
     <!-- 두두 머리 위에 띄울 텍스트 -->
-    <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
+    <div id="dudu-label">안녕하세요! 저는 샘플 캐릭터 3이라고 해요!</div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
@@ -187,8 +187,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       scene.addNode(arObject);
       
       //let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
-      let dudu = new Gltf2Node({url: '../media/gltf/dudu/dudu.gltf'});
-      dudu.scale = [0.4, 0.4, 0.4];
+      let dudu = new Gltf2Node({url: '../media/gltf/human_3/human_3.gltf'});
+      dudu.scale = [0.6, 0.6, 0.6];
       arObject.addNode(dudu);
 
 
@@ -376,7 +376,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           labelEl.textContent = "";
         }
 
-        //window.location.href = "/index.html";
+        window.location.href = "/index.html";
       }
 
       // Adds a new object to the scene at the
@@ -459,7 +459,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           const projMat = view.projectionMatrix;
 
           // !!!!!!!!!!!!!!!!!!!!두두 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
-          const localHeadPos = vec3.fromValues(-0.055, 0.4, 0);
+          const localHeadPos = vec3.fromValues(0, 0.6, 0);
           const worldHeadPos = vec3.create();
           vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
 

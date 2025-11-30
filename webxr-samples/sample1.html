@@ -44,6 +44,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </details>
     </header>
 
+    <!-- 두두 머리 위에 띄울 텍스트 -->
+    <div id="dudu-label">안녕하세요! 저는 샘플 캐릭터 1이라고 해요!</div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
@@ -53,11 +55,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <style>
       #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn {
-        display: none; /* 🔥🔥🔥 AR 시작 이후에만 UI가 나타나게 하기 위함 🔥🔥🔥 */
+        display: none; 
+      }
+
+
+      #dudu-label {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -120%);
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        font-size: 14px;
+        white-space: pre-line;
+        box-sizing: border-box;
+        width: 230px;  
+        pointer-events: none;
+        z-index: 9999;
+        display: none;  /* 처음엔 숨김, 두두 배치되면 보이게 */
       }
     </style>
 
-    <!-- ✅ 아래 코드는 index.html에서 가져온 채팅 UI 그대로 유지됨 (기능, 위치 CSS는 이미 존재) -->
+
     <!-- ====== 채팅 UI ====== -->
     <!-- 대화 로그 영역 -->
     <div id="log"></div>
@@ -74,6 +95,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <button id="send" type="button">전송</button>
     </div>
 
+    
+
     <script src="chat.js"></script>
 
 
@@ -84,10 +107,42 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       import {Node} from '../js/render/core/node.js';
       import {Gltf2Node} from '../js/render/nodes/gltf2.js';
       import {DropShadowNode} from '../js/render/nodes/drop-shadow.js';
-      import {vec3} from '../js/render/math/gl-matrix.js';
+      //import {vec3} from '../js/render/math/gl-matrix.js';
+      import {vec3, mat4, vec4} from '../js/render/math/gl-matrix.js';
       import {Ray} from '../js/render/math/ray.js';
 
+      // 두두 생성되지 않음
+      window.hasDuduPlaced = false;
 
+      // 줄바꿈 스크립트
+      function autoWrapText(text, maxChars = 20, maxSpaces = 5) {
+        let result = "";
+        let countChars = 0;
+        let countSpaces = 0;
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+
+          countChars++;
+          if (ch === " ") countSpaces++;
+
+          if (countChars > maxChars || countSpaces >= maxSpaces) {
+            result += "\n";
+            countChars = 0;
+            countSpaces = 0;
+          }
+
+          result += ch;
+        }
+        return result;
+      }
+
+      const duduLabelEl = document.getElementById("dudu-label");
+      if (duduLabelEl) {
+        const rawText = duduLabelEl.textContent;           // 원래 텍스트
+        const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
+        duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
+      }
 
       // 최근에 UI를 탭한 시점 (ms 기준)
       let lastUiTapTime = 0;
@@ -132,8 +187,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       scene.addNode(arObject);
       
       //let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
-      let dudu = new Gltf2Node({url: '../media/gltf/dudu/dudu.gltf'});
-      dudu.scale = [0.4, 0.4, 0.4];
+      let dudu = new Gltf2Node({url: '../media/gltf/human_1/human_1.gltf'});
+      dudu.scale = [0.6, 0.6, 0.6];
       arObject.addNode(dudu);
 
 
@@ -149,6 +204,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       const MAX_DUDUS = 1;
       let dudus = [];
+
+      let currentDudu = null;   // 현재 씬에 있는 두두 하나 기억
 
       // Ensure the background is transparent for AR.
       scene.clear = false;
@@ -173,8 +230,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       function onRequestSession() {
         return navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['local', 'hit-test', 'dom-overlay'], // ✅ 추가
-          domOverlay: { root: document.body }, // ✅ 추가
+          requiredFeatures: ['local', 'hit-test', 'dom-overlay'], 
+          domOverlay: { root: document.body }, 
         }).then((session) => {
           xrButton.setSession(session);
           onSessionStarted(session);
@@ -227,8 +284,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         /* AR 진입 시 UI 표시 */
 
 
-        document.getElementById("log").style.display = "block";         // 🔥 로그 표시 ON
-        document.getElementById("chatbar").style.display = "flex";      // 🔥 채팅바 표시 ON
+        document.getElementById("log").style.display = "block";   
+        document.getElementById("chatbar").style.display = "flex";  
 
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
@@ -244,10 +301,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         xrHitTestSource = null;
         session.end();
 
+        // TTS 중단
+        if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
+          window.speechSynthesis.cancel();
+        }
+
         /* AR 종료 시 UI 숨김 */
 
-        document.getElementById("log").style.display = "none";         // 로그 OFF
-        document.getElementById("chatbar").style.display = "none";     // 채팅바 OFF
+        document.getElementById("log").style.display = "none";    
+        document.getElementById("chatbar").style.display = "none";   
 
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
@@ -257,15 +319,29 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (listeningBtn) listeningBtn.style.display = "none";
         if (guitarBtn)    guitarBtn.style.display    = "none";
 
-        /* AR 종료되면 WebXRButton UI 복원 */
+        // AR 종료되면 WebXRButton UI 복원
         xrButton.domElement.style.display = 'inline-flex';
         document.getElementById('ui-box').style.display = 'block';
+
+        currentDudu = null;
+        window.hasDuduPlaced = false;
+
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl) {
+          labelEl.style.display = "none";
+          labelEl.textContent = "";
+        }
       }
 
       function onSessionEnded(event) {
 
         // WebXRButton 내부 상태 정리
         xrButton.setSession(null);
+
+        // TTS 중단
+        if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
+          window.speechSynthesis.cancel();
+        }
 
         // AR 오버레이(기타 버튼) 숨김
 
@@ -291,6 +367,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           xrButton.domElement.style.display = 'inline-flex';
         }
 
+        currentDudu = null;
+        window.hasDuduPlaced = false;
+
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl) {
+          labelEl.style.display = "none";
+          labelEl.textContent = "";
+        }
+
         window.location.href = "/index.html";
       }
 
@@ -303,6 +388,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         scene.addNode(newDudu);
 
         dudus.push(newDudu);
+        currentDudu = newDudu;
+
+        if (typeof window.playUiSound === "function") {
+          window.playUiSound(5);
+        }
+
+        window.hasDuduPlaced = true;
+
+        // 두두 라벨도 켜기
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl) {
+          labelEl.style.display = "block";
+        }
 
         // For performance reasons if we add too many objects start
         // removing the oldest ones to keep the scene complexity
@@ -317,7 +415,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let rayDirection = vec3.create();
       function onSelect(event) {
         if (reticle.visible) {
-          // 🔹 최근에 UI를 탭했다면 이 select는 무시
+          // 최근에 UI를 탭했다면 이 select는 무시
           const now = performance.now();
           if (now - lastUiTapTime < UI_TAP_IGNORE_WINDOW) {
             // console.log('Ignoring XR select caused by UI tap');
@@ -348,6 +446,58 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             reticle.matrix = pose.transform.matrix;
           }
         }
+
+
+        // 두두 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl && currentDudu && pose && pose.views.length > 0) {
+          const view = pose.views[0];
+
+          const viewMat = mat4.create();
+          mat4.invert(viewMat, view.transform.matrix);
+
+          const projMat = view.projectionMatrix;
+
+          // !!!!!!!!!!!!!!!!!!!!두두 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
+          const localHeadPos = vec3.fromValues(0, 0.6, 0);
+          const worldHeadPos = vec3.create();
+          vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
+
+          // world → view → clip → NDC → screen
+          const worldPos4 = vec4.fromValues(
+            worldHeadPos[0],
+            worldHeadPos[1],
+            worldHeadPos[2],
+            1.0
+          );
+          const viewPos4 = vec4.create();
+          const clipPos4 = vec4.create();
+
+          vec4.transformMat4(viewPos4, worldPos4, viewMat);
+          vec4.transformMat4(clipPos4, viewPos4, projMat);
+
+          // 카메라 뒤에 있으면 숨김
+          if (clipPos4[3] <= 0) {
+            labelEl.style.display = "none";
+          } else {
+            const ndcX = clipPos4[0] / clipPos4[3];
+            const ndcY = clipPos4[1] / clipPos4[3];
+
+            const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
+            const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
+
+            labelEl.style.left = `${x}px`;
+            labelEl.style.top  = `${y}px`;
+
+            if (labelEl.style.display !== "none") {
+              // 이미 보여지고 있으면 그대로
+            } else {
+              // 혹시 숨겨져 있으면 다시 켜줌 (mic에서 끈 거라면 chat.js가 관리)
+              // 여기선 굳이 켜지 말고, chat.js에서만 켜고 싶으면 이 줄을 지워도 됨
+            }
+          }
+        }
+
 
         scene.startFrame();
 

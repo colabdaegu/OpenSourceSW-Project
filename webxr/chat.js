@@ -1,5 +1,5 @@
 if (
-  window.location.pathname.startsWith("/webxr-samples/")
+  window.location.pathname.startsWith("/webxr/")
 ) {
   
   // =======================
@@ -105,6 +105,24 @@ if (
   const guitarBtn = document.getElementById("guitarBtn");
   const duduLabel = document.getElementById("dudu-label");
 
+  let currentCharNum = 0;
+  const char1Toggle = document.getElementById("char1Toggle");
+  const char2Toggle = document.getElementById("char2Toggle");
+  const char3Toggle = document.getElementById("char3Toggle");
+  const charButtons = [char1Toggle, char2Toggle, char3Toggle];
+
+  // 어떤 버튼이 선택됐는지 UI 반영
+  function updateCharButtonUI(activeIndex) {
+    charButtons.forEach((btn, i) => {
+      if (!btn) return;
+      if (i === activeIndex) {
+        btn.classList.add("is-active");
+      } else {
+        btn.classList.remove("is-active");
+      }
+    });
+  }
+
   // 지금 인식된 AR 대상(마커) 이름/설명
   // 나중에 index.html 쪽에서 window.currentARTarget 에 값을 넣어주면 됨.
   if (!("currentARTarget" in window)) {
@@ -127,7 +145,7 @@ if (
 
     log.appendChild(p);
 
-    // 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
+    // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
     while (log.children.length > MAX_LOG_MESSAGES) {
       log.removeChild(log.firstChild);
     }
@@ -337,7 +355,7 @@ if (
       if (ev && ev.preventDefault) ev.preventDefault();
       if (!rec) return;
 
-      // 🔹 다른 입력에 포커스 있으면 먼저 blur (모바일 키보드 내리기)
+      // 다른 입력에 포커스 있으면 먼저 blur (모바일 키보드 내리기)
       if (document.activeElement && document.activeElement.blur) {
         document.activeElement.blur();
       }
@@ -513,5 +531,47 @@ if (
         guitarBtn.textContent = "🎵"; // 다시 기타 아이콘
       }
     });
+  }
+
+
+
+  updateCharButtonUI(currentCharNum);
+
+  function setChar(index) {
+    if (index === currentCharNum) {
+      console.log("같은 캐릭터라 스킵:", index);
+      return;
+    }
+    currentCharNum = index;
+    updateCharButtonUI(index);      // 버튼 색/상태 변경
+
+    // 클릭 사운드
+    playUiSound(1);
+
+    // TTS도 중지
+    if (synth) synth.cancel();
+
+    // 말풍선 완전히 닫기
+    if (duduLabel) {
+      duduLabel.style.display = "none";
+      duduLabel.textContent = "";
+    }
+
+    // 실제 3D 캐릭터 교체 (AR 모듈에서 정의)
+    if (typeof window.switchDuduCharacter === "function") {
+      window.switchDuduCharacter(index);
+    } else {
+      console.warn("switchDuduCharacter 가 아직 준비되지 않았습니다.");
+    }
+  }
+
+  if (char1Toggle) {
+    char1Toggle.addEventListener("click", () => setChar(0));
+  }
+  if (char2Toggle) {
+    char2Toggle.addEventListener("click", () => setChar(1));
+  }
+  if (char3Toggle) {
+    char3Toggle.addEventListener("click", () => setChar(2));
   }
 }

@@ -107,39 +107,49 @@
 
         <script>
           document.addEventListener("click", (e) => {
-          const a = e.target.closest("a[href]");
-          if (!a) return;
-          const href = a.getAttribute("href");
+            const a = e.target.closest("a[href]");
+            if (!a) return;
+            const href = a.getAttribute("href");
 
-          // webxr-samples/... 요청만 .html 요청
-          if (href.startsWith("webxr-samples/") && !href.endsWith(".html")) {
-            e.preventDefault();
-            window.location.href = href + ".html";
-          }
-        });
+            // webxr/... 요청만 .html 요청
+            if (href.startsWith("webxr/") && !href.endsWith(".html")) {
+              e.preventDefault();
+              window.location.href = href + ".html";
+            }
+
+            const b = e.target.closest("b[href_sample]");
+            if (!b) return;
+            const href_sample = b.getAttribute("href_sample");
+
+            // webxr-samples/... 요청만 .html 요청
+            if (href_sample.startsWith("webxr-samples/") && !href_sample.endsWith(".html")) {
+              e.preventDefault();
+              window.location.href_sample = href_sample + ".html";
+            }
+          });
 
           let pages = [
             { title: '두두 AR', category: 'AR Basics',
-              path: 'webxr-samples/hit-test.html',
+              path: 'webxr/ar-dudu.html',
               description: '두두 캐릭터를 AR로 불러와 상호작용해볼 수 있습니다.'},
 
             { title: '대구대학교 로드뷰 AR', category: 'AR Basics',
-              path: 'webxr-samples/hit-test-copy.html',
+              path: 'webxr/ar-dudu-copy.html',
               description: '두두와 대구대학교 캠퍼스를 AR로 둘러볼 수 있습니다.'},
 
             { tag: 'hr' },
             { tag: 'br' },
 
             { title: '샘플 캐릭터 1', category: 'Sample',
-              path: 'webxr-samples/hit-test.html',
+              path: 'webxr-samples/sample1.html',
               description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
 
             { title: '샘플 캐릭터 2', category: 'Sample',
-              path: 'webxr-samples/hit-test.html',
+              path: 'webxr-samples/sample2.html',
               description: '남자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
 
             { title: '샘플 캐릭터 3', category: 'Sample',
-              path: 'webxr-samples/hit-test.html',
+              path: 'webxr-samples/sample3.html',
               description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
 
             { tag: 'hr' },
@@ -187,7 +197,7 @@
             links.classList.add('links');
 
             let sourceLink = document.createElement('a');
-            sourceLink.href = 'https://github.com/immersive-web/webxr-samples/blob/main/' + page.path;
+            sourceLink.href = 'https://github.com/immersive-web/webxr/blob/main/' + page.path;
             sourceLink.textContent = '소스 코드';
             links.appendChild(sourceLink);
 

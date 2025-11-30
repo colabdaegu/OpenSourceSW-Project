@@ -55,6 +55,16 @@ app.get("/", (req, res) => {
 // docs 폴더는 /docs/... 로만 접근 가능
 app.use("/docs", express.static(path.join(__dirname, "docs")));
 
+// webxr 폴더는 /webxr/... 로만 접근 가능
+//app.use("/webxr", express.static(path.join(__dirname, "webxr")));
+app.get("/webxr/:page", (req, res, next) => {
+  const file = path.join(__dirname, "webxr", req.params.page + ".html");
+  if (fs.existsSync(file)) {
+    return res.sendFile(req.params.page + ".html", { root: path.join(__dirname, "webxr") });
+  }
+  next();
+});
+
 // webxr-samples 폴더는 /webxr-samples/... 로만 접근 가능
 //app.use("/webxr-samples", express.static(path.join(__dirname, "webxr-samples")));
 app.get("/webxr-samples/:page", (req, res, next) => {
