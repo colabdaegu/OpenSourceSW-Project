@@ -15,6 +15,9 @@ const client = new OpenAI({
 
 const app = express();
 
+
+app.use(express.static(path.join(__dirname)));
+
 // =======================
 // systemPrompt: 파일에서 읽어오기
 // =======================
@@ -43,12 +46,25 @@ try {
 // =======================
 
 // 1) /docs 폴더의 파일을 정적 서빙
-app.use(express.static("docs"));
-
-// 2) 루트(/) 접속 시 /docs/index.html 반환 (AR UI가 뜨게 됨)
+//app.use(express.static("docs"));
 app.get("/", (req, res) => {
-  return res.sendFile("index.html", { root: "docs" });
+  res.sendFile("index.html", { root: __dirname });
 });
+
+// docs 폴더는 /docs/... 로만 접근 가능
+app.use("/docs", express.static(path.join(__dirname, "docs")));
+
+// webxr-samples 폴더는 /webxr-samples/... 로만 접근 가능
+//app.use("/webxr-samples", express.static(path.join(__dirname, "webxr-samples")));
+app.get("/webxr-samples/:page", (req, res, next) => {
+  const file = path.join(__dirname, "webxr-samples", req.params.page + ".html");
+  if (fs.existsSync(file)) {
+    return res.sendFile(req.params.page + ".html", { root: path.join(__dirname, "webxr-samples") });
+  }
+  next();
+});
+
+
 
 // 그 외 미들웨어
 app.use(
@@ -105,7 +121,7 @@ app.post("/chat", async (req, res) => {
 // =======================
 // 서버 PORT 설정 + 실행 ✅
 // =======================
-const PORT = process.env.PORT || 8000;
+const PORT = 8000;
 app.listen(PORT, () => {
   console.log(`🚀 Local chat server running on port ${PORT}`);
   console.log(`🌐 ngrok 터널로 접속 후 AR 화면이 보이면 성공입니다!`);

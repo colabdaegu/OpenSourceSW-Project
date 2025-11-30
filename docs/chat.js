@@ -1,3 +1,10 @@
+if (
+  window.location.pathname.startsWith("/docs/") ||
+  window.location.pathname.startsWith("/webxr-samples/")
+) {
+  console.log("✅ Chat/AR page detected → chatbot script activated");
+
+
 // =======================
 // 설정 값
 // =======================
@@ -312,4 +319,5 @@ if (!SR) {
     listening = false;
     resetMicUI();
   };
+}
 }

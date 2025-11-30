@@ -106,13 +106,25 @@
       <main class='main' id='main'>
 
         <script>
+          document.addEventListener("click", (e) => {
+          const a = e.target.closest("a[href]");
+          if (!a) return;
+          const href = a.getAttribute("href");
+
+          // webxr-samples/... 요청만 .html을 붙인다
+          if (href.startsWith("webxr-samples/") && !href.endsWith(".html")) {
+            e.preventDefault();
+            window.location.href = href + ".html";
+          }
+        });
+
           let pages = [
             { title: '두두 AR', category: 'AR Basics',
               path: 'webxr-samples/hit-test.html',
               description: '두두 캐릭터를 AR로 불러와 상호작용해볼 수 있습니다.'},
 
             { title: '대구대학교 로드뷰 AR', category: 'AR Basics',
-              path: 'webxr-samples/hit-test.html',
+              path: 'webxr-samples/hit-test-copy.html',
               description: '두두와 대구대학교 캠퍼스를 AR로 둘러볼 수 있습니다.'},
 
             { tag: 'hr' },
@@ -129,6 +141,13 @@
             { title: '샘플 캐릭터 3', category: 'Sample',
               path: 'webxr-samples/hit-test.html',
               description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
+
+            { tag: 'hr' },
+            { tag: 'br' },
+
+            { title: 'Chat-Bot 테스트', category: 'Sample',
+              path: 'docs/index.html',
+              description: 'Chat-Bot 시스템을 테스트하는 샘플입니다.'},
           ];
 
           let mainElement = document.getElementById("main");
