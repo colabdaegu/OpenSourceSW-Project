@@ -111,7 +111,7 @@
           if (!a) return;
           const href = a.getAttribute("href");
 
-          // webxr-samples/... 요청만 .html을 붙인다
+          // webxr-samples/... 요청만 .html 요청
           if (href.startsWith("webxr-samples/") && !href.endsWith(".html")) {
             e.preventDefault();
             window.location.href = href + ".html";

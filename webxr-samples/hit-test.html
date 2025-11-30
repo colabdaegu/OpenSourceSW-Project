@@ -45,7 +45,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </header>
 
     <!-- 두두 머리 위에 띄울 텍스트 -->
-    <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요~</div>
+    <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
@@ -55,7 +55,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <style>
       #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn {
-        display: none; /* 🔥🔥🔥 AR 시작 이후에만 UI가 나타나게 하기 위함 🔥🔥🔥 */
+        display: none; 
       }
 
 
@@ -78,7 +78,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
     </style>
 
-    <!-- ✅ 아래 코드는 index.html에서 가져온 채팅 UI 그대로 유지됨 (기능, 위치 CSS는 이미 존재) -->
+
     <!-- ====== 채팅 UI ====== -->
     <!-- 대화 로그 영역 -->
     <div id="log"></div>
@@ -205,7 +205,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const MAX_DUDUS = 1;
       let dudus = [];
 
-      let currentDudu = null;   // 👈 현재 씬에 있는 두두 하나 기억
+      let currentDudu = null;   // 현재 씬에 있는 두두 하나 기억
 
       // Ensure the background is transparent for AR.
       scene.clear = false;
@@ -301,6 +301,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         xrHitTestSource = null;
         session.end();
 
+        // TTS 중단
+        if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
+          window.speechSynthesis.cancel();
+        }
+
         /* AR 종료 시 UI 숨김 */
 
         document.getElementById("log").style.display = "none";    
@@ -314,7 +319,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (listeningBtn) listeningBtn.style.display = "none";
         if (guitarBtn)    guitarBtn.style.display    = "none";
 
-        /* AR 종료되면 WebXRButton UI 복원 */
+        // AR 종료되면 WebXRButton UI 복원
         xrButton.domElement.style.display = 'inline-flex';
         document.getElementById('ui-box').style.display = 'block';
 
@@ -332,6 +337,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // WebXRButton 내부 상태 정리
         xrButton.setSession(null);
+
+        // TTS 중단
+        if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
+          window.speechSynthesis.cancel();
+        }
 
         // AR 오버레이(기타 버튼) 숨김
 
@@ -405,7 +415,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let rayDirection = vec3.create();
       function onSelect(event) {
         if (reticle.visible) {
-          // 🔹 최근에 UI를 탭했다면 이 select는 무시
+          // 최근에 UI를 탭했다면 이 select는 무시
           const now = performance.now();
           if (now - lastUiTapTime < UI_TAP_IGNORE_WINDOW) {
             // console.log('Ignoring XR select caused by UI tap');

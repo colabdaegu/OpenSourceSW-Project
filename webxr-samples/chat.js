@@ -3,6 +3,52 @@ if (
 ) {
   console.log("✅ Chat/AR page detected → chatbot script activated");
 
+  
+  // =======================
+  //  두두 TTS (Web Speech)
+  // =======================
+  const synth = window.speechSynthesis || null;
+  let duduVoice = null;
+
+  function pickKoreanVoice() {
+    if (!synth) return;
+    const voices = synth.getVoices();
+    // lang 이 ko 로 시작하는 음성 찾기
+    duduVoice =
+      voices.find(v => v.lang && v.lang.startsWith("ko")) ||
+      voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
+    console.log("🎙 선택된 두두 음성:", duduVoice?.name, duduVoice?.lang);
+  }
+
+  // 크롬은 비동기로 로드됨
+  if (synth) {
+    pickKoreanVoice();
+    synth.onvoiceschanged = pickKoreanVoice;
+  }
+
+  // listening / listeningOn 변수는 아래에서 이미 선언되니,
+  // 함수 안에서만 사용(호이스팅으로 접근 가능)
+  function speakDudu(text) {
+    if (!synth) return;          // 지원 안 하는 브라우저
+    if (typeof text !== "string" || !text.trim()) return;           // 입력되지 않음
+    if (typeof listeningOn !== "undefined" && !listeningOn) return; // 🔇 버튼으로 끔
+    if (typeof listening !== "undefined" && listening) return;      // 내가 말하는 동안은 읽지 않기
+
+    synth.cancel(); // 이전 말 끊기
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ko-KR";
+    if (duduVoice) utter.voice = duduVoice;
+
+    // 말투 세부 조절
+    utter.rate = 1.0;   // 말속도 (0.1 ~ 10)
+    utter.pitch = 1.05; // 톤
+    utter.volume = 1.0; // 볼륨
+
+    synth.speak(utter);
+  }
+
+
 
   // 공용 BGM 설정
   const SOUND_FILES = {
@@ -181,6 +227,11 @@ if (
 
       append("bot", reply);
 
+
+      // 두두가 말해주기
+      if (window.hasDuduPlaced && typeof speakDudu === "function") {
+        speakDudu(reply);
+      }
       
       // !!!!! 두두 머리 위 말풍선에도 같은 텍스트 표시
       if (duduLabel) {
@@ -235,10 +286,10 @@ if (
       const isHidden = logEl.style.display === "none";
 
       if (isHidden) {
-        // 👉 로그 보이기
+        // 로그 보이기
         logEl.style.display = "block";
       } else {
-        // 👉 로그 숨기기
+        // 로그 숨기기
         logEl.style.display = "none";
       }
     });
@@ -256,7 +307,7 @@ if (
   }
 
   // =======================
-  // 음성 인식: "토글 방식 + 말하는 대로 바로 입력"
+  // 음성 인식
   // =======================
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -333,7 +384,7 @@ if (
       }
     };
 
-    // 👉 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
+    // 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
     mic.addEventListener("pointerdown", (ev) => {
       // 마우스면 왼쪽 버튼만 허용
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
@@ -370,7 +421,7 @@ if (
 
       const combined = (finalText + " " + tempText).trim();
 
-      // 🔹 말하는 대로 바로 입력칸에 표시
+      // 말하는 대로 바로 입력칸에 표시
       msg.value = combined;
       // 경고) focus를 주지 않아야 모바일 키보드가 튀어나오지 않음
     };
@@ -406,6 +457,8 @@ if (
       listeningBtn.addEventListener("click", () => {
         // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
         if (listeningOn) {
+          synth.cancel();
+
           listeningBtn.textContent = "🔈";
           listeningOn = false;
           playUiSound(1);

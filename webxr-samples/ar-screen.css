@@ -106,7 +106,7 @@ canvas, .a-canvas{
   transform: scale(1.05);
 }
 
-/* 🔹 왼쪽 위: 채팅창 열기/닫기 버튼 (흰 동그라미 + 💬 이모지) */
+/* 왼쪽 위: 채팅창 열기/닫기 버튼 (흰 동그라미 + 💬 이모지) */
 .chat-toggle-btn {
   position: fixed;
   top: 40px;
@@ -138,7 +138,7 @@ canvas, .a-canvas{
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* 🔹 배경음악 버튼 */
+/* 배경음악 버튼 */
 .listening-btn {
   position: fixed;
   top: 120px;
@@ -171,7 +171,7 @@ canvas, .a-canvas{
 }
 
 
-/* 🔹 배경음악 버튼 */
+/* 배경음악 버튼 */
 .guitar-btn {
   position: fixed;
   top: 200px;
@@ -214,7 +214,7 @@ canvas, .a-canvas{
   display: none;
 }
 
-/* 🔸 오른쪽 위: '학과 소개' 플로팅 버튼 */
+/* 오른쪽 위: '학과 소개' 플로팅 버튼 */
 .floating-dept-btn {
   position: fixed;
   top: 12px;
