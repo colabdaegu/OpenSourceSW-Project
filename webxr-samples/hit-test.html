@@ -29,6 +29,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <link rel='icon' type='image/png' sizes='96x96' href='../favicon-96x96.png'>
     <link rel='stylesheet' href='../css/common.css'>
 
+    <link rel="stylesheet" href="ar-screen.css">
+
     <title>Hit Test</title>
   </head>
   <body>
@@ -117,6 +119,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
 
       function onSessionStarted(session) {
+        // 아래부터 기존 오픈소스 내용
         session.addEventListener('end', onSessionEnded);
         session.addEventListener('select', onSelect);
 

@@ -1,0 +1,178 @@
+/* 대화 로그 */
+#log{
+  position:fixed; left:0; right:0; bottom:64px;
+  max-height:40dvh; overflow:auto; -webkit-overflow-scrolling: touch;
+  background:rgba(0,0,0,.35); color:#fff; padding:8px;
+  font:14px/1.5 system-ui; z-index:9999;
+}
+#log p{ margin:.25rem 0 }
+
+/* 하단 채팅 바 */
+#chatbar{
+  position:fixed; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.55);
+  padding:8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  display:flex; gap:8px; align-items:center;
+  z-index:10000;
+  box-sizing:border-box;
+}
+
+/* 입력창 */
+#msg{
+  flex:1 1 auto;
+  min-width:0;
+  resize:none;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:8px 10px;
+  font:14px/1.4 system-ui;
+  max-height:80px;
+  overflow-y:auto;
+}
+
+/* 보내기/마이크 버튼 */
+#send, #mic{
+  flex:0 0 auto;
+  height:40px;
+  padding:0 14px;
+  border-radius:999px;
+  border:0;
+  cursor:pointer;
+  font:14px system-ui;
+}
+#send{
+  background:#19c37d;
+  color:#08110b;
+}
+#mic{
+  background:#2d7eff;
+  color:#fff;
+}
+
+/* A-Frame 씬 전체화면 */
+a-scene{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh !important; /* 100dvh → 100vh */
+}
+
+/* 캔버스도 전체화면 */
+canvas, .a-canvas{
+  width:100vw !important;
+  height:100vh !important;  /* 100dvh → 100vh */
+  display:block;
+}
+
+/* iOS용 높이 보정은 GitHub Pages에서는 비활성화 (100vh 그대로 사용) */
+
+
+/* 음성 모달 */
+.voicemodal{
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.6);
+  z-index:10000;
+}
+.voicemodal.hidden{ display:none; }
+
+.voicemodal .panel{
+  width:min(420px, 90vw);
+  background:#111827;
+  border-radius:16px;
+  padding:16px 18px 14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.7);
+}
+.voicemodal .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.voicemodal .header button{ background:transparent; color:#aaa; border:0; font-size:18px; cursor:pointer; }
+.voicemodal .status{ font:13px/1.4 system-ui; color:#7da6ff; margin:6px 0 8px; }
+.voicemodal textarea{
+  width:100%; border-radius:10px; border:1px solid #2a2d37; background:#0b0c0f; color:#fff; padding:10px;
+}
+.voicemodal .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px; }
+.voicemodal .actions button{
+  height:36px; padding:0 12px; border-radius:10px; border:0; cursor:pointer;
+}
+#voiceStart{ background:#2d7eff; color:#fff; }
+#voiceStop{ background:#444; color:#fff; }
+#voiceApply{ background:#19c37d; color:#08120d; }
+
+/* 말하는 중일 때 마이크 버튼이 살짝 강조 */
+#mic.recording{
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+/* 🔹 왼쪽 위: 채팅창 열기/닫기 버튼 (흰 동그라미 + 💬 이모지) */
+.chat-toggle-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 26px;   /* 💬 크기 */
+  line-height: 1;
+  color: #222222;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  outline: none;
+}
+
+.chat-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+
+
+
+/* 대화 로그만 숨기기 (입력창은 그대로) */
+.chat-log-hidden #log {
+  display: none;
+}
+
+/* 🔸 오른쪽 위: '학과 소개' 플로팅 버튼 */
+.floating-dept-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1001;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #2ecc71;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+.floating-dept-btn:active,
+.chat-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.floating-dept-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
