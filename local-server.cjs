@@ -22,8 +22,15 @@ app.use(express.static(path.join(__dirname)));
 // =======================
 
 const promptPath = path.join(__dirname, "media", "prompt", "dudu-system-prompt.txt");
-
-let systemPrompt = "";
+let systemPrompt = [
+  systemPrompt,    // 기존 dudu-system-prompt.txt 내용
+  "\n\n",
+  "===== [단과대학 기본 정보] =====\n",
+  collegeInfo,
+  "\n\n",
+  "===== [학과 기본 정보] =====\n",
+  deptInfo
+].join("");
 try {
   systemPrompt = fs.readFileSync(promptPath, "utf8");
   console.log("✅ systemPrompt loaded from:", promptPath);
@@ -40,6 +47,22 @@ try {
     "사용자가 AR로 인식한 대상(건물/장소/마커 이름)이 문장에 들어오면, 그 대상을 중심으로 설명해.",
     "답변할 때 이모지 절대 넣지마. 답변할 때 이모지 절대 넣지마.",
   ].join("\n");
+}
+
+const deptInfoPath = path.join(__dirname, "media", "prompt", "dept-info.txt");
+let deptInfo = "";
+try {
+  deptInfo = fs.readFileSync(deptInfoPath, "utf8");
+} catch (err) {
+  console.error("⚠️ dept-info.txt 읽기 실패:", err.message);
+}
+
+const collegeInfoPath = path.join(__dirname, "media", "prompt", "college-info.txt");
+let collegeInfo = "";
+try {
+  collegeInfo = fs.readFileSync(collegeInfoPath, "utf8");
+} catch (err) {
+  console.error("⚠️ college-info.txt 읽기 실패:", err.message);
 }
 
 // =======================

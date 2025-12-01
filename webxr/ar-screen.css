@@ -77,10 +77,10 @@ canvas, .a-canvas{
 
 
 
-/* 왼쪽 위: 채팅창 열기/닫기 버튼 (흰 동그라미 + 💬 이모지) */
+/* 왼쪽 위: 채팅창 열기/닫기 버튼 */
 .chat-toggle-btn {
   position: fixed;
-  top: 140px;
+  top: calc(50% - 160px); 
   left: 20px;
   z-index: 9999;
 
@@ -95,7 +95,7 @@ canvas, .a-canvas{
   align-items: center;
   justify-content: center;
 
-  font-size: 26px;   /* 💬 크기 */
+  font-size: 26px; 
   line-height: 1;
   color: #222222;
 
@@ -112,7 +112,7 @@ canvas, .a-canvas{
 /* TTS 음성 버튼 */
 .listening-btn {
   position: fixed;
-  top: 230px;
+  top: calc(50% - 30px); 
   left: 20px;
   z-index: 9999;
 
@@ -127,7 +127,7 @@ canvas, .a-canvas{
   align-items: center;
   justify-content: center;
 
-  font-size: 26px;   /* 💬 크기 */
+  font-size: 26px;   
   line-height: 1;
   color: #222222;
 
@@ -145,7 +145,7 @@ canvas, .a-canvas{
 /* 배경음악 버튼 */
 .guitar-btn {
   position: fixed;
-  top: 320px;
+  top: calc(50% + 100px); 
   left: 20px;
   z-index: 9999;
 
@@ -160,7 +160,7 @@ canvas, .a-canvas{
   align-items: center;
   justify-content: center;
 
-  font-size: 26px;   /* 💬 크기 */
+  font-size: 26px;  
   line-height: 1;
   color: #222222;
 
@@ -176,7 +176,7 @@ canvas, .a-canvas{
 
 .char-toggle-group {
   position: fixed;
-  top: 40px;
+  top: 105px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
@@ -199,8 +199,8 @@ canvas, .a-canvas{
   position: relative;
   flex: 1 1 auto;
 
-  min-width: 70px;       /* 더 넓게 */
-  height: 52px;          /* 60px 캡슐 안에 자연스럽게 들어감 */
+  min-width: 66px;      
+  height: 52px;        
   padding: 0 22px;
 
   border: none;
@@ -255,6 +255,71 @@ canvas, .a-canvas{
 .chat-log-hidden #log {
   display: none;
 }
+
+
+
+
+/* 공통: 오른쪽 책갈피형 버튼 베이스 */
+.college-description-btn,
+.department-description-btn {
+  position: fixed;
+  right: -170px;
+  z-index: 9999;
+
+  /* 책갈피 느낌 나는 가로 긴 버튼 */
+  min-width: 150px;
+  height: 46px;
+  padding: 0 18px 0 20px;
+
+  border: 3px solid #000000;
+  border-radius: 999px 12px 12px 999px;
+
+  background: #8A2BE2;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  outline: none;
+
+  transition: right 0.25s ease-out;
+}
+
+/* 살짝 떠있는 느낌 + 호버 */
+.college-description-btn:hover,
+.department-description-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+
+  background: #9b3ff0; /* 호버 시 약간 밝게 */
+}
+
+/* 눌릴 때 */
+.college-description-btn:active,
+.department-description-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+
+  background: #7726c2; /* 클릭 시 약간 어둡게 */
+}
+
+/* 위/아래 위치만 각각 다르게 */
+.college-description-btn {
+  top: 200px;
+}
+
+.department-description-btn {
+  top: 270px;
+}
+
+
 
 /* 오른쪽 위: '학과 소개' 플로팅 버튼 */
 .floating-dept-btn {

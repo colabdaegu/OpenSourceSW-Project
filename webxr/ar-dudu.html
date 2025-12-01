@@ -70,8 +70,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </button>
     </div>
 
+    <button id="collegeDescriptionBtn" class="college-description-btn" type="button">🏫　　IT·공과대학에 대해서 </button>
+    <button id="departmentDescriptionBtn" class="department-description-btn" type="button">📚 　 컴퓨터소프트웨어 소개</button>
+
     <style>
-      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, .char-toggle-group {
+      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn,
+       .char-toggle-group {
         display: none; 
       }
 
@@ -168,7 +172,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle';
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn';
+      
 
       window.addEventListener('pointerdown', (ev) => {
         const target = ev.target;
@@ -360,6 +365,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
+        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+
         if (chatToggle)   chatToggle.style.display   = "block";
         if (listeningBtn) listeningBtn.style.display = "block";
         if (guitarBtn)    guitarBtn.style.display    = "block";
@@ -368,7 +376,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char1Toggle)    char1Toggle.style.display    = "block";
         if (char2Toggle)    char2Toggle.style.display    = "block";
         if (char3Toggle)    char3Toggle.style.display    = "block";
+
+        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "block";
+        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "block";
       }
+
+      
 
       function onEndSession(session) {
         xrHitTestSource.cancel();
@@ -389,6 +402,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
 
+        const char1Toggle = document.getElementById("char1Toggle");
+        const char2Toggle = document.getElementById("char2Toggle");
+        const char3Toggle = document.getElementById("char3Toggle");
+
+        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+
         if (chatToggle)   chatToggle.style.display   = "none";
         if (listeningBtn) listeningBtn.style.display = "none";
         if (guitarBtn)    guitarBtn.style.display    = "none";
@@ -397,6 +417,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char1Toggle)    char1Toggle.style.display    = "none";
         if (char2Toggle)    char2Toggle.style.display    = "none";
         if (char3Toggle)    char3Toggle.style.display    = "none";
+
+        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "none";
+        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "none";
+
+        // 배경음악 중단
+        if (window.duBgm) {
+          try {
+            window.duBgm.pause();
+            window.duBgm.currentTime = 0;
+          } catch (e) {
+            console.warn("BGM stop error:", e);
+          }
+        }
+        const guitarBtnEl = document.getElementById("guitarBtn");
+        if (guitarBtnEl) {
+          guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
+        }
 
         // AR 종료되면 WebXRButton UI 복원
         xrButton.domElement.style.display = 'inline-flex';
@@ -422,8 +459,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           window.speechSynthesis.cancel();
         }
 
-        // AR 오버레이(기타 버튼) 숨김
-
+        // 배경음악 중단
+        if (window.duBgm) {
+          try {
+            window.duBgm.pause();
+            window.duBgm.currentTime = 0;
+          } catch (e) {
+            console.warn("BGM stop error:", e);
+          }
+        }
+        const guitarBtnEl = document.getElementById("guitarBtn");
+        if (guitarBtnEl) {
+          guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
+        }
 
         // 채팅창 제거
         const log = document.getElementById("log");
@@ -436,6 +484,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
+        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";
         if (chatToggle)  chatToggle.style.display  = "none";
@@ -446,6 +497,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char1Toggle)   char1Toggle.style.display   = "none";
         if (char2Toggle)   char2Toggle.style.display   = "none";
         if (char3Toggle)   char3Toggle.style.display   = "none";
+
+        if (collegeDescriptionBtn)   collegeDescriptionBtn.style.display   = "none";
+        if (departmentDescriptionBtn)   departmentDescriptionBtn.style.display   = "none";
 
         // 위에 설명 박스 다시 보이게
         document.getElementById('ui-box').style.display = 'block';

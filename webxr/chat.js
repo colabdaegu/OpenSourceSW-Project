@@ -47,7 +47,6 @@ if (
   }
 
 
-
   // 공용 BGM 설정
   const SOUND_FILES = {
     1: "../media/sound/click.ogg",   // 기본 클릭음
@@ -87,10 +86,15 @@ if (
   const MAX_LOG_MESSAGES = 6;
 
   // 학과 소개 버튼이 보낼 숨겨진 질문
-  //  '3줄 정도' 부분을 '2줄 정도', '4줄 정도' 등으로 바꾸면 길이 조절 가능
+  // IT·공과대학 소개 요약 요청용 프롬프트 (2~3줄)
+  const COLLEGE_SUMMARY_PROMPT =
+  "대구대학교 IT·공과대학에 대해 1~3문장 정도로 아주 짧게 요약해서 소개해줘.\n\n"
+  + "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+
+  // 컴퓨터소프트웨어전공 요약 요청 프롬프트 (2~3줄)
   const DEPT_SUMMARY_PROMPT =
-    "대구대학교 컴퓨터정보공학부 컴퓨터소프트웨어전공에 대해 2줄 정도로 짧게 소개해줘. " +
-    "무엇을 배우는 학과인지와 졸업 후 진로를 중심으로 설명해줘.";
+  "컴퓨터소프트웨어전공에 대해 1~3문장 정도로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n"
+  + "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
   // =======================
   // DOM 요소 가져오기
@@ -110,6 +114,9 @@ if (
   const char2Toggle = document.getElementById("char2Toggle");
   const char3Toggle = document.getElementById("char3Toggle");
   const charButtons = [char1Toggle, char2Toggle, char3Toggle];
+
+  const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+  const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
 
   // 어떤 버튼이 선택됐는지 UI 반영
   function updateCharButtonUI(activeIndex) {
@@ -495,6 +502,8 @@ if (
   const bgm = new Audio();
   bgm.loop = true; // 계속 반복 재생
 
+  window.duBgm = bgm;
+
   // 재생 가능한 기타 사운드 목록
   const backgroundMusics = [
     "../media/sound/guitar.ogg",
@@ -574,4 +583,76 @@ if (
   if (char3Toggle) {
     char3Toggle.addEventListener("click", () => setChar(2));
   }
+
+
+// 상태 & 타이머 ID
+let collegeBtnOpened = false;
+let deptBtnOpened = false;
+let collegeBtnTimeoutId = null;
+let deptBtnTimeoutId = null;
+
+// 5초 후 자동으로 숨기는 함수들
+function scheduleHideCollegeBtn() {
+  if (collegeBtnTimeoutId) clearTimeout(collegeBtnTimeoutId);
+  collegeBtnTimeoutId = setTimeout(() => {
+    collegeBtnOpened = false;
+    if (collegeDescriptionBtn) {
+      collegeDescriptionBtn.style.right = "-170px";  // 다시 숨기기
+    }
+  }, 3000); // 3초
+}
+
+function scheduleHideDeptBtn() {
+  if (deptBtnTimeoutId) clearTimeout(deptBtnTimeoutId);
+  deptBtnTimeoutId = setTimeout(() => {
+    deptBtnOpened = false;
+    if (departmentDescriptionBtn) {
+      departmentDescriptionBtn.style.right = "-170px";
+    }
+  }, 3000);
+}
+
+// 단대 소개 버튼
+if (collegeDescriptionBtn) {
+  collegeDescriptionBtn.addEventListener("click", () => {
+    // 아직 안 열렸으면 → 슬라이드 아웃만 하고 타이머 시작
+    if (!collegeBtnOpened) {
+      collegeBtnOpened = true;
+      collegeDescriptionBtn.style.right = "-10px";   // 화면 안쪽으로
+      scheduleHideCollegeBtn();                     // 3초 뒤 자동 복귀
+      return;
+    }
+
+
+    playUiSound(2);
+    scheduleHideCollegeBtn();
+
+    // AI 호출 추가
+    sendMessage(COLLEGE_SUMMARY_PROMPT, {
+      skipUserLog: true,
+      ignoreARTarget: true,
+    });
+  });
+}
+
+// 학과 소개 버튼
+if (departmentDescriptionBtn) {
+  departmentDescriptionBtn.addEventListener("click", () => {
+    if (!deptBtnOpened) {
+      deptBtnOpened = true;
+      departmentDescriptionBtn.style.right = "-10px";
+      scheduleHideDeptBtn();
+      return;
+    }
+
+    playUiSound(2);
+    scheduleHideDeptBtn();
+
+    // AI 호출 추가
+    sendMessage(DEPT_SUMMARY_PROMPT, {
+      skipUserLog: true,
+      ignoreARTarget: true,
+    });
+  });
+}
 }
