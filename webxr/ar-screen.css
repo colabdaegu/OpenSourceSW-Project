@@ -1,0 +1,350 @@
+/* 대화 로그 */
+#log{
+  position:fixed; left:0; right:0; bottom:64px;
+  max-height:40dvh; overflow:auto; -webkit-overflow-scrolling: touch;
+  background:rgba(0,0,0,.35); color:#fff; padding:8px;
+  font:14px/1.5 system-ui; z-index:9999;
+}
+#log p{ margin:.25rem 0 }
+
+/* 하단 채팅 바 */
+#chatbar{
+  position:fixed; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.55);
+  padding:8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  display:flex; gap:8px; align-items:center;
+  z-index:10000;
+  box-sizing:border-box;
+}
+
+/* 입력창 */
+#msg{
+  flex:1 1 auto;
+  min-width:0;
+  resize:none;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:8px 10px;
+  font:14px/1.4 system-ui;
+  max-height:80px;
+  overflow-y:auto;
+}
+
+/* 보내기/마이크 버튼 */
+#send, #mic{
+  flex:0 0 auto;
+  height:40px;
+  padding:0 14px;
+  border-radius:999px;
+  border:0;
+  cursor:pointer;
+  font:14px system-ui;
+}
+#send{
+  background:#19c37d;
+  color:#08110b;
+}
+#mic{
+  background:#2d7eff;
+  color:#fff;
+}
+
+/* A-Frame 씬 전체화면 */
+a-scene{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh !important; /* 100dvh → 100vh */
+}
+
+/* 캔버스도 전체화면 */
+canvas, .a-canvas{
+  width:100vw !important;
+  height:100vh !important;  /* 100dvh → 100vh */
+  display:block;
+}
+
+
+/* 말하는 중일 때 마이크 버튼이 살짝 강조 */
+#mic.recording{
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+
+
+
+/* 왼쪽 위: 채팅창 열기/닫기 버튼 */
+.chat-toggle-btn {
+  position: fixed;
+  top: calc(50% - 160px); 
+  left: 20px;
+  z-index: 9999;
+
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 26px; 
+  line-height: 1;
+  color: #222222;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  outline: none;
+}
+
+.chat-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* TTS 음성 버튼 */
+.listening-btn {
+  position: fixed;
+  top: calc(50% - 30px); 
+  left: 20px;
+  z-index: 9999;
+
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 26px;   
+  line-height: 1;
+  color: #222222;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  outline: none;
+}
+
+.listening-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+
+/* 배경음악 버튼 */
+.guitar-btn {
+  position: fixed;
+  top: calc(50% + 100px); 
+  left: 20px;
+  z-index: 9999;
+
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+
+  background: #cfcccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 26px;  
+  line-height: 1;
+  color: #222222;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  outline: none;
+}
+
+.guitar-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.char-toggle-group {
+  position: fixed;
+  top: 105px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 4px;
+  height: 60px; /* 커다란 바깥 캡슐 높이 */
+
+  background: rgba(0, 0, 0, 0.30);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+
+
+/* 개별 세그먼트 버튼(더 큼) */
+.char-toggle-btn {
+  position: relative;
+  flex: 1 1 auto;
+
+  min-width: 66px;      
+  height: 52px;        
+  padding: 0 22px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: transparent;
+  color: #444;
+  font-size: 24px;       /* 크게 */
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  outline: none;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+/* 세그먼트 사이 세로 구분선 (더 길고 비율 유지) */
+.char-toggle-btn + .char-toggle-btn::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;     /* 높이 자동 조정 → 60px 버전에 맞게 */
+  width: 2px;      /* 두께 증가 */
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* 클릭 시 살짝 눌림 */
+.char-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+/* 선택된 버튼 */
+.char-toggle-btn.is-active {
+  background: #ffffff;
+  color: #111;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+
+
+
+/* 대화 로그만 숨기기 (입력창은 그대로) */
+.chat-log-hidden #log {
+  display: none;
+}
+
+
+
+
+/* 공통: 오른쪽 책갈피형 버튼 베이스 */
+.college-description-btn,
+.department-description-btn {
+  position: fixed;
+  right: -170px;
+  z-index: 9999;
+
+  /* 책갈피 느낌 나는 가로 긴 버튼 */
+  min-width: 150px;
+  height: 46px;
+  padding: 0 18px 0 20px;
+
+  border: 3px solid #000000;
+  border-radius: 999px 12px 12px 999px;
+
+  background: #8A2BE2;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  outline: none;
+
+  transition: right 0.25s ease-out;
+}
+
+/* 살짝 떠있는 느낌 + 호버 */
+.college-description-btn:hover,
+.department-description-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+
+  background: #9b3ff0; /* 호버 시 약간 밝게 */
+}
+
+/* 눌릴 때 */
+.college-description-btn:active,
+.department-description-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+
+  background: #7726c2; /* 클릭 시 약간 어둡게 */
+}
+
+/* 위/아래 위치만 각각 다르게 */
+.college-description-btn {
+  top: 200px;
+}
+
+.department-description-btn {
+  top: 270px;
+}
+
+
+
+/* 오른쪽 위: '학과 소개' 플로팅 버튼 */
+.floating-dept-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1001;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #2ecc71;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+.floating-dept-btn:active,
+.chat-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.floating-dept-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}

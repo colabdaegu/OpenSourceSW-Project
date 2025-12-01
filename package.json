@@ -1,0 +1,23 @@
+{
+  "name": "arjs-ar-chatbot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx live-server apps/web --port=5173",
+    "server": "node server.js",
+    "format": "prettier -w .",
+    "lint": "eslint \"apps/web/**/*.{js,html}\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.13.0",
+    "eslint-plugin-html": "^8.1.2",
+    "live-server": "^1.2.2",
+    "prettier": "^3.3.3"
+  }
+}

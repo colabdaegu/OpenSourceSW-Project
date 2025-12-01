@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='chrome=1'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <meta name='mobile-web-app-capable' content='yes'>
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+
+    <meta name='twitter:card' content='summary'>
+    <meta name='twitter:title' content='WebXR Samples'>
+    <meta name='twitter:description' content='Sample WebXR pages for testing and reference'>
+
+    <link rel='icon' type='image/png' sizes='32x32' href='favicon-32x32.png'>
+    <link rel='icon' type='image/png' sizes='96x96' href='favicon-96x96.png'>
+
+    <link rel='stylesheet' href='css/stylesheet.css'>
+    <link rel='stylesheet' href='css/pygment_trac.css'>
+
+    <style>
+      article {
+        position: relative;
+        padding: 0.5em;
+        background-color: rgba(255, 255, 255, 0.90);
+        margin-bottom: 1em;
+        border-radius: 3px;
+      }
+
+      article h3 {
+        font-size: 1.0em;
+        margin-top: 0px;
+        margin-bottom: 0px;
+      }
+
+      article h3::before {
+        display: inline-block;
+        content: attr(data-index) ' - ';
+        font-weight: bold;
+        white-space: nowrap;
+        margin-right: 0.2em;
+      }
+
+      article h4 {
+        position: absolute;
+        right: 0.5em;
+        top: 0.5em;
+        margin-top: 0px;
+        margin-bottom: 0px;
+      }
+
+      article p {
+        margin: 0.5em;
+      }
+
+      article .links {
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+      }
+
+      article a {
+        display: inline-block;
+      }
+
+      article a:not(:first-child)::before {
+        display: inline-block;
+        content: '•';
+        font-weight: bold;
+        white-space: nowrap;
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+      }
+
+      .github-link {
+        font-size: 0.8em;
+      }
+
+      .wordmark img {
+        width: 95%;
+      }
+    </style>
+
+    <!--[if lt IE 9]>
+    <script src='https://html5shiv.googlecode.com/svn/trunk/html5.js'></script>
+    <![endif]-->
+    <title>WebXR - Samples</title>
+  </head>
+  <body>
+
+    <div class='container' id='container'>
+      <header class='header'>
+        <div id='nav'>
+            <a href='./' class='selected'>AR Menu</a>
+            <a href='https://github.com/colabdaegu/OpenSourceSW-Project' target="_blank">OSS</a>
+            <a href='https://github.com/immersive-web/webxr-samples' target="_blank">WebXR</a>
+            <a href='https://daegu.ac.kr/main' target="_blank">DAEGU UNIV</a>
+        </div>
+
+        <h1>
+          <a href='' class='wordmark'>
+            <img src='media/logo/d-logo.png' alt='WebXR Logo'/>
+          </a>
+        </h1>
+        <h2 class='tagline'>Team OpenAR ㅡ 김현수, 이재훈</h2>
+      </header>
+
+      <main class='main' id='main'>
+
+        <script>
+          document.addEventListener("click", (e) => {
+            const a = e.target.closest("a[href]");
+            if (!a) return;
+            const href = a.getAttribute("href");
+
+            // webxr/... 요청만 .html 요청
+            if (href.startsWith("webxr/") && !href.endsWith(".html")) {
+              e.preventDefault();
+              window.location.href = href + ".html";
+            }
+
+            const b = e.target.closest("b[href_sample]");
+            if (!b) return;
+            const href_sample = b.getAttribute("href_sample");
+
+            // webxr-samples/... 요청만 .html 요청
+            if (href_sample.startsWith("webxr-samples/") && !href_sample.endsWith(".html")) {
+              e.preventDefault();
+              window.location.href_sample = href_sample + ".html";
+            }
+          });
+
+          let pages = [
+            { title: '두두 AR', category: 'AR Basics',
+              path: 'webxr/ar-dudu.html',
+              description: '두두 캐릭터를 AR로 불러와 상호작용해볼 수 있습니다.'},
+
+            { title: '대구대학교 로드뷰 AR', category: 'AR Basics',
+              path: 'webxr/ar-dudu-copy.html',
+              description: '두두와 대구대학교 캠퍼스를 AR로 둘러볼 수 있습니다.'},
+
+            { tag: 'hr' },
+            { tag: 'br' },
+
+            { title: '샘플 캐릭터 1', category: 'Sample',
+              path: 'webxr-samples/sample1.html',
+              description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
+
+            { title: '샘플 캐릭터 2', category: 'Sample',
+              path: 'webxr-samples/sample2.html',
+              description: '남자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
+
+            { title: '샘플 캐릭터 3', category: 'Sample',
+              path: 'webxr-samples/sample3.html',
+              description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
+
+            { tag: 'hr' },
+            { tag: 'br' },
+
+            { title: 'Chat-Bot 테스트', category: 'Sample',
+              path: 'docs/index.html',
+              description: 'Chat-Bot 시스템을 테스트하는 샘플입니다.'},
+          ];
+
+          let mainElement = document.getElementById("main");
+
+          // Append an element for every item in the pages list.
+          let pageIndex = 0;
+          for (var i = 0; i < pages.length; ++i) {
+            var page = pages[i];
+
+            if (page.tag) {
+              mainElement.appendChild(document.createElement(page.tag));
+              continue;
+            } else {
+              pageIndex++;
+            }
+
+            let article = document.createElement('article');
+
+            let title = document.createElement('h3');
+            title.setAttribute('data-index', pageIndex);
+
+            let titleLink = document.createElement('a');
+            titleLink.href = page.path;
+            titleLink.textContent = page.title;
+            title.appendChild(titleLink);
+            article.appendChild(title);
+
+            let category = document.createElement('h4');
+            category.textContent = page.category;
+            article.appendChild(category);
+
+            let description = document.createElement('p');
+            description.textContent = page.description;
+            article.appendChild(description);
+
+            let links = document.createElement('div');
+            links.classList.add('links');
+
+            let sourceLink = document.createElement('a');
+            sourceLink.href = 'https://github.com/immersive-web/webxr/blob/main/' + page.path;
+            sourceLink.textContent = '소스 코드';
+            links.appendChild(sourceLink);
+
+            if (!page.noPolyfill) {
+              let polyfillLink = document.createElement('a');
+              polyfillLink.href = page.path + '?usePolyfill=0';
+              polyfillLink.textContent = '플레이';
+              links.appendChild(polyfillLink);
+            }
+
+            article.appendChild(links);
+
+            mainElement.appendChild(article);
+          }
+        </script>
+      </main>
+
+      <p>이 샘플에서 사용된 3D 모델들은 <a href="https://poly.google.com">Poly</a>에서 제공되었으며, 많은 모델들은 <a href="https://vr.google.com/blocks/">Blocks</a>에서 제작되었습니다.<br/>
+      모델은 <a href="https://www.khronos.org/gltf/">glTF 2.0 포맷</a>으로 저장 및 불러오고 있습니다.<br/>
+      원작 모델의 출처 정보는 <a href="https://github.com/immersive-web/webxr-samples/tree/main/media/gltf">media/gltf</a>에서 확인할 수 있습니다.</p>
+
+      <h3><a class='github-link' href='https://github.com/colabdaegu/OpenSourceSW-Project'>View samples source on GitHub</a></h3>
+
+      <footer class='footer'>
+      </footer>
+    </div>
+  </body>
+</html>
