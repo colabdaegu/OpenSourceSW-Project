@@ -117,7 +117,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </div>
 
     
-
+    <script src="/ngrok-address.js"></script>
     <script src="chat.js"></script>
 
 
@@ -525,10 +525,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // specified transform.
       function addARObjectAt(matrix) {
         arObject.visible = true;
-        arObject.matrix = matrix;
-        currentDudu = arObject;
 
-        // 필요하면 배열에 한 번만 넣어둠 (거의 의미 없음)
+        // matrix 복사
+        const m = mat4.clone(matrix);
+
+        /** Y축으로 아래로 내리기 (값 조절 포인트) **/
+        mat4.translate(m, m, [0, 0.4, 0]);
+
+        arObject.matrix = m;
+        currentDudu = arObject;
+      
+
+        // 필요하면 배열에 한 번만 넣어둠
         if (!dudus.includes(arObject)) {
           dudus.push(arObject);
         }
