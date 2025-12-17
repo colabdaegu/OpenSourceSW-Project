@@ -4,7 +4,21 @@
 > OpenAr : DU AR-CHAT
 
 ----------------------
-# 사용 절차 (https://nobeoka.tistory.com/4)
+# 주요 경로 설명
+- `api/chatApi.js` — (초안 / 더미) LLM 오케스트레이터
+- `docs/` — Chat-Bot 테스트의 디렉터리
+- `js/` — WebXR용 모듈
+- `media/gltf/` — 3D 모델 리소스
+- `media/prompt/` — 챗봇 프롬프트
+- `webxr/` — 두두 챗봇 AR의 디렉터리 [메인]
+- `webxr-samples/` — 샘플 캐릭터 AR의 디렉터리
+- `index.html` — 엔트리 포인트
+- `local-server.cjs` — 백엔드 중앙 관리
+- `ngrok-address.js` — ngrok 서버 지정
+- `.env` — API 환경 변수
+
+----------------------
+# 개발 환경 세팅 (https://nobeoka.tistory.com/4)
 ## 1. 파일의 루트 경로에 node_modules 폴더와 .env 환경 변수 넣기
 깃에 안 올라가는 파일들에 대해서는 임포트 후에 따로 다운받으셔서 직접 넣으셔야 합니다.
 > https://drive.google.com/drive/folders/1O1sjO2N-USdTWfs3iXuIPip0aDR3Nki5?usp=sharing 
