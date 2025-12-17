@@ -161,5 +161,4 @@ app.post("/chat", async (req, res) => {
 const PORT = 8000;
 app.listen(PORT, () => {
   console.log(`🚀 Local chat server running on port ${PORT}`);
-  console.log(`🌐 ngrok 터널로 접속 후 AR 화면이 보이면 성공입니다!`);
 });

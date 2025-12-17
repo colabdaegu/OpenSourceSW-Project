@@ -587,74 +587,74 @@ if (
   }
 
 
-// 상태 & 타이머 ID
-let collegeBtnOpened = false;
-let deptBtnOpened = false;
-let collegeBtnTimeoutId = null;
-let deptBtnTimeoutId = null;
+  // 상태 & 타이머 ID
+  let collegeBtnOpened = false;
+  let deptBtnOpened = false;
+  let collegeBtnTimeoutId = null;
+  let deptBtnTimeoutId = null;
 
-// 5초 후 자동으로 숨기는 함수들
-function scheduleHideCollegeBtn() {
-  if (collegeBtnTimeoutId) clearTimeout(collegeBtnTimeoutId);
-  collegeBtnTimeoutId = setTimeout(() => {
-    collegeBtnOpened = false;
-    if (collegeDescriptionBtn) {
-      collegeDescriptionBtn.style.right = "-170px";  // 다시 숨기기
-    }
-  }, 3000); // 3초
-}
+  // 5초 후 자동으로 숨기는 함수들
+  function scheduleHideCollegeBtn() {
+    if (collegeBtnTimeoutId) clearTimeout(collegeBtnTimeoutId);
+    collegeBtnTimeoutId = setTimeout(() => {
+      collegeBtnOpened = false;
+      if (collegeDescriptionBtn) {
+        collegeDescriptionBtn.style.right = "-170px";  // 다시 숨기기
+      }
+    }, 3000); // 3초
+  }
 
-function scheduleHideDeptBtn() {
-  if (deptBtnTimeoutId) clearTimeout(deptBtnTimeoutId);
-  deptBtnTimeoutId = setTimeout(() => {
-    deptBtnOpened = false;
-    if (departmentDescriptionBtn) {
-      departmentDescriptionBtn.style.right = "-170px";
-    }
-  }, 3000);
-}
+  function scheduleHideDeptBtn() {
+    if (deptBtnTimeoutId) clearTimeout(deptBtnTimeoutId);
+    deptBtnTimeoutId = setTimeout(() => {
+      deptBtnOpened = false;
+      if (departmentDescriptionBtn) {
+        departmentDescriptionBtn.style.right = "-170px";
+      }
+    }, 3000);
+  }
 
-// 단대 소개 버튼
-if (collegeDescriptionBtn) {
-  collegeDescriptionBtn.addEventListener("click", () => {
-    // 아직 안 열렸으면 → 슬라이드 아웃만 하고 타이머 시작
-    if (!collegeBtnOpened) {
-      collegeBtnOpened = true;
-      collegeDescriptionBtn.style.right = "-10px";   // 화면 안쪽으로
-      scheduleHideCollegeBtn();                     // 3초 뒤 자동 복귀
-      return;
-    }
+  // 단대 소개 버튼
+  if (collegeDescriptionBtn) {
+    collegeDescriptionBtn.addEventListener("click", () => {
+      // 아직 안 열렸으면 → 슬라이드 아웃만 하고 타이머 시작
+      if (!collegeBtnOpened) {
+        collegeBtnOpened = true;
+        collegeDescriptionBtn.style.right = "-10px";   // 화면 안쪽으로
+        scheduleHideCollegeBtn();                     // 3초 뒤 자동 복귀
+        return;
+      }
 
 
-    playUiSound(2);
-    scheduleHideCollegeBtn();
+      playUiSound(2);
+      scheduleHideCollegeBtn();
 
-    // AI 호출 추가
-    sendMessage(COLLEGE_SUMMARY_PROMPT, {
-      skipUserLog: true,
-      ignoreARTarget: true,
+      // AI 호출 추가
+      sendMessage(COLLEGE_SUMMARY_PROMPT, {
+        skipUserLog: true,
+        ignoreARTarget: true,
+      });
     });
-  });
-}
+  }
 
-// 학과 소개 버튼
-if (departmentDescriptionBtn) {
-  departmentDescriptionBtn.addEventListener("click", () => {
-    if (!deptBtnOpened) {
-      deptBtnOpened = true;
-      departmentDescriptionBtn.style.right = "-10px";
+  // 학과 소개 버튼
+  if (departmentDescriptionBtn) {
+    departmentDescriptionBtn.addEventListener("click", () => {
+      if (!deptBtnOpened) {
+        deptBtnOpened = true;
+        departmentDescriptionBtn.style.right = "-10px";
+        scheduleHideDeptBtn();
+        return;
+      }
+
+      playUiSound(2);
       scheduleHideDeptBtn();
-      return;
-    }
 
-    playUiSound(2);
-    scheduleHideDeptBtn();
-
-    // AI 호출 추가
-    sendMessage(DEPT_SUMMARY_PROMPT, {
-      skipUserLog: true,
-      ignoreARTarget: true,
+      // AI 호출 추가
+      sendMessage(DEPT_SUMMARY_PROMPT, {
+        skipUserLog: true,
+        ignoreARTarget: true,
+      });
     });
-  });
-}
+  }
 }
