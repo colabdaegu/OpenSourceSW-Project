@@ -96,7 +96,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </div>
 
     
-
+    <script src="/ngrok-address.js"></script>
     <script src="chat.js"></script>
 
 
@@ -382,13 +382,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // Adds a new object to the scene at the
       // specified transform.
       function addARObjectAt(matrix) {
-        let newDudu = arObject.clone();
-        newDudu.visible = true;
-        newDudu.matrix = matrix;
-        scene.addNode(newDudu);
+        arObject.visible = true;
 
-        dudus.push(newDudu);
-        currentDudu = newDudu;
+        // matrix 복사
+        const m = mat4.clone(matrix);
+
+        /** Y축으로 아래로 내리기 (값 조절 포인트) **/
+        mat4.translate(m, m, [0, 0.65, 0]);
+
+        arObject.matrix = m;
+        currentDudu = arObject;
+
+
+        // 필요하면 배열에 한 번만 넣어둠
+        if (!dudus.includes(arObject)) {
+          dudus.push(arObject);
+        }
 
         if (typeof window.playUiSound === "function") {
           window.playUiSound(5);
@@ -399,7 +408,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // 두두 라벨도 켜기
         const labelEl = document.getElementById("dudu-label");
         if (labelEl) {
-          labelEl.style.display = "block";
+          if (labelEl.textContent && labelEl.textContent.trim().length > 0) {
+            // 내용이 있을 때만 보여주기
+            labelEl.style.display = "block";
+          } else {
+            // 내용이 없으면 완전히 숨김
+            labelEl.style.display = "none";
+          }
         }
 
         // For performance reasons if we add too many objects start

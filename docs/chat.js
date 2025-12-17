@@ -73,8 +73,10 @@ function localBotReply(text) {
 // =======================
 // 백엔드 API 주소 (ngrok)
 // =======================
-const CHAT_API = "https://wilson-unscented-dissidently.ngrok-free.dev/chat";
-// ↑ ngrok 주소 바뀌면 여기만 새 주소로 교체 + /chat 붙이기
+if (!window.NGROK_CONFIG || !window.NGROK_CONFIG.NGROK_ADDRESS) {
+  throw new Error("ngrok-address.js의 NGROK_CONFIG.NGROK_ADDRESS가 설정되지 않았습니다.");
+}
+const MY_NGROK_ADDRESS = window.NGROK_CONFIG.NGROK_ADDRESS;
 
 // =======================
 // 메시지 전송 로직
@@ -118,7 +120,7 @@ async function sendMessage(overrideText = null, options = {}) {
   }
 
   try {
-    const resp = await fetch(CHAT_API, {
+    const resp = await fetch(MY_NGROK_ADDRESS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

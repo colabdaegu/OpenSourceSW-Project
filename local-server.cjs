@@ -21,34 +21,7 @@ app.use(express.static(path.join(__dirname)));
 // systemPrompt: 파일에서 읽어오기
 // =======================
 
-const promptPath = path.join(__dirname, "media", "prompt", "dudu-system-prompt.txt");
-let systemPrompt = [
-  systemPrompt,    // 기존 dudu-system-prompt.txt 내용
-  "\n\n",
-  "===== [단과대학 기본 정보] =====\n",
-  collegeInfo,
-  "\n\n",
-  "===== [학과 기본 정보] =====\n",
-  deptInfo
-].join("");
-try {
-  systemPrompt = fs.readFileSync(promptPath, "utf8");
-  console.log("✅ systemPrompt loaded from:", promptPath);
-  console.log("🔎 systemPrompt preview:", systemPrompt.slice(0, 200));
-} catch (err) {
-  console.error("⚠️ system prompt 파일을 읽지 못했습니다:", err.message);
-  // 파일이 없거나 오류 날 때 사용할 기본 프롬프트
-  systemPrompt = [
-    "넌 대구대학교 마스코트 '두두'야.",
-    "항상 두두 입장에서 1인칭으로 말해.",
-    "대구대학교와 캠퍼스, 전공, 건물, 상징물 등을 학생 눈높이에 맞춰 쉽고 친근하게 설명해.",
-    "답변은 말풍선 한 개 분량으로 1~2문장 정도로 짧게.",
-    "말투는 밝고 친근하게, 이모지도 가끔 써도 좋지만 과하지 않게.",
-    "사용자가 AR로 인식한 대상(건물/장소/마커 이름)이 문장에 들어오면, 그 대상을 중심으로 설명해.",
-    "답변할 때 이모지 절대 넣지마. 답변할 때 이모지 절대 넣지마.",
-  ].join("\n");
-}
-
+// 1) 학과 / 단과대학 정보 먼저 읽기
 const deptInfoPath = path.join(__dirname, "media", "prompt", "dept-info.txt");
 let deptInfo = "";
 try {
@@ -64,6 +37,36 @@ try {
 } catch (err) {
   console.error("⚠️ college-info.txt 읽기 실패:", err.message);
 }
+
+
+// 2) 기본 systemPrompt 읽기 또는 fallback
+const promptPath = path.join(__dirname, "media", "prompt", "dudu-system-prompt.txt");
+let basePrompt = "";
+try {
+  basePrompt = fs.readFileSync(promptPath, "utf8");
+  console.log("✅ systemPrompt loaded from:", promptPath);
+} catch (err) {
+  console.error("⚠️ system prompt 파일 읽기 실패:", err.message);
+
+  basePrompt = [
+    "넌 대구대학교 마스코트 '두두'야.",
+    "항상 두두 입장에서 1인칭으로 말해.",
+    "대구대학교와 캠퍼스, 전공, 건물 등을 학생 눈높이에 맞춰 쉽게 설명해.",
+    "답변은 1~2문장으로 짧게.",
+  ].join("\n");
+}
+
+
+// 3) 최종 systemPrompt 합치기 (여기서 순서 OK)
+let systemPrompt = [
+  basePrompt,
+  "\n\n===== [단과대학 기본 정보] =====\n",
+  collegeInfo,
+  "\n\n===== [학과 기본 정보] =====\n",
+  deptInfo
+].join("");
+
+console.log("🔎 systemPrompt preview:", systemPrompt.slice(0, 200));
 
 // =======================
 // * AR용 정적 파일 서빙 *
@@ -158,5 +161,4 @@ app.post("/chat", async (req, res) => {
 const PORT = 8000;
 app.listen(PORT, () => {
   console.log(`🚀 Local chat server running on port ${PORT}`);
-  console.log(`🌐 ngrok 터널로 접속 후 AR 화면이 보이면 성공입니다!`);
 });
