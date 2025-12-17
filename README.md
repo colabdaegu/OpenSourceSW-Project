@@ -7,7 +7,7 @@
 # 사용 절차 (https://nobeoka.tistory.com/4)
 ## 1. 파일의 루트 경로에 node_modules 폴더와 .env 환경 변수 넣기
 깃에 안 올라가는 파일들에 대해서는 임포트 후에 따로 다운받으셔서 직접 넣으셔야 합니다.
-> https://drive.google.com/file/d/1nNF0q5fWuMKazcR4vQYky8q-mGDSwk_n/view?usp=sharing 
+> https://drive.google.com/drive/folders/1O1sjO2N-USdTWfs3iXuIPip0aDR3Nki5?usp=sharing 
 
 ## 2. ngrok 회원가입 및 Your Authtoken 발급
 > https://dashboard.ngrok.com/get-started/your-authtoken 
