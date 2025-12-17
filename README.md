@@ -4,7 +4,7 @@
 OpenAr : DU AR-CHAT<br>
 <br>
 -------------------------------------------
-= 사용 절차(https://nobeoka.tistory.com/4) =<br>
+## 사용 절차(https://nobeoka.tistory.com/4) <br>
 ① 파일의 root 경로에 node_modules 폴더와 .env 환경 변수 붙여넣기<br>
 https://drive.google.com/file/d/1nNF0q5fWuMKazcR4vQYky8q-mGDSwk_n/view?usp=sharing <br>
 <br>
