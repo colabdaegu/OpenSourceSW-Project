@@ -141,15 +141,15 @@
             { tag: 'br' },
 
             { title: '샘플 캐릭터 1', category: 'Sample',
-              path: 'webxr-samples/sample1.html',
+              path: 'webxr-samples/sample.html?char=1',
               description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
 
             { title: '샘플 캐릭터 2', category: 'Sample',
-              path: 'webxr-samples/sample2.html',
+              path: 'webxr-samples/sample.html?char=2',
               description: '남자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
 
             { title: '샘플 캐릭터 3', category: 'Sample',
-              path: 'webxr-samples/sample3.html',
+              path: 'webxr-samples/sample.html?char=3',
               description: '여자 캐릭터와 간단한 대화를 체험할 수 있는 샘플입니다.'},
 
             { tag: 'hr' },
@@ -203,7 +203,14 @@
 
             if (!page.noPolyfill) {
               let polyfillLink = document.createElement('a');
-              polyfillLink.href = page.path + '?usePolyfill=0';
+
+              // page.path에 이미 ?가 있으면 &로, 없으면 ?로 붙이기
+              if (page.path.indexOf("?") !== -1) {
+                polyfillLink.href = page.path + "&usePolyfill=0";
+              } else {
+                polyfillLink.href = page.path + "?usePolyfill=0";
+              }
+
               polyfillLink.textContent = '플레이';
               links.appendChild(polyfillLink);
             }

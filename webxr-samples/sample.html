@@ -45,7 +45,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </header>
 
     <!-- 두두 머리 위에 띄울 텍스트 -->
-    <div id="dudu-label">반갑습니다! 저는 샘플 캐릭터 2라고 합니다!</div>
+    <div id="dudu-label"></div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
@@ -97,6 +97,35 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     
     <script src="/ngrok-address.js"></script>
+
+    <script>
+      // URL에서 char 값 읽기 (없으면 1)
+      const params = new URLSearchParams(location.search);
+      let char = params.get("char");
+      if (char === null) char = "1";
+        // 기본값(캐릭터1)
+        window.CHAR_NAME = "캐릭터 1";
+        window.CHAR_LABEL = "안녕하세요! 저는 캐릭터 1이라고 해요!";
+        window.CHAR_GLTF  = "../media/gltf/human_1/human_1.gltf";
+        window.SAY_Y_OFFSET = 0.6;
+        window.CHAR_Y_OFFSET = 0.65;
+      if (char === "2") {
+        // (캐릭터2)
+        window.CHAR_NAME = "캐릭터 2";
+        window.CHAR_LABEL = "반갑습니다! 저는 캐릭터 2라고 합니다!";
+        window.CHAR_GLTF  = "../media/gltf/human_2/human_2.gltf";
+        window.SAY_Y_OFFSET = 0.6;
+        window.CHAR_Y_OFFSET = 0.65;
+      } else if (char === "3") {
+        // (캐릭터3)
+        window.CHAR_NAME = "캐릭터 3";
+        window.CHAR_LABEL = "안녕하세요! 저는 캐릭터 3이라고 해요!";
+        window.CHAR_GLTF  = "../media/gltf/human_3/human_3.gltf";
+        window.SAY_Y_OFFSET = 0.6;
+        window.CHAR_Y_OFFSET = 0.65;
+      }
+    </script>
+
     <script src="chat.js"></script>
 
 
@@ -139,9 +168,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       const duduLabelEl = document.getElementById("dudu-label");
       if (duduLabelEl) {
-        const rawText = duduLabelEl.textContent;           // 원래 텍스트
-        const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
-        duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
+        const wrapped = autoWrapText(window.CHAR_LABEL);
+        duduLabelEl.textContent = wrapped;
+        // const rawText = duduLabelEl.textContent;           // 원래 텍스트
+        // const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
+        // duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
       }
 
       // 최근에 UI를 탭한 시점 (ms 기준)
@@ -187,7 +218,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       scene.addNode(arObject);
       
       //let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
-      let dudu = new Gltf2Node({url: '../media/gltf/human_2/human_2.gltf'});
+      let dudu = new Gltf2Node({ url: window.CHAR_GLTF });
       dudu.scale = [0.6, 0.6, 0.6];
       arObject.addNode(dudu);
 
@@ -388,7 +419,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const m = mat4.clone(matrix);
 
         /** Y축으로 아래로 내리기 (값 조절 포인트) **/
-        mat4.translate(m, m, [0, 0.65, 0]);
+        mat4.translate(m, m, [0, window.CHAR_Y_OFFSET, 0]);
 
         arObject.matrix = m;
         currentDudu = arObject;
@@ -474,7 +505,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           const projMat = view.projectionMatrix;
 
           // !!!!!!!!!!!!!!!!!!!!두두 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
-          const localHeadPos = vec3.fromValues(0, 0.6, 0);
+          const localHeadPos = vec3.fromValues(0, window.SAY_Y_OFFSET, 0);
           const worldHeadPos = vec3.create();
           vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
 

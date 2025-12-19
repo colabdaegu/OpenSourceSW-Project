@@ -78,6 +78,40 @@ if (
   }
 
 
+
+  // =======================
+  // 프롬프트 로드 (프론트에서 읽기)
+  // =======================
+  const PROMPT_URLS = {
+    base: "/media/prompt/dudu-system-prompt.txt",
+    college: "/media/prompt/college-info.txt",
+    dept: "/media/prompt/dept-info.txt",
+  };
+
+  const promptCache = {
+    base: null,
+    college: null,
+    dept: null,
+  };
+
+  async function loadPrompt(kind) {
+    if (promptCache[kind]) return promptCache[kind];
+
+    const url = PROMPT_URLS[kind];
+    const resp = await fetch(url, { cache: "no-store" });
+    if (!resp.ok) {
+      throw new Error(`Prompt load failed: ${kind} (${resp.status})`);
+    }
+    const text = await resp.text();
+    promptCache[kind] = text;
+    return text;
+  }
+
+  // 페이지 진입 시 base 프롬프트 미리 로드
+  loadPrompt("base").catch((e) => console.warn("base prompt preload failed:", e));
+
+
+
   // =======================
   // 설정 값
   // =======================
@@ -88,13 +122,13 @@ if (
   // 학과 소개 버튼이 보낼 숨겨진 질문
   // IT·공과대학 소개 요약 요청용 프롬프트 (2~3줄)
   const COLLEGE_SUMMARY_PROMPT =
-  "대구대학교 IT·공과대학에 대해 1~3문장 정도로 아주 짧게 요약해서 소개해줘.\n\n"
-  + "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+    "대구대학교 IT·공과대학에 대해 1~2문장으로 아주 짧게 요약해서 소개해줘.\n\n" +
+    "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
-  // 컴퓨터소프트웨어전공 요약 요청 프롬프트 (2~3줄)
   const DEPT_SUMMARY_PROMPT =
-  "컴퓨터소프트웨어전공에 대해 1~3문장 정도로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n"
-  + "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+    "대구대학교의 컴퓨터소프트웨어전공에 대해 1~2문장으로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n" +
+    "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+
 
   // =======================
   // DOM 요소 가져오기
@@ -164,12 +198,6 @@ if (
   function localBotReply(text) {
     const t = (text || "").toLowerCase();
     if (!t) return "무슨 말을 해야 할지 모르겠어요 😅";
-    if (t.includes("안녕") || t.includes("hello")) {
-      return "안녕하세요! Hiro 마커를 비추고 질문해 보세요 📷";
-    }
-    if (t.includes("도움") || t.includes("help")) {
-      return "카메라로 마커를 비추면서 궁금한 걸 물어보면 두두가 설명해 줄게요!";
-    }
     return "API에 문제가 있거나 설정이 완료되지 않았습니다! .env 환경 변수 파일을 확인해주세요 🙂";
   }
 
@@ -188,7 +216,11 @@ if (
   // options.skipUserLog  : true면 유저 메시지를 로그에 표시하지 않음
   // options.ignoreARTarget : true면 AR 대상 정보 붙이지 않음
   async function sendMessage(overrideText = null, options = {}) {
-    const { skipUserLog = false, ignoreARTarget = false } = options;
+    const {
+      skipUserLog = false,
+      ignoreARTarget = false,
+      promptExtraKind = null,
+    } = options;
 
     const text = (overrideText !== null && overrideText !== undefined)
       ? String(overrideText).trim()
@@ -225,12 +257,46 @@ if (
         `학생 질문: ${text}`;
     }
 
+
+
+    // =======================
+    // system prompt 구성
+    // =======================
+    let basePrompt = "";
+    try {
+      basePrompt = await loadPrompt("base");
+    } catch (e) {
+      console.warn("base prompt load failed, sending without system:", e);
+      basePrompt = "";
+    }
+
+    let extraPrompt = "";
+    if (promptExtraKind) {
+      try {
+        extraPrompt = await loadPrompt(promptExtraKind);
+      } catch (e) {
+        console.warn(`${promptExtraKind} prompt load failed:`, e);
+        extraPrompt = "";
+      }
+    }
+
+    const systemContent = [basePrompt, extraPrompt].filter(Boolean).join("\n\n");
+
+    const messagesToSend = [];
+    if (systemContent.trim().length > 0) {
+      messagesToSend.push({ role: "system", content: systemContent });
+    }
+    messagesToSend.push({ role: "user", content: messageForServer });
+
+
+
+
     try {
       const resp = await fetch(MY_NGROK_ADDRESS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: messageForServer,
+          messages: messagesToSend,
           model: "gpt-4.1-mini",
           max_tokens: 500,
           temperature: 0.8,
@@ -633,6 +699,7 @@ if (
       sendMessage(COLLEGE_SUMMARY_PROMPT, {
         skipUserLog: true,
         ignoreARTarget: true,
+        promptExtraKind: "college",
       });
     });
   }
@@ -654,6 +721,7 @@ if (
       sendMessage(DEPT_SUMMARY_PROMPT, {
         skipUserLog: true,
         ignoreARTarget: true,
+        promptExtraKind: "dept",
       });
     });
   }
