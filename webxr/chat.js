@@ -725,4 +725,76 @@ if (
       });
     });
   }
+
+
+  // =======================
+  // 리모컨 컨트롤 (캠퍼스 이동)
+  // =======================
+  let remoteIndex = 0;
+
+  const REMOTE_SPOTS = [
+    "공공인재대학으로",
+    "글로벌경영대학으로",
+    "사회과학대학으로",
+    "보건바이오대학으로",
+    "IT·공과대학으로",
+    "디자인예술대학으로",
+    "사범대학으로",
+    "재활과학대학으로",
+    "체육레저학부로",
+    "문화콘텐츠학부로",
+    "자유전공학부로",
+    "글로컬라이프대학으로",
+    "간호대학으로"
+  ];
+
+  // 숫자를 잠깐 보여주는 토스트 함수
+  function showToastNumber(index) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+
+    toast.textContent = REMOTE_SPOTS[index] + " 이동...";
+    toast.style.display = "block";
+
+    setTimeout(function () {
+      toast.style.display = "none";
+    }, 1000);
+  }
+
+  const btnUp = document.getElementById("btnUp");
+  const btnDown = document.getElementById("btnDown");
+
+  if (btnUp) {
+    btnUp.addEventListener("click", () => {
+      playUiSound(2);
+
+      switch (remoteIndex) {
+        case 12:
+          remoteIndex = 0;
+          break;
+        default:
+          remoteIndex = remoteIndex + 1;
+          break;
+      }
+
+      showToastNumber(remoteIndex);
+    });
+  }
+
+  if (btnDown) {
+    btnDown.addEventListener("click", () => {
+      playUiSound(2);
+
+      switch (remoteIndex) {
+        case 0:
+          remoteIndex = 12;
+          break;
+        default:
+          remoteIndex = remoteIndex - 1;
+          break;
+      }
+
+      showToastNumber(remoteIndex);
+    });
+  }
 }
