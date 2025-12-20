@@ -86,12 +86,40 @@ if (
     base: "/media/prompt/dudu-system-prompt.txt",
     college: "/media/prompt/college-info.txt",
     dept: "/media/prompt/dept-info.txt",
+
+    street0: "/media/prompt/street-view-prompts/0-college-of-public-service.txt",
+    street1: "/media/prompt/street-view-prompts/1-college-of-global-business.txt",
+    street2: "/media/prompt/street-view-prompts/2-college-of-social-sciences.txt",
+    street3: "/media/prompt/street-view-prompts/3-college-of-health-bio-sciences.txt",
+    street4: "/media/prompt/street-view-prompts/4-college-of-it-engineering.txt",
+    street5: "/media/prompt/street-view-prompts/5-college-of-design-arts.txt",
+    street6: "/media/prompt/street-view-prompts/6-college-of-education.txt",
+    street7: "/media/prompt/street-view-prompts/7-college-of-rehabilitation-sciences.txt",
+    street8: "/media/prompt/street-view-prompts/8-department-of-sports-leisure.txt",
+    street9: "/media/prompt/street-view-prompts/9-department-of-cultural-contents.txt",
+    street10: "/media/prompt/street-view-prompts/10-department-of-liberal-studies.txt",
+    street11: "/media/prompt/street-view-prompts/11-college-of-glocal-life.txt",
+    street12: "/media/prompt/street-view-prompts/12-college-of-nursing.txt",
   };
 
   const promptCache = {
     base: null,
     college: null,
     dept: null,
+
+    street0: null,
+    street1: null,
+    street2: null,
+    street3: null,
+    street4: null,
+    street5: null,
+    street6: null,
+    street7: null,
+    street8: null,
+    street9: null,
+    street10: null,
+    street11: null,
+    street12: null,
   };
 
   async function loadPrompt(kind) {
@@ -117,7 +145,7 @@ if (
   // =======================
 
   // 화면에 유지할 최대 메시지 수
-  const MAX_LOG_MESSAGES = 6;
+  const MAX_LOG_MESSAGES = 4;
 
   // 학과 소개 버튼이 보낼 숨겨진 질문
   // IT·공과대학 소개 요약 요청용 프롬프트 (2~3줄)
@@ -126,7 +154,7 @@ if (
     "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
   const DEPT_SUMMARY_PROMPT =
-    "대구대학교의 컴퓨터소프트웨어전공에 대해 1~2문장으로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n" +
+    "대구대학교 컴퓨터소프트웨어전공에 대해 1~2문장으로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n" +
     "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
 
@@ -748,6 +776,30 @@ if (
     "간호대학으로"
   ];
 
+  function getCollegeNameFromRemoteSpot(index) {
+    const raw = REMOTE_SPOTS[index];
+
+    return raw.replace(/(으로|로)\s*$/, "").trim();
+  }
+
+  async function requestRemotePromptAnswer(index) {
+    const promptKey = "street" + index;
+
+    const collegeName = getCollegeNameFromRemoteSpot(index);
+
+    const HIDDEN_QUESTION =
+      `"대구대학교 ${collegeName}는 ○○○○○○○○○○!"\n` +
+      `○○○○○○○○○○는 ${collegeName}의 한 줄 소개 및 학과 목록의 내용을 축약한 내용이다.\n` +
+      `그리고 ${collegeName}을(를) 학생에게 친근하게 1~2줄 정도로 짧지만 유익하게 설명해.\n` +
+      `불필요한 안녕하세요!와 같은 인사도 절대로 하지 말고, 설명에 집중할 것.`;
+
+    return sendMessage(HIDDEN_QUESTION, {
+      skipUserLog: true,
+      ignoreARTarget: true,
+      promptExtraKind: promptKey,
+    });
+  }
+
   // 숫자를 잠깐 보여주는 토스트 함수
   function showToastNumber(index) {
     const toast = document.getElementById("toast");
@@ -764,8 +816,27 @@ if (
   const btnUp = document.getElementById("btnUp");
   const btnDown = document.getElementById("btnDown");
 
+  // 리모콘 재사용 대기 시간
+  let remoteLocked = false;
+  const REMOTE_LOCK_DURATION = 1000;
+  function lockRemoteTemporarily() {
+    remoteLocked = true;
+
+    if (btnUp) btnUp.disabled = true;
+    if (btnDown) btnDown.disabled = true;
+
+    setTimeout(() => {
+      remoteLocked = false;
+      if (btnUp) btnUp.disabled = false;
+      if (btnDown) btnDown.disabled = false;
+    }, REMOTE_LOCK_DURATION);
+  }
+
   if (btnUp) {
     btnUp.addEventListener("click", () => {
+      if (remoteLocked) return;
+
+      lockRemoteTemporarily();
       playUiSound(2);
 
       switch (remoteIndex) {
@@ -778,11 +849,15 @@ if (
       }
 
       showToastNumber(remoteIndex);
+      requestRemotePromptAnswer(remoteIndex);
     });
   }
 
   if (btnDown) {
     btnDown.addEventListener("click", () => {
+      if (remoteLocked) return;
+
+      lockRemoteTemporarily();
       playUiSound(2);
 
       switch (remoteIndex) {
@@ -795,6 +870,7 @@ if (
       }
 
       showToastNumber(remoteIndex);
+      requestRemotePromptAnswer(remoteIndex);
     });
   }
 }
