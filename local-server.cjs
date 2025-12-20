@@ -6,14 +6,13 @@ const cors = require("cors");
 require("dotenv").config();
 const OpenAI = require("openai");
 const path = require("path");
+const fs = require("fs");
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const app = express();
-
-app.use(express.static(path.join(__dirname)));
 
 app.get("/", (req, res) => {
   res.sendFile("index.html", { root: __dirname });
@@ -22,12 +21,16 @@ app.get("/", (req, res) => {
 app.use("/docs", express.static(path.join(__dirname, "docs")));
 
 app.get("/webxr/:page", (req, res, next) => {
-  const fs = require("fs");
   const file = path.join(__dirname, "webxr", req.params.page + ".html");
-  if (fs.existsSync(file)) {
-    return res.sendFile(req.params.page + ".html", { root: path.join(__dirname, "webxr") });
-  }
-  next();
+  if (!fs.existsSync(file)) return next();
+
+  const html = fs.readFileSync(file, "utf8");
+  const replaced = html.replaceAll(
+    "__KAKAO_MAP_APPKEY__",
+    process.env.KAKAO_MAP_APPKEY || ""
+  );
+
+  return res.status(200).type("html").send(replaced);
 });
 
 app.get("/webxr-samples/:page", (req, res, next) => {
@@ -38,6 +41,8 @@ app.get("/webxr-samples/:page", (req, res, next) => {
   }
   next();
 });
+
+app.use(express.static(path.join(__dirname)));
 
 app.use(
   cors({

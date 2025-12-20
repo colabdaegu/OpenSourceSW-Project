@@ -818,7 +818,7 @@ if (
 
   // 리모콘 재사용 대기 시간
   let remoteLocked = false;
-  const REMOTE_LOCK_DURATION = 1000;
+  const REMOTE_LOCK_DURATION = 2500;
   function lockRemoteTemporarily() {
     remoteLocked = true;
 
