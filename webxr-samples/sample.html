@@ -45,37 +45,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </header>
 
     <!-- 두두 머리 위에 띄울 텍스트 -->
-    <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
+    <div id="dudu-label"></div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
     <button id="listeningBtn" class="listening-btn" type="button">🔊</button>
     <button id="guitarBtn" class="guitar-btn" type="button">🎵</button>
 
-    <div class="char-toggle-group">
-      <button id="char1Toggle"
-              class="char-toggle-btn"
-              type="button">
-        1
-      </button>
-      <button id="char2Toggle"
-              class="char-toggle-btn"
-              type="button">
-        2
-      </button>
-      <button id="char3Toggle"
-              class="char-toggle-btn"
-              type="button">
-        3
-      </button>
-    </div>
-
-    <button id="collegeDescriptionBtn" class="college-description-btn" type="button">🏫　　IT·공과대학에 대해서 </button>
-    <button id="departmentDescriptionBtn" class="department-description-btn" type="button">📚 　 컴퓨터소프트웨어 소개</button>
 
     <style>
-      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn,
-       .char-toggle-group {
+      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn {
         display: none; 
       }
 
@@ -118,6 +97,35 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     
     <script src="/ngrok-address.js"></script>
+
+    <script>
+      // URL에서 char 값 읽기 (없으면 1)
+      const params = new URLSearchParams(location.search);
+      let char = params.get("char");
+      if (char === null) char = "1";
+        // 기본값(캐릭터1)
+        window.CHAR_NAME = "캐릭터 1";
+        window.CHAR_LABEL = "안녕하세요! 저는 캐릭터 1이라고 해요!";
+        window.CHAR_GLTF  = "../media/gltf/human_1/human_1.gltf";
+        window.SAY_Y_OFFSET = 0.6;
+        window.CHAR_Y_OFFSET = 0.65;
+      if (char === "2") {
+        // (캐릭터2)
+        window.CHAR_NAME = "캐릭터 2";
+        window.CHAR_LABEL = "반갑습니다! 저는 캐릭터 2라고 합니다!";
+        window.CHAR_GLTF  = "../media/gltf/human_2/human_2.gltf";
+        window.SAY_Y_OFFSET = 0.6;
+        window.CHAR_Y_OFFSET = 0.65;
+      } else if (char === "3") {
+        // (캐릭터3)
+        window.CHAR_NAME = "캐릭터 3";
+        window.CHAR_LABEL = "안녕하세요! 저는 캐릭터 3이라고 해요!";
+        window.CHAR_GLTF  = "../media/gltf/human_3/human_3.gltf";
+        window.SAY_Y_OFFSET = 0.6;
+        window.CHAR_Y_OFFSET = 0.65;
+      }
+    </script>
+
     <script src="chat.js"></script>
 
 
@@ -160,20 +168,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       const duduLabelEl = document.getElementById("dudu-label");
       if (duduLabelEl) {
-        const rawText = duduLabelEl.textContent;           // 원래 텍스트
-        const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
-        duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
+        const wrapped = autoWrapText(window.CHAR_LABEL);
+        duduLabelEl.textContent = wrapped;
+        // const rawText = duduLabelEl.textContent;           // 원래 텍스트
+        // const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
+        // duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
       }
-
-      const charGroup = document.querySelector(".char-toggle-group");
 
       // 최근에 UI를 탭한 시점 (ms 기준)
       let lastUiTapTime = 0;
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn';
-      
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box';
 
       window.addEventListener('pointerdown', (ev) => {
         const target = ev.target;
@@ -210,56 +217,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       arObject.visible = false;
       scene.addNode(arObject);
       
-
-      // ==== 캐릭터(두두) 기본 모델들 ====
-      const CHARACTER_URLS = [
-        '../media/gltf/dudu/dudu.gltf',       // char1
-        '../media/gltf/dudu_2/dudu_2.gltf',   // char2
-        '../media/gltf/dudu_3/dudu_3.gltf',   // char3
-      ];
-
-      let currentCharIndex = 0; // 0: dudu, 1: dudu_2, 2: dudu_3
-
-
-      function getHeadLocalPos() {
-        switch (currentCharIndex) {
-          case 0: // 캐릭터 1
-            return vec3.fromValues(-0.055, 0.40, 0);
-          case 1: // 캐릭터 2
-            return vec3.fromValues(0.03, 0.40, 0);   
-          case 2: // 캐릭터 3
-            return vec3.fromValues(0.03, 0.40, 0); 
-          default:
-            return vec3.fromValues(0, 0.40, 0);
-        }
-      }
-
-      function createCharacterNode(index) {
-        const node = new Gltf2Node({ url: CHARACTER_URLS[index] });
-        node.scale = [0.4, 0.4, 0.4];
-        return node;
-      }
-
-      // 기본 dudu는 char1 (index 0)
-      let dudu = createCharacterNode(currentCharIndex);
+      //let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
+      let dudu = new Gltf2Node({ url: window.CHAR_GLTF });
+      dudu.scale = [0.6, 0.6, 0.6];
       arObject.addNode(dudu);
-
-      // 버튼에서 호출할 캐릭터 교체 함수
-      function switchCharacter(index) {
-        if (index === currentCharIndex) return;
-
-        currentCharIndex = index;
-
-        // 기본 arObject 안의 모델 교체
-        if (dudu) {
-          arObject.removeNode(dudu);
-        }
-        dudu = createCharacterNode(index);
-        arObject.addNode(dudu);
-      }
-
-      // chat.js 에서 쓸 수 있게 전역으로 노출
-      window.switchDuduCharacter = switchCharacter;
 
 
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
@@ -361,27 +322,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
 
-        const char1Toggle = document.getElementById("char1Toggle");
-        const char2Toggle = document.getElementById("char2Toggle");
-        const char3Toggle = document.getElementById("char3Toggle");
-
-        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
-        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
-
         if (chatToggle)   chatToggle.style.display   = "block";
         if (listeningBtn) listeningBtn.style.display = "block";
         if (guitarBtn)    guitarBtn.style.display    = "block";
-
-        if (charGroup)    charGroup.style.display    = "inline-flex";
-        if (char1Toggle)    char1Toggle.style.display    = "block";
-        if (char2Toggle)    char2Toggle.style.display    = "block";
-        if (char3Toggle)    char3Toggle.style.display    = "block";
-
-        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "block";
-        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "block";
       }
-
-      
 
       function onEndSession(session) {
         xrHitTestSource.cancel();
@@ -402,38 +346,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
 
-        const char1Toggle = document.getElementById("char1Toggle");
-        const char2Toggle = document.getElementById("char2Toggle");
-        const char3Toggle = document.getElementById("char3Toggle");
-
-        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
-        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
-
         if (chatToggle)   chatToggle.style.display   = "none";
         if (listeningBtn) listeningBtn.style.display = "none";
         if (guitarBtn)    guitarBtn.style.display    = "none";
-
-        if (charGroup)    charGroup.style.display    = "none";
-        if (char1Toggle)    char1Toggle.style.display    = "none";
-        if (char2Toggle)    char2Toggle.style.display    = "none";
-        if (char3Toggle)    char3Toggle.style.display    = "none";
-
-        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "none";
-        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "none";
-
-        // 배경음악 중단
-        if (window.duBgm) {
-          try {
-            window.duBgm.pause();
-            window.duBgm.currentTime = 0;
-          } catch (e) {
-            console.warn("BGM stop error:", e);
-          }
-        }
-        const guitarBtnEl = document.getElementById("guitarBtn");
-        if (guitarBtnEl) {
-          guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
-        }
 
         // AR 종료되면 WebXRButton UI 복원
         xrButton.domElement.style.display = 'inline-flex';
@@ -459,19 +374,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           window.speechSynthesis.cancel();
         }
 
-        // 배경음악 중단
-        if (window.duBgm) {
-          try {
-            window.duBgm.pause();
-            window.duBgm.currentTime = 0;
-          } catch (e) {
-            console.warn("BGM stop error:", e);
-          }
-        }
-        const guitarBtnEl = document.getElementById("guitarBtn");
-        if (guitarBtnEl) {
-          guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
-        }
+        // AR 오버레이(기타 버튼) 숨김
+
 
         // 채팅창 제거
         const log = document.getElementById("log");
@@ -480,26 +384,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
 
-        const char1Toggle = document.getElementById("char1Toggle");
-        const char2Toggle = document.getElementById("char2Toggle");
-        const char3Toggle = document.getElementById("char3Toggle");
-
-        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
-        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
-
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";
         if (chatToggle)  chatToggle.style.display  = "none";
         if (listeningBtn)listeningBtn.style.display= "none";
         if (guitarBtn)   guitarBtn.style.display   = "none";
-
-        if (charGroup)    charGroup.style.display    = "none";
-        if (char1Toggle)   char1Toggle.style.display   = "none";
-        if (char2Toggle)   char2Toggle.style.display   = "none";
-        if (char3Toggle)   char3Toggle.style.display   = "none";
-
-        if (collegeDescriptionBtn)   collegeDescriptionBtn.style.display   = "none";
-        if (departmentDescriptionBtn)   departmentDescriptionBtn.style.display   = "none";
 
         // 위에 설명 박스 다시 보이게
         document.getElementById('ui-box').style.display = 'block';
@@ -530,11 +419,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const m = mat4.clone(matrix);
 
         /** Y축으로 아래로 내리기 (값 조절 포인트) **/
-        mat4.translate(m, m, [0, 0.4, 0]);
+        mat4.translate(m, m, [0, window.CHAR_Y_OFFSET, 0]);
 
         arObject.matrix = m;
         currentDudu = arObject;
-      
+
 
         // 필요하면 배열에 한 번만 넣어둠
         if (!dudus.includes(arObject)) {
@@ -616,7 +505,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           const projMat = view.projectionMatrix;
 
           // !!!!!!!!!!!!!!!!!!!!두두 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
-          const localHeadPos = getHeadLocalPos();
+          const localHeadPos = vec3.fromValues(0, window.SAY_Y_OFFSET, 0);
           const worldHeadPos = vec3.create();
           vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
 

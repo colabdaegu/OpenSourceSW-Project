@@ -78,23 +78,85 @@ if (
   }
 
 
+
+  // =======================
+  // 프롬프트 로드 (프론트에서 읽기)
+  // =======================
+  const PROMPT_URLS = {
+    base: "/media/prompt/dudu-system-prompt.txt",
+    college: "/media/prompt/college-info.txt",
+    dept: "/media/prompt/dept-info.txt",
+
+    street0: "/media/prompt/street-view-prompts/0-college-of-public-service.txt",
+    street1: "/media/prompt/street-view-prompts/1-college-of-global-business.txt",
+    street2: "/media/prompt/street-view-prompts/2-college-of-social-sciences.txt",
+    street3: "/media/prompt/street-view-prompts/3-college-of-health-bio-sciences.txt",
+    street4: "/media/prompt/street-view-prompts/4-college-of-it-engineering.txt",
+    street5: "/media/prompt/street-view-prompts/5-college-of-design-arts.txt",
+    street6: "/media/prompt/street-view-prompts/6-college-of-education.txt",
+    street7: "/media/prompt/street-view-prompts/7-college-of-rehabilitation-sciences.txt",
+    street8: "/media/prompt/street-view-prompts/8-department-of-sports-leisure.txt",
+    street9: "/media/prompt/street-view-prompts/9-department-of-cultural-contents.txt",
+    street10: "/media/prompt/street-view-prompts/10-department-of-liberal-studies.txt",
+    street11: "/media/prompt/street-view-prompts/11-college-of-glocal-life.txt",
+    street12: "/media/prompt/street-view-prompts/12-college-of-nursing.txt",
+  };
+
+  const promptCache = {
+    base: null,
+    college: null,
+    dept: null,
+
+    street0: null,
+    street1: null,
+    street2: null,
+    street3: null,
+    street4: null,
+    street5: null,
+    street6: null,
+    street7: null,
+    street8: null,
+    street9: null,
+    street10: null,
+    street11: null,
+    street12: null,
+  };
+
+  async function loadPrompt(kind) {
+    if (promptCache[kind]) return promptCache[kind];
+
+    const url = PROMPT_URLS[kind];
+    const resp = await fetch(url, { cache: "no-store" });
+    if (!resp.ok) {
+      throw new Error(`Prompt load failed: ${kind} (${resp.status})`);
+    }
+    const text = await resp.text();
+    promptCache[kind] = text;
+    return text;
+  }
+
+  // 페이지 진입 시 base 프롬프트 미리 로드
+  loadPrompt("base").catch((e) => console.warn("base prompt preload failed:", e));
+
+
+
   // =======================
   // 설정 값
   // =======================
 
   // 화면에 유지할 최대 메시지 수
-  const MAX_LOG_MESSAGES = 6;
+  const MAX_LOG_MESSAGES = 4;
 
   // 학과 소개 버튼이 보낼 숨겨진 질문
   // IT·공과대학 소개 요약 요청용 프롬프트 (2~3줄)
   const COLLEGE_SUMMARY_PROMPT =
-  "대구대학교 IT·공과대학에 대해 1~3문장 정도로 아주 짧게 요약해서 소개해줘.\n\n"
-  + "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+    "대구대학교 IT·공과대학에 대해 1~2문장으로 아주 짧게 요약해서 소개해줘.\n\n" +
+    "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
-  // 컴퓨터소프트웨어전공 요약 요청 프롬프트 (2~3줄)
   const DEPT_SUMMARY_PROMPT =
-  "컴퓨터소프트웨어전공에 대해 1~3문장 정도로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n"
-  + "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+    "대구대학교 컴퓨터소프트웨어전공에 대해 1~2문장으로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n" +
+    "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
+
 
   // =======================
   // DOM 요소 가져오기
@@ -164,12 +226,6 @@ if (
   function localBotReply(text) {
     const t = (text || "").toLowerCase();
     if (!t) return "무슨 말을 해야 할지 모르겠어요 😅";
-    if (t.includes("안녕") || t.includes("hello")) {
-      return "안녕하세요! Hiro 마커를 비추고 질문해 보세요 📷";
-    }
-    if (t.includes("도움") || t.includes("help")) {
-      return "카메라로 마커를 비추면서 궁금한 걸 물어보면 두두가 설명해 줄게요!";
-    }
     return "API에 문제가 있거나 설정이 완료되지 않았습니다! .env 환경 변수 파일을 확인해주세요 🙂";
   }
 
@@ -188,7 +244,11 @@ if (
   // options.skipUserLog  : true면 유저 메시지를 로그에 표시하지 않음
   // options.ignoreARTarget : true면 AR 대상 정보 붙이지 않음
   async function sendMessage(overrideText = null, options = {}) {
-    const { skipUserLog = false, ignoreARTarget = false } = options;
+    const {
+      skipUserLog = false,
+      ignoreARTarget = false,
+      promptExtraKind = null,
+    } = options;
 
     const text = (overrideText !== null && overrideText !== undefined)
       ? String(overrideText).trim()
@@ -225,12 +285,46 @@ if (
         `학생 질문: ${text}`;
     }
 
+
+
+    // =======================
+    // system prompt 구성
+    // =======================
+    let basePrompt = "";
+    try {
+      basePrompt = await loadPrompt("base");
+    } catch (e) {
+      console.warn("base prompt load failed, sending without system:", e);
+      basePrompt = "";
+    }
+
+    let extraPrompt = "";
+    if (promptExtraKind) {
+      try {
+        extraPrompt = await loadPrompt(promptExtraKind);
+      } catch (e) {
+        console.warn(`${promptExtraKind} prompt load failed:`, e);
+        extraPrompt = "";
+      }
+    }
+
+    const systemContent = [basePrompt, extraPrompt].filter(Boolean).join("\n\n");
+
+    const messagesToSend = [];
+    if (systemContent.trim().length > 0) {
+      messagesToSend.push({ role: "system", content: systemContent });
+    }
+    messagesToSend.push({ role: "user", content: messageForServer });
+
+
+
+
     try {
       const resp = await fetch(MY_NGROK_ADDRESS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: messageForServer,
+          messages: messagesToSend,
           model: "gpt-4.1-mini",
           max_tokens: 500,
           temperature: 0.8,
@@ -633,6 +727,7 @@ if (
       sendMessage(COLLEGE_SUMMARY_PROMPT, {
         skipUserLog: true,
         ignoreARTarget: true,
+        promptExtraKind: "college",
       });
     });
   }
@@ -654,7 +749,128 @@ if (
       sendMessage(DEPT_SUMMARY_PROMPT, {
         skipUserLog: true,
         ignoreARTarget: true,
+        promptExtraKind: "dept",
       });
+    });
+  }
+
+
+  // =======================
+  // 리모컨 컨트롤 (캠퍼스 이동)
+  // =======================
+  let remoteIndex = 0;
+
+  const REMOTE_SPOTS = [
+    "공공인재대학으로",
+    "글로벌경영대학으로",
+    "사회과학대학으로",
+    "보건바이오대학으로",
+    "IT·공과대학으로",
+    "디자인예술대학으로",
+    "사범대학으로",
+    "재활과학대학으로",
+    "체육레저학부로",
+    "문화콘텐츠학부로",
+    "자유전공학부로",
+    "글로컬라이프대학으로",
+    "간호대학으로"
+  ];
+
+  function getCollegeNameFromRemoteSpot(index) {
+    const raw = REMOTE_SPOTS[index];
+
+    return raw.replace(/(으로|로)\s*$/, "").trim();
+  }
+
+  async function requestRemotePromptAnswer(index) {
+    const promptKey = "street" + index;
+
+    const collegeName = getCollegeNameFromRemoteSpot(index);
+
+    const HIDDEN_QUESTION =
+      `"대구대학교 ${collegeName}는 ○○○○○○○○○○!"\n` +
+      `○○○○○○○○○○는 ${collegeName}의 한 줄 소개 및 학과 목록의 내용을 축약한 내용이다.\n` +
+      `그리고 ${collegeName}을(를) 학생에게 친근하게 1~2줄 정도로 짧지만 유익하게 설명해.\n` +
+      `불필요한 안녕하세요!와 같은 인사도 절대로 하지 말고, 설명에 집중할 것.`;
+
+    return sendMessage(HIDDEN_QUESTION, {
+      skipUserLog: true,
+      ignoreARTarget: true,
+      promptExtraKind: promptKey,
+    });
+  }
+
+  // 숫자를 잠깐 보여주는 토스트 함수
+  function showToastNumber(index) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+
+    toast.textContent = REMOTE_SPOTS[index] + " 이동...";
+    toast.style.display = "block";
+
+    setTimeout(function () {
+      toast.style.display = "none";
+    }, 1000);
+  }
+
+  const btnUp = document.getElementById("btnUp");
+  const btnDown = document.getElementById("btnDown");
+
+  // 리모콘 재사용 대기 시간
+  let remoteLocked = false;
+  const REMOTE_LOCK_DURATION = 1000;
+  function lockRemoteTemporarily() {
+    remoteLocked = true;
+
+    if (btnUp) btnUp.disabled = true;
+    if (btnDown) btnDown.disabled = true;
+
+    setTimeout(() => {
+      remoteLocked = false;
+      if (btnUp) btnUp.disabled = false;
+      if (btnDown) btnDown.disabled = false;
+    }, REMOTE_LOCK_DURATION);
+  }
+
+  if (btnUp) {
+    btnUp.addEventListener("click", () => {
+      if (remoteLocked) return;
+
+      lockRemoteTemporarily();
+      playUiSound(2);
+
+      switch (remoteIndex) {
+        case 12:
+          remoteIndex = 0;
+          break;
+        default:
+          remoteIndex = remoteIndex + 1;
+          break;
+      }
+
+      showToastNumber(remoteIndex);
+      requestRemotePromptAnswer(remoteIndex);
+    });
+  }
+
+  if (btnDown) {
+    btnDown.addEventListener("click", () => {
+      if (remoteLocked) return;
+
+      lockRemoteTemporarily();
+      playUiSound(2);
+
+      switch (remoteIndex) {
+        case 0:
+          remoteIndex = 12;
+          break;
+        default:
+          remoteIndex = remoteIndex - 1;
+          break;
+      }
+
+      showToastNumber(remoteIndex);
+      requestRemotePromptAnswer(remoteIndex);
     });
   }
 }

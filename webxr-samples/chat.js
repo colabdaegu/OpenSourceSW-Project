@@ -47,7 +47,6 @@ if (
   }
 
 
-
   // 공용 BGM 설정
   const SOUND_FILES = {
     1: "../media/sound/click.ogg",   // 기본 클릭음
@@ -79,6 +78,42 @@ if (
   }
 
 
+
+  // =======================
+  // 프롬프트 로드
+  // =======================
+  const BOT_NAME = window.CHAR_NAME;
+
+  const SAMPLE_SYSTEM_PROMPT =
+    "너는 " + BOT_NAME + "(이)야.\n" +
+    "모든 답변은 2~3줄 정도로 짧게 대답해.\n";
+
+  // const PROMPT_URLS = {
+  //   base: "/media/prompt/dudu-system-prompt.txt",
+  // };
+
+  // const promptCache = {
+  //   base: null,
+  // };
+
+  // async function loadPrompt(kind) {
+  //   if (promptCache[kind]) return promptCache[kind];
+
+  //   const url = PROMPT_URLS[kind];
+  //   const resp = await fetch(url, { cache: "no-store" });
+  //   if (!resp.ok) {
+  //     throw new Error(`Prompt load failed: ${kind} (${resp.status})`);
+  //   }
+  //   const text = await resp.text();
+  //   promptCache[kind] = text;
+  //   return text;
+  // }
+
+  // // 페이지 진입 시 base 프롬프트 미리 로드
+  // loadPrompt("base").catch((e) => console.warn("base prompt preload failed:", e));
+
+
+
   // =======================
   // 설정 값
   // =======================
@@ -86,11 +121,6 @@ if (
   // 화면에 유지할 최대 메시지 수
   const MAX_LOG_MESSAGES = 6;
 
-  // 학과 소개 버튼이 보낼 숨겨진 질문
-  //  '3줄 정도' 부분을 '2줄 정도', '4줄 정도' 등으로 바꾸면 길이 조절 가능
-  const DEPT_SUMMARY_PROMPT =
-    "대구대학교 컴퓨터정보공학부 컴퓨터소프트웨어전공에 대해 2줄 정도로 짧게 소개해줘. " +
-    "무엇을 배우는 학과인지와 졸업 후 진로를 중심으로 설명해줘.";
 
   // =======================
   // DOM 요소 가져오기
@@ -99,11 +129,11 @@ if (
   const msg  = document.getElementById("msg");
   const send = document.getElementById("send");
   const mic  = document.getElementById("mic");
-  const deptBtn = document.getElementById("deptInfoBtn");
   const chatToggle = document.getElementById("chatToggle");
   const listeningBtn = document.getElementById("listeningBtn");
   const guitarBtn = document.getElementById("guitarBtn");
   const duduLabel = document.getElementById("dudu-label");
+
 
   // 지금 인식된 AR 대상(마커) 이름/설명
   // 나중에 index.html 쪽에서 window.currentARTarget 에 값을 넣어주면 됨.
@@ -121,13 +151,13 @@ if (
       p.textContent = "🎓 " + text;
       p.classList.add("msg-user");
     } else {
-      p.textContent = "🟢 두두: " + text;
+      p.textContent = "🟢 " + BOT_NAME + ": " + text;
       p.classList.add("msg-bot");
     }
 
     log.appendChild(p);
 
-    // 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
+    // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
     while (log.children.length > MAX_LOG_MESSAGES) {
       log.removeChild(log.firstChild);
     }
@@ -139,12 +169,6 @@ if (
   function localBotReply(text) {
     const t = (text || "").toLowerCase();
     if (!t) return "무슨 말을 해야 할지 모르겠어요 😅";
-    if (t.includes("안녕") || t.includes("hello")) {
-      return "안녕하세요! Hiro 마커를 비추고 질문해 보세요 📷";
-    }
-    if (t.includes("도움") || t.includes("help")) {
-      return "카메라로 마커를 비추면서 궁금한 걸 물어보면 두두가 설명해 줄게요!";
-    }
     return "API에 문제가 있거나 설정이 완료되지 않았습니다! .env 환경 변수 파일을 확인해주세요 🙂";
   }
 
@@ -163,7 +187,16 @@ if (
   // options.skipUserLog  : true면 유저 메시지를 로그에 표시하지 않음
   // options.ignoreARTarget : true면 AR 대상 정보 붙이지 않음
   async function sendMessage(overrideText = null, options = {}) {
-    const { skipUserLog = false, ignoreARTarget = false } = options;
+    const {
+      skipUserLog = false,
+      ignoreARTarget = false,
+    } = options;
+
+    // const {
+    //   skipUserLog = false,
+    //   ignoreARTarget = false,
+    //   promptExtraKind = null,
+    // } = options;
 
     const text = (overrideText !== null && overrideText !== undefined)
       ? String(overrideText).trim()
@@ -200,12 +233,48 @@ if (
         `학생 질문: ${text}`;
     }
 
+
+
+    // =======================
+    // system prompt 구성
+    // =======================
+    const systemContent = SAMPLE_SYSTEM_PROMPT;
+
+    // let basePrompt = "";
+    // try {
+    //   basePrompt = await loadPrompt("base");
+    // } catch (e) {
+    //   console.warn("base prompt load failed, sending without system:", e);
+    //   basePrompt = "";
+    // }
+
+    // let extraPrompt = "";
+    // if (promptExtraKind) {
+    //   try {
+    //     extraPrompt = await loadPrompt(promptExtraKind);
+    //   } catch (e) {
+    //     console.warn(`${promptExtraKind} prompt load failed:`, e);
+    //     extraPrompt = "";
+    //   }
+    // }
+
+    // const systemContent = [basePrompt, extraPrompt].filter(Boolean).join("\n\n");
+
+    const messagesToSend = [];
+    if (systemContent.trim().length > 0) {
+      messagesToSend.push({ role: "system", content: systemContent });
+    }
+    messagesToSend.push({ role: "user", content: messageForServer });
+
+
+
+
     try {
       const resp = await fetch(MY_NGROK_ADDRESS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: messageForServer,
+          messages: messagesToSend,
           model: "gpt-4.1-mini",
           max_tokens: 500,
           temperature: 0.8,
@@ -295,17 +364,6 @@ if (
     });
   }
 
-  // 오른쪽 위 '학과 소개' 버튼 → 숨겨진 질문으로 학과 설명 받기
-  if (deptBtn) {
-    deptBtn.addEventListener("click", () => {
-      playUiSound(1);
-      sendMessage(DEPT_SUMMARY_PROMPT, {
-        skipUserLog: true,      // 유저 질문은 로그에 안 보이게
-        ignoreARTarget: true,   // AR 마커 문구도 붙이지 않게
-      });
-    });
-  }
-
   // =======================
   // 음성 인식
   // =======================
@@ -339,7 +397,7 @@ if (
       if (ev && ev.preventDefault) ev.preventDefault();
       if (!rec) return;
 
-      // 🔹 다른 입력에 포커스 있으면 먼저 blur (모바일 키보드 내리기)
+      // 다른 입력에 포커스 있으면 먼저 blur (모바일 키보드 내리기)
       if (document.activeElement && document.activeElement.blur) {
         document.activeElement.blur();
       }
@@ -478,6 +536,8 @@ if (
   // 오디오 플레이어 하나 생성
   const bgm = new Audio();
   bgm.loop = true; // 계속 반복 재생
+
+  window.duBgm = bgm;
 
   // 재생 가능한 기타 사운드 목록
   const backgroundMusics = [
