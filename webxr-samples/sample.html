@@ -74,7 +74,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         width: 230px;  
         pointer-events: none;
         z-index: 9999;
-        display: none;  /* 처음엔 숨김, 두두 배치되면 보이게 */
+        will-change: transform, top, left;
+        display: none;
       }
     </style>
 
@@ -114,8 +115,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         window.CHAR_NAME = "캐릭터 2";
         window.CHAR_LABEL = "반갑습니다! 저는 캐릭터 2라고 합니다!";
         window.CHAR_GLTF  = "../media/gltf/human_2/human_2.gltf";
-        window.SAY_Y_OFFSET = 0.6;
-        window.CHAR_Y_OFFSET = 0.65;
+        window.SAY_Y_OFFSET = 0.5;
+        window.CHAR_Y_OFFSET = 0.3;
       } else if (char === "3") {
         // (캐릭터3)
         window.CHAR_NAME = "캐릭터 3";
@@ -487,9 +488,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (xrHitTestSource && pose) {
           let hitTestResults = frame.getHitTestResults(xrHitTestSource);
           if (hitTestResults.length > 0) {
+            // let pose = hitTestResults[0].getPose(xrRefSpace);
+            // reticle.visible = true;
+            // reticle.matrix = pose.transform.matrix;
+            
             let pose = hitTestResults[0].getPose(xrRefSpace);
-            reticle.visible = true;
-            reticle.matrix = pose.transform.matrix;
+            let m = pose.transform.matrix;
+
+            // Y축이 거의 1이면 = 0도 (바닥)
+            const yUp = m[5]; // column-major 기준
+
+            if (yUp > 0.99) {
+              reticle.visible = true;
+              reticle.matrix = m;
+            } else {
+              reticle.visible = false;
+            }
           }
         }
 
@@ -524,8 +538,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
           // 카메라 뒤에 있으면 숨김
           if (clipPos4[3] <= 0) {
-            labelEl.style.display = "none";
+            labelEl.style.visibility = "hidden";
           } else {
+            labelEl.style.visibility = "visible";
+
             const ndcX = clipPos4[0] / clipPos4[3];
             const ndcY = clipPos4[1] / clipPos4[3];
 
@@ -533,14 +549,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
 
             labelEl.style.left = `${x}px`;
-            labelEl.style.top  = `${y}px`;
 
-            if (labelEl.style.display !== "none") {
-              // 이미 보여지고 있으면 그대로
-            } else {
-              // 혹시 숨겨져 있으면 다시 켜줌 (mic에서 끈 거라면 chat.js가 관리)
-              // 여기선 굳이 켜지 말고, chat.js에서만 켜고 싶으면 이 줄을 지워도 됨
-            }
+            // Y 오프셋은 transform이 아니라 top에서 직접 빼기
+            // 말풍선 높이를 읽어서 머리 위로 올림
+            const bubbleH = labelEl.offsetHeight || 0;
+            const gapPx = 0;
+            labelEl.style.top = `${y - bubbleH - gapPx}px`;
+
+            // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
+            const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
+            const viewUp4  = vec4.create();
+            vec4.transformMat4(viewUp4, worldUp4, viewMat);
+
+            // roll
+            const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
+
+            // transform에는 X중앙정렬 + roll만
+            labelEl.style.transformOrigin = "50% 100%";
+            labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
           }
         }
 

@@ -8,9 +8,6 @@ if (
 // 설정 값
 // =======================
 
-// 화면에 유지할 최대 메시지 수 (원하면 6 대신 4, 8 등으로 조정)
-const MAX_LOG_MESSAGES = 6;
-
 // 학과 소개 버튼이 보낼 숨겨진 질문
 //  '3줄 정도' 부분을 '2줄 정도', '4줄 정도' 등으로 바꾸면 길이 조절 가능
 const DEPT_SUMMARY_PROMPT =
@@ -48,11 +45,6 @@ function append(role, text) {
   }
 
   log.appendChild(p);
-
-  // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
-  while (log.children.length > MAX_LOG_MESSAGES) {
-    log.removeChild(log.firstChild);
-  }
 
   log.scrollTop = log.scrollHeight;
 }

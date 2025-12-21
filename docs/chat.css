@@ -1,9 +1,23 @@
 /* 대화 로그 */
 #log{
-  position:fixed; left:0; right:0; bottom:64px;
-  max-height:40dvh; overflow:auto; -webkit-overflow-scrolling: touch;
-  background:rgba(0,0,0,.35); color:#fff; padding:8px;
-  font:14px/1.5 system-ui; z-index:9999;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 64px;
+
+  height: auto;   
+  max-height: 40vh; 
+  overflow-y: auto; 
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  padding: 8px;
+  font: 14px/1.5 system-ui;
+  z-index: 9999;
+
+  transition: max-height 0.2s ease;
 }
 #log p{ margin:.25rem 0 }
 

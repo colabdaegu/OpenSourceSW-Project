@@ -86,7 +86,7 @@ if (
 
   const SAMPLE_SYSTEM_PROMPT =
     "너는 " + BOT_NAME + "(이)야.\n" +
-    "모든 답변은 2~3줄 정도로 짧게 대답해.\n";
+    "모든 답변은 2~3줄 정도로 대답해.\n";
 
   // const PROMPT_URLS = {
   //   base: "/media/prompt/dudu-system-prompt.txt",
@@ -111,15 +111,6 @@ if (
 
   // // 페이지 진입 시 base 프롬프트 미리 로드
   // loadPrompt("base").catch((e) => console.warn("base prompt preload failed:", e));
-
-
-
-  // =======================
-  // 설정 값
-  // =======================
-
-  // 화면에 유지할 최대 메시지 수
-  const MAX_LOG_MESSAGES = 6;
 
 
   // =======================
@@ -156,11 +147,6 @@ if (
     }
 
     log.appendChild(p);
-
-    // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
-    while (log.children.length > MAX_LOG_MESSAGES) {
-      log.removeChild(log.firstChild);
-    }
 
     log.scrollTop = log.scrollHeight;
   }
@@ -328,19 +314,15 @@ if (
       playUiSound(3);
       sendMessage();
     }
-
-    if (duduLabel) duduLabel.style.display = "none";
   });
 
   msg.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-    if (msg.value.trim().length > 0) {
-      playUiSound(3);
-      sendMessage();
-    }
-
-      if (duduLabel) duduLabel.style.display = "none";
+      if (msg.value.trim().length > 0) {
+        playUiSound(3);
+        sendMessage();
+      }
     }
   });
 
@@ -449,9 +431,6 @@ if (
 
       // 마우스면 왼쪽 버튼만 허용
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
-
-      // 마이크 누르면 두두 라벨 숨김
-      if (duduLabel) duduLabel.style.display = "none";
 
       if (!listening) {
         // 듣기 시작

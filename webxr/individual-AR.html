@@ -70,18 +70,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </button>
     </div>
 
-
-    <div id="remoteControlLabel">캠퍼스 이동</div>
-    <div id="remoteControl">
-      <button id="btnUp">▲</button>
-      <button id="btnDown">▼</button>
-    </div>
-
-    <div id="toast">0</div>
-
+    <button id="collegeDescriptionBtn" class="college-description-btn" type="button">🏫　　IT·공과대학에 대해서 </button>
+    <button id="departmentDescriptionBtn" class="department-description-btn" type="button">📚 　 컴퓨터소프트웨어 소개</button>
 
     <style>
-      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
+      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn,
        .char-toggle-group {
         display: none; 
       }
@@ -102,7 +95,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         width: 230px;  
         pointer-events: none;
         z-index: 9999;
-        display: none;  /* 처음엔 숨김, 두두 배치되면 보이게 */
+        will-change: transform, top, left;
+        display: none;
       }
     </style>
 
@@ -138,7 +132,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       //import {vec3} from '../js/render/math/gl-matrix.js';
       import {vec3, mat4, vec4} from '../js/render/math/gl-matrix.js';
       import {Ray} from '../js/render/math/ray.js';
-
 
       // 두두 생성되지 않음
       window.hasDuduPlaced = false;
@@ -180,7 +173,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #remoteControl, #remoteControlLabel';
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn';
       
 
       window.addEventListener('pointerdown', (ev) => {
@@ -373,8 +366,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
-        const remoteControl = document.getElementById("remoteControl");
-        const remoteLabel = document.getElementById("remoteControlLabel");
+        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
 
 
         if (chatToggle)   chatToggle.style.display   = "block";
@@ -386,8 +379,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char2Toggle)    char2Toggle.style.display    = "block";
         if (char3Toggle)    char3Toggle.style.display    = "block";
 
-        if (remoteControl) remoteControl.style.display = "flex";
-        if (remoteLabel) remoteLabel.style.display = "block";
+        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "block";
+        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "block";
       }
 
       
@@ -415,8 +408,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
-        const remoteControl = document.getElementById("remoteControl");
-        const remoteLabel = document.getElementById("remoteControlLabel");
+        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
 
 
         if (chatToggle)   chatToggle.style.display   = "none";
@@ -428,8 +421,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char2Toggle)    char2Toggle.style.display    = "none";
         if (char3Toggle)    char3Toggle.style.display    = "none";
 
-        if (remoteControl) remoteControl.style.display = "none";
-        if (remoteLabel) remoteLabel.style.display = "none";
+        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "none";
+        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "none";
 
 
         // 배경음악 중단
@@ -495,8 +488,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
-        const remoteControl = document.getElementById("remoteControl");
-        const remoteLabel = document.getElementById("remoteControlLabel");
+        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
+        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
 
 
         if (log) log.style.display = "none";
@@ -510,9 +503,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char2Toggle)   char2Toggle.style.display   = "none";
         if (char3Toggle)   char3Toggle.style.display   = "none";
 
-        if (remoteControl) remoteControl.style.display = "none";
-        if (remoteLabel) remoteLabel.style.display = "none";
-
+        if (collegeDescriptionBtn)   collegeDescriptionBtn.style.display   = "none";
+        if (departmentDescriptionBtn)   departmentDescriptionBtn.style.display   = "none";
 
 
         // 위에 설명 박스 다시 보이게
@@ -548,7 +540,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         arObject.matrix = m;
         currentDudu = arObject;
-      
+
 
         // 필요하면 배열에 한 번만 넣어둠
         if (!dudus.includes(arObject)) {
@@ -612,9 +604,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (xrHitTestSource && pose) {
           let hitTestResults = frame.getHitTestResults(xrHitTestSource);
           if (hitTestResults.length > 0) {
+            // let pose = hitTestResults[0].getPose(xrRefSpace);
+            // reticle.visible = true;
+            // reticle.matrix = pose.transform.matrix;
+
             let pose = hitTestResults[0].getPose(xrRefSpace);
-            reticle.visible = true;
-            reticle.matrix = pose.transform.matrix;
+            let m = pose.transform.matrix;
+
+            // Y축이 거의 1이면 = 0도 (바닥)
+            const yUp = m[5]; // column-major 기준
+
+            if (yUp > 0.99) {
+              reticle.visible = true;
+              reticle.matrix = m;
+            } else {
+              reticle.visible = false;
+            }
           }
         }
 
@@ -649,8 +654,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
           // 카메라 뒤에 있으면 숨김
           if (clipPos4[3] <= 0) {
-            labelEl.style.display = "none";
+            labelEl.style.visibility = "hidden";
           } else {
+            labelEl.style.visibility = "visible";
+
             const ndcX = clipPos4[0] / clipPos4[3];
             const ndcY = clipPos4[1] / clipPos4[3];
 
@@ -658,14 +665,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
 
             labelEl.style.left = `${x}px`;
-            labelEl.style.top  = `${y}px`;
 
-            if (labelEl.style.display !== "none") {
-              // 이미 보여지고 있으면 그대로
-            } else {
-              // 혹시 숨겨져 있으면 다시 켜줌 (mic에서 끈 거라면 chat.js가 관리)
-              // 여기선 굳이 켜지 말고, chat.js에서만 켜고 싶으면 이 줄을 지워도 됨
-            }
+            // Y 오프셋은 transform이 아니라 top에서 직접 빼기
+            // 말풍선 높이를 읽어서 머리 위로 올림
+            const bubbleH = labelEl.offsetHeight || 0;
+            const gapPx = 0;
+            labelEl.style.top = `${y - bubbleH - gapPx}px`;
+
+            // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
+            const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
+            const viewUp4  = vec4.create();
+            vec4.transformMat4(viewUp4, worldUp4, viewMat);
+
+            // roll
+            const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
+
+            // transform에는 X중앙정렬 + roll만
+            labelEl.style.transformOrigin = "50% 100%";
+            labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
           }
         }
 

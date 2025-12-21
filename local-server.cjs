@@ -6,6 +6,7 @@ const cors = require("cors");
 require("dotenv").config();
 const OpenAI = require("openai");
 const path = require("path");
+const fs = require("fs");
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -13,13 +14,39 @@ const client = new OpenAI({
 
 const app = express();
 
-app.use(express.static(path.join(__dirname)));
-
 app.get("/", (req, res) => {
   res.sendFile("index.html", { root: __dirname });
 });
 
 app.use("/docs", express.static(path.join(__dirname, "docs")));
+
+app.get("/webxr/DU-AR-CHAT.html", (req, res) => {
+  const filePath = path.join(__dirname, "webxr", "DU-AR-CHAT.html");
+  if (!fs.existsSync(filePath)) return res.status(404).send("Not found");
+
+  const kakaoKey = process.env.KAKAO_MAP_APPKEY;
+  if (!kakaoKey) return res.status(500).send("KAKAO_MAP_APPKEY missing");
+
+  let html = fs.readFileSync(filePath, "utf8");
+  html = html.replaceAll("__KAKAO_MAP_APPKEY__", kakaoKey);
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+});
+
+app.get("/webxr/individual-Street-View.html", (req, res) => {
+  const filePath = path.join(__dirname, "webxr", "individual-Street-View.html");
+  if (!fs.existsSync(filePath)) return res.status(404).send("Not found");
+
+  const kakaoKey = process.env.KAKAO_MAP_APPKEY;
+  if (!kakaoKey) return res.status(500).send("KAKAO_MAP_APPKEY missing");
+
+  let html = fs.readFileSync(filePath, "utf8");
+  html = html.replaceAll("__KAKAO_MAP_APPKEY__", kakaoKey);
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+});
 
 app.get("/webxr/:page", (req, res, next) => {
   const fs = require("fs");
@@ -39,6 +66,8 @@ app.get("/webxr-samples/:page", (req, res, next) => {
   next();
 });
 
+app.use(express.static(path.join(__dirname)));
+
 app.use(
   cors({
     origin: "*",
@@ -55,7 +84,7 @@ app.post("/chat", async (req, res) => {
   try {
     const {
       message: userMessage,
-      messages, // ✅ 새로 추가: [{role, content}, ...]
+      messages,
       model = "gpt-4.1-mini",
       max_tokens = 200,
       temperature = 0.7,
