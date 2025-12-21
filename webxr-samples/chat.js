@@ -113,15 +113,6 @@ if (
   // loadPrompt("base").catch((e) => console.warn("base prompt preload failed:", e));
 
 
-
-  // =======================
-  // 설정 값
-  // =======================
-
-  // 화면에 유지할 최대 메시지 수
-  const MAX_LOG_MESSAGES = 6;
-
-
   // =======================
   // DOM 요소 가져오기
   // =======================
@@ -156,11 +147,6 @@ if (
     }
 
     log.appendChild(p);
-
-    // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
-    while (log.children.length > MAX_LOG_MESSAGES) {
-      log.removeChild(log.firstChild);
-    }
 
     log.scrollTop = log.scrollHeight;
   }
@@ -328,19 +314,15 @@ if (
       playUiSound(3);
       sendMessage();
     }
-
-    if (duduLabel) duduLabel.style.display = "none";
   });
 
   msg.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-    if (msg.value.trim().length > 0) {
-      playUiSound(3);
-      sendMessage();
-    }
-
-      if (duduLabel) duduLabel.style.display = "none";
+      if (msg.value.trim().length > 0) {
+        playUiSound(3);
+        sendMessage();
+      }
     }
   });
 
@@ -449,9 +431,6 @@ if (
 
       // 마우스면 왼쪽 버튼만 허용
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
-
-      // 마이크 누르면 두두 라벨 숨김
-      if (duduLabel) duduLabel.style.display = "none";
 
       if (!listening) {
         // 듣기 시작

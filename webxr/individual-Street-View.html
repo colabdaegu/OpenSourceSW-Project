@@ -38,7 +38,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <details open>
         <summary>DU AR-Chat</summary>
         <p>
-          이 샘플은 실제 표면 위에 가상 객체를 배치하기 위해 히트 테스트를 사용하는 기능을 보여줍니다.
+          이 샘플은 로드뷰 화면 위에 가상 객체를 배치하기 위해 히트 테스트를 사용하는 기능을 보여줍니다.
           <a class="back" href="/">뒤로가기</a>
         </p>
       </details>
@@ -46,6 +46,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <!-- 두두 머리 위에 띄울 텍스트 -->
     <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
+
+    <!-- 로드뷰(고정 두두) 전용 말풍선 -->
+    <div id="dudu-street-view-label"></div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
@@ -70,13 +73,40 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </button>
     </div>
 
-    <button id="collegeDescriptionBtn" class="college-description-btn" type="button">🏫　　IT·공과대학에 대해서 </button>
-    <button id="departmentDescriptionBtn" class="department-description-btn" type="button">📚 　 컴퓨터소프트웨어 소개</button>
+
+    <div id="remoteControlLabel">캠퍼스 이동</div>
+    <div id="remoteControl">
+      <button id="btnUp">▲</button>
+      <button id="btnDown">▼</button>
+    </div>
+
+    <div id="toast">0</div>
+
 
     <style>
-      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn,
+      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
        .char-toggle-group {
         display: none; 
+      }
+
+
+      #dudu3d{
+        position: fixed;
+        left: calc(50% + 5px);
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(55vw, 320px);
+        height: min(55vw, 320px);
+        z-index: 9999;
+        pointer-events: none;
+        background: transparent;
+        
+        opacity: 0.65;
+      }
+      #dudu3d::part(default-progress-bar),
+      #dudu3d::part(progress-bar),
+      #dudu3d::part(progress-mask) {
+        display: none !important;
       }
 
 
@@ -98,8 +128,54 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         will-change: transform, top, left;
         display: none;
       }
-    </style>
 
+
+      #dudu-street-view-label{
+        position: fixed;
+        left: 50%;
+        top: calc(50% - 70px);
+        transform: translate(-50%, -120%);
+        width: 175px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.4);
+        color: #fff;
+        font-size: 12px;
+        line-height: 1.45;
+        text-align: left;
+        white-space: normal;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        box-sizing: border-box;
+        z-index: 10000;
+        pointer-events: none;
+        display: none;
+      }
+
+
+      #roadview{
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+        z-index: 1;
+      }
+
+
+      
+    </style>
+    <model-viewer
+      id="dudu3d"
+      src="../media/gltf/dudu/dudu.gltf"
+      autoplay
+      disable-zoom
+      exposure="1"
+      environment-image="neutral"
+      shadow-intensity="1"
+      shadow-softness="1"
+      interaction-prompt="none"
+      style="display:none;"
+    ></model-viewer>
 
     <!-- ====== 채팅 UI ====== -->
     <!-- 대화 로그 영역 -->
@@ -121,6 +197,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <script src="/ngrok-address.js"></script>
     <script src="chat.js"></script>
 
+    <div id="roadview"></div>
+
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=__KAKAO_MAP_APPKEY__"></script>
 
     <script type="module">
       import {WebXRButton} from '../js/util/webxr-button.js';
@@ -133,8 +212,37 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       import {vec3, mat4, vec4} from '../js/render/math/gl-matrix.js';
       import {Ray} from '../js/render/math/ray.js';
 
+
       // 두두 생성되지 않음
       window.hasDuduPlaced = false;
+      window.hasStreetDuduPlaced = false;
+
+      // 로드뷰 전역 객체
+      let roadview = null;
+      let roadviewClient = null;
+
+      // =======================
+      // 로드뷰 좌표 테이블 (0~12)
+      // https://apis.map.kakao.com/web/sample/addMapClickEventWithMarker/
+      // =======================
+      const ROADVIEW_POSITIONS = [
+        { lat: 35.902330854481235,  lng: 128.84372684313558, pan: 0  },  // 0 - 공공인재대학
+        { lat: 35.901387001082604,  lng: 128.85060488923892, pan: 130  },  // 1 - 글로벌경영대학
+        { lat: 35.901364764471964,  lng: 128.84179669881323, pan: 105  },  // 2 - 사회과학대학
+        { lat: 35.903111497273194,  lng: 128.85622160407024, pan: 223  },  // 3 - 보건바이오대학
+        { lat: 35.898668791496114,  lng: 128.85507402228905, pan: 15   },  // 4 - IT·공과대학 
+        { lat: 35.90253775928005,  lng: 128.84521576298965, pan: 34  },  // 5 - 디자인예술대학
+        { lat: 35.899513951312755,  lng: 128.84657424174395, pan: 0  },  // 6 - 사범대학
+        { lat: 35.89968880330472,  lng: 128.85262531455385, pan: 71.5  },  // 7 - 재활과학대학
+        { lat: 35.90347157646457,  lng: 128.84923852280758, pan: 315  },  // 8 - 체육레저학부
+        { lat: 35.89906791852828,  lng: 128.84993899263768, pan: 150  },  // 9 - 문화콘텐츠학부
+        { lat: 35.89897618587197, lng: 128.84989809487084, pan: 108 },  // 10 - 자유전공학부
+        { lat: 35.85665449257892, lng: 128.5753815771618, pan: 63 },  // 11 - 글로컬라이프대학
+        { lat: 35.85529786579435, lng: 128.57627072633176, pan: 106 },  // 12 - 간호대학
+      ];
+
+      
+
 
       // 줄바꿈 스크립트
       function autoWrapText(text, maxChars = 20, maxSpaces = 5) {
@@ -158,6 +266,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
         return result;
       }
+      window.autoWrapText = autoWrapText;
 
       const duduLabelEl = document.getElementById("dudu-label");
       if (duduLabelEl) {
@@ -173,7 +282,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn';
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #remoteControl, #remoteControlLabel';
       
 
       window.addEventListener('pointerdown', (ev) => {
@@ -222,6 +331,50 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let currentCharIndex = 0; // 0: dudu, 1: dudu_2, 2: dudu_3
 
 
+      function setOverlayModelByIndex(index) {
+        const mv = document.getElementById("dudu3d");
+        if (!mv) return;
+        if (index < 0 || index >= CHARACTER_URLS.length) return;
+
+        const next = CHARACTER_URLS[index];
+        if (mv.getAttribute("src") === next) return;
+
+        mv.setAttribute("src", next);
+      }
+
+
+      // 로드뷰 이동 함수
+      function moveRoadviewToIndex(index) {
+        if (!roadview || !roadviewClient) {
+          console.warn("로드뷰 아직 초기화 안됨");
+          return;
+        }
+
+        const pos = ROADVIEW_POSITIONS[index];
+        if (!pos) {
+          console.warn("좌표 없음:", index);
+          return;
+        }
+
+        const latLng = new kakao.maps.LatLng(pos.lat, pos.lng);
+
+        roadviewClient.getNearestPanoId(latLng, 50, function (panoId) {
+          if (!panoId) {
+            console.warn("panoId 없음:", index);
+            return;
+          }
+          roadview.setPanoId(panoId, latLng);
+
+          // 방향 적용
+          roadview.setViewpoint({
+              pan: pos.pan,
+              tilt: 0,
+              zoom: -100
+          });
+        });
+      }
+
+
       function getHeadLocalPos() {
         switch (currentCharIndex) {
           case 0: // 캐릭터 1
@@ -257,10 +410,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
         dudu = createCharacterNode(index);
         arObject.addNode(dudu);
+
+        setOverlayModelByIndex(index);
       }
 
       // chat.js 에서 쓸 수 있게 전역으로 노출
       window.switchDuduCharacter = switchCharacter;
+
+      // 이 페이지의 1/2/3 버튼도 동일 함수로 연결
+      document.getElementById("char1Toggle")?.addEventListener("click", () => switchCharacter(0));
+      document.getElementById("char2Toggle")?.addEventListener("click", () => switchCharacter(1));
+      document.getElementById("char3Toggle")?.addEventListener("click", () => switchCharacter(2));
 
 
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
@@ -352,6 +512,41 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           session.requestAnimationFrame(onXRFrame);
         });
 
+
+        const roadviewContainer = document.getElementById('roadview'); //로드뷰를 표시할 div
+        roadview = new kakao.maps.Roadview(roadviewContainer); //로드뷰 객체
+        roadviewClient = new kakao.maps.RoadviewClient(); //좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
+
+        // var position = new kakao.maps.LatLng(33.450701, 126.570667);
+
+        // // 특정 위치의 좌표와 가까운 로드뷰의 panoId를 추출하여 로드뷰를 띄운다.
+        // roadviewClient.getNearestPanoId(position, 50, function(panoId) {
+        //     roadview.setPanoId(panoId, position); //panoId와 중심좌표를 통해 로드뷰 실행
+        // });
+
+        // 시작 시 0번으로 이동
+        moveRoadviewToIndex(0);
+        setDuduOpacity(false);
+
+        window.moveRoadviewToIndex = moveRoadviewToIndex;
+        setTimeout(() => {
+          window.requestRemotePromptAnswer?.(0);
+        }, 300);
+
+
+        const mv = document.getElementById("dudu3d");
+        if (mv) mv.style.display = "block";
+        window.hasStreetDuduPlaced = true;
+        // 로드뷰 켜지는 순간 AR 라벨은 즉시 OFF
+        window.hasDuduPlaced = false;
+        currentDudu = null;
+
+        const arLabel = document.getElementById("dudu-label");
+        if (arLabel) {
+          arLabel.style.display = "none";
+          arLabel.textContent = "";
+        }
+
         /* AR 진입 시 UI 표시 */
 
 
@@ -366,8 +561,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
-        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
-        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+        const remoteControl = document.getElementById("remoteControl");
+        const remoteLabel = document.getElementById("remoteControlLabel");
+
 
         if (chatToggle)   chatToggle.style.display   = "block";
         if (listeningBtn) listeningBtn.style.display = "block";
@@ -378,8 +574,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char2Toggle)    char2Toggle.style.display    = "block";
         if (char3Toggle)    char3Toggle.style.display    = "block";
 
-        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "block";
-        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "block";
+        if (remoteControl) remoteControl.style.display = "flex";
+        if (remoteLabel) remoteLabel.style.display = "block";
       }
 
       
@@ -392,6 +588,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // TTS 중단
         if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
           window.speechSynthesis.cancel();
+          setDuduOpacity(false);
+        }
+
+        // 로드뷰 종료
+        const roadviewEl = document.getElementById("roadview");
+        if (roadviewEl) {
+          roadviewEl.style.display = "none";
         }
 
         /* AR 종료 시 UI 숨김 */
@@ -407,8 +610,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
-        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
-        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+        const remoteControl = document.getElementById("remoteControl");
+        const remoteLabel = document.getElementById("remoteControlLabel");
+
 
         if (chatToggle)   chatToggle.style.display   = "none";
         if (listeningBtn) listeningBtn.style.display = "none";
@@ -419,8 +623,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char2Toggle)    char2Toggle.style.display    = "none";
         if (char3Toggle)    char3Toggle.style.display    = "none";
 
-        if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "none";
-        if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "none";
+        if (remoteControl) remoteControl.style.display = "none";
+        if (remoteLabel) remoteLabel.style.display = "none";
+
+
+        const mv = document.getElementById("dudu3d");
+        if (mv) mv.style.display = "none";
+        window.hasStreetDuduPlaced = false;
 
         // 배경음악 중단
         if (window.duBgm) {
@@ -448,6 +657,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           labelEl.style.display = "none";
           labelEl.textContent = "";
         }
+        const streetLabelEl = document.getElementById("dudu-street-view-label");
+        if (streetLabelEl) {
+          streetLabelEl.style.display = "none";
+          streetLabelEl.textContent = "";
+        }
       }
 
       function onSessionEnded(event) {
@@ -458,6 +672,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // TTS 중단
         if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
           window.speechSynthesis.cancel();
+          setDuduOpacity(false);
+        }
+
+        // 로드뷰 종료
+        const roadviewEl = document.getElementById("roadview");
+        if (roadviewEl) {
+          roadviewEl.style.display = "none";
         }
 
         // 배경음악 중단
@@ -485,8 +706,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const char2Toggle = document.getElementById("char2Toggle");
         const char3Toggle = document.getElementById("char3Toggle");
 
-        const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
-        const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+        const remoteControl = document.getElementById("remoteControl");
+        const remoteLabel = document.getElementById("remoteControlLabel");
+
 
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";
@@ -499,8 +721,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (char2Toggle)   char2Toggle.style.display   = "none";
         if (char3Toggle)   char3Toggle.style.display   = "none";
 
-        if (collegeDescriptionBtn)   collegeDescriptionBtn.style.display   = "none";
-        if (departmentDescriptionBtn)   departmentDescriptionBtn.style.display   = "none";
+        if (remoteControl) remoteControl.style.display = "none";
+        if (remoteLabel) remoteLabel.style.display = "none";
+
+
+        const mv = document.getElementById("dudu3d");
+        if (mv) mv.style.display = "none";
+        window.hasStreetDuduPlaced = false;
+
 
         // 위에 설명 박스 다시 보이게
         document.getElementById('ui-box').style.display = 'block';
@@ -517,6 +745,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (labelEl) {
           labelEl.style.display = "none";
           labelEl.textContent = "";
+        }
+        const streetLabelEl = document.getElementById("dudu-street-view-label");
+        if (streetLabelEl) {
+          streetLabelEl.style.display = "none";
+          streetLabelEl.textContent = "";
         }
 
         window.location.href = "/index.html";
@@ -535,7 +768,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         arObject.matrix = m;
         currentDudu = arObject;
-
+      
 
         // 필요하면 배열에 한 번만 넣어둠
         if (!dudus.includes(arObject)) {
@@ -551,12 +784,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // 두두 라벨도 켜기
         const labelEl = document.getElementById("dudu-label");
         if (labelEl) {
-          if (labelEl.textContent && labelEl.textContent.trim().length > 0) {
-            // 내용이 있을 때만 보여주기
-            labelEl.style.display = "block";
-          } else {
-            // 내용이 없으면 완전히 숨김
+          if (window.hasStreetDuduPlaced) {
             labelEl.style.display = "none";
+          } else {
+            if (labelEl.textContent && labelEl.textContent.trim().length > 0) {
+              // 내용이 있을 때만 보여주기
+              labelEl.style.display = "block";
+            } else {
+              // 내용이 없으면 완전히 숨김
+              labelEl.style.display = "none";
+            }
           }
         }
 
@@ -572,6 +809,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let rayOrigin = vec3.create();
       let rayDirection = vec3.create();
       function onSelect(event) {
+        /* AR 클릭 이벤트 끔 */
+        if (!window.enableARPlacement) return;
+
         if (reticle.visible) {
           // 최근에 UI를 탭했다면 이 select는 무시
           const now = performance.now();
@@ -602,14 +842,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             // let pose = hitTestResults[0].getPose(xrRefSpace);
             // reticle.visible = true;
             // reticle.matrix = pose.transform.matrix;
-
+            
             let pose = hitTestResults[0].getPose(xrRefSpace);
             let m = pose.transform.matrix;
 
             // Y축이 거의 1이면 = 0도 (바닥)
             const yUp = m[5]; // column-major 기준
 
-            if (yUp > 0.99) {
+            if (yUp >= 0) {
               reticle.visible = true;
               reticle.matrix = m;
             } else {
@@ -621,7 +861,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // 두두 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
         const labelEl = document.getElementById("dudu-label");
-        if (labelEl && currentDudu && pose && pose.views.length > 0) {
+        if (labelEl && window.hasStreetDuduPlaced) {
+          labelEl.style.display = "none";
+          labelEl.textContent = "";
+        } else if (labelEl && currentDudu && pose && pose.views.length > 0) {
           const view = pose.views[0];
 
           const viewMat = mat4.create();
@@ -649,8 +892,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
           // 카메라 뒤에 있으면 숨김
           if (clipPos4[3] <= 0) {
-            labelEl.style.display = "none";
+            labelEl.style.visibility = "hidden";
           } else {
+            labelEl.style.visibility = "visible";
+
             const ndcX = clipPos4[0] / clipPos4[3];
             const ndcY = clipPos4[1] / clipPos4[3];
 
@@ -673,7 +918,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             // roll
             const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
 
-            // transform에는 X중앙정렬 + roll만!
+            // transform에는 X중앙정렬 + roll만
             labelEl.style.transformOrigin = "50% 100%";
             labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
           }
@@ -692,5 +937,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // Start the XR application.
       initXR();
     </script>
+
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   </body>
 </html>

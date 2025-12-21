@@ -538,8 +538,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
           // 카메라 뒤에 있으면 숨김
           if (clipPos4[3] <= 0) {
-            labelEl.style.display = "none";
+            labelEl.style.visibility = "hidden";
           } else {
+            labelEl.style.visibility = "visible";
+
             const ndcX = clipPos4[0] / clipPos4[3];
             const ndcY = clipPos4[1] / clipPos4[3];
 
@@ -562,7 +564,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             // roll
             const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
 
-            // transform에는 X중앙정렬 + roll만!
+            // transform에는 X중앙정렬 + roll만
             labelEl.style.transformOrigin = "50% 100%";
             labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
           }

@@ -24,6 +24,18 @@ if (
     synth.onvoiceschanged = pickKoreanVoice;
   }
 
+
+  // TTS시 두두 강조(거리뷰 전용)
+  function setDuduOpacity(isSpeaking) {
+    const mv = document.getElementById("dudu3d");
+    if (!mv) return;
+
+    // 거리뷰 두두가 떠 있을 때만 적용하고 싶으면 아래 조건 유지
+    if (!window.hasStreetDuduPlaced) return;
+
+    mv.style.opacity = isSpeaking ? "0.9" : "0.65";
+  }
+
   // listening / listeningOn 변수는 아래에서 이미 선언되니,
   // 함수 안에서만 사용(호이스팅으로 접근 가능)
   function speakDudu(text) {
@@ -33,6 +45,7 @@ if (
     if (typeof listening !== "undefined" && listening) return;      // 내가 말하는 동안은 읽지 않기
 
     synth.cancel(); // 이전 말 끊기
+    setDuduOpacity(false);
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ko-KR";
@@ -42,6 +55,11 @@ if (
     utter.rate = 1.0;   // 말속도 (0.1 ~ 10)
     utter.pitch = 1.05; // 톤
     utter.volume = 1.0; // 볼륨
+
+    /** TTS 시작/종료에 따라 투명도 변경 **/
+    utter.onstart = () => setDuduOpacity(true);
+    utter.onend = () => setDuduOpacity(false);
+    utter.onerror = () => setDuduOpacity(false);
 
     synth.speak(utter);
   }
@@ -140,21 +158,16 @@ if (
 
 
 
-  // =======================
-  // 설정 값
-  // =======================
-
-  // 화면에 유지할 최대 메시지 수
-  const MAX_LOG_MESSAGES = 4;
-
   // 학과 소개 버튼이 보낼 숨겨진 질문
   // IT·공과대학 소개 요약 요청용 프롬프트 (2~3줄)
   const COLLEGE_SUMMARY_PROMPT =
     "대구대학교 IT·공과대학에 대해 1~2문장으로 아주 짧게 요약해서 소개해줘.\n\n" +
+    "글자수는 150자 이내로\n\n" +
     "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
   const DEPT_SUMMARY_PROMPT =
     "대구대학교 컴퓨터소프트웨어전공에 대해 1~2문장으로 아주 짧게 소개해줘. 무엇을 배우는지와 졸업 후 진로 중심으로.\n\n" +
+    "글자수는 150자 이내로\n\n" +
     "이것은 단순한 설명을 위한 프롬포트이므로, 더 궁금한 것이 있으면 알려주세요와 같은 필요없는 말은 절대로 하지 말 것.";
 
 
@@ -170,6 +183,7 @@ if (
   const listeningBtn = document.getElementById("listeningBtn");
   const guitarBtn = document.getElementById("guitarBtn");
   const duduLabel = document.getElementById("dudu-label");
+  const streetDuduLabel = document.getElementById("dudu-street-view-label");
 
   let currentCharNum = 0;
   const char1Toggle = document.getElementById("char1Toggle");
@@ -179,6 +193,9 @@ if (
 
   const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
   const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
+
+  const mapBtn = document.getElementById("mapBtn");
+
 
   // 어떤 버튼이 선택됐는지 UI 반영
   function updateCharButtonUI(activeIndex) {
@@ -214,12 +231,68 @@ if (
 
     log.appendChild(p);
 
-    // 🔹 오래된 메시지 지우기 (최신 MAX_LOG_MESSAGES개만 유지)
-    while (log.children.length > MAX_LOG_MESSAGES) {
-      log.removeChild(log.firstChild);
+    log.scrollTop = log.scrollHeight;
+  }
+
+
+
+  // =======================
+  // 말풍선(AR/거리뷰) 공용 처리
+  // =======================
+  let bubbleHideTimerId = null;
+
+  function hideAllBubbles() {
+    if (duduLabel) {
+      duduLabel.style.display = "none";
+      duduLabel.textContent = "";
+    }
+    if (streetDuduLabel) {
+      streetDuduLabel.style.display = "none";
+      streetDuduLabel.textContent = "";
+    }
+  }
+
+  function showBubbleText(text) {
+    const wrap = (t, maxChars, maxSpaces) =>
+      (typeof window.autoWrapText === "function")
+        ? window.autoWrapText(t, maxChars, maxSpaces)
+        : t;
+
+    // AR용
+    const wrappedForAR = wrap(text);
+
+    // 거리뷰용
+    const wrappedForStreet = text;
+
+    // AR 라벨: AR에 두두가 배치되었을 때만
+    if (duduLabel) {
+      if (window.hasStreetDuduPlaced) {
+        duduLabel.style.display = "none";
+        duduLabel.textContent = "";
+      } else if (window.hasDuduPlaced) {
+        duduLabel.textContent = wrappedForAR;
+        duduLabel.style.display = "block";
+      } else {
+        duduLabel.style.display = "none";
+        duduLabel.textContent = "";
+      }
     }
 
-    log.scrollTop = log.scrollHeight;
+    // 거리뷰 라벨: 거리뷰 오버레이 두두가 배치되었을 때만
+    if (streetDuduLabel) {
+      if (window.hasStreetDuduPlaced) {
+        streetDuduLabel.textContent = wrappedForStreet;
+        streetDuduLabel.style.display = "block";
+      } else {
+        streetDuduLabel.style.display = "none";
+        streetDuduLabel.textContent = "";
+      }
+    }
+  }
+
+  // "현재 활성 두두" 기준으로 TTS 읽기
+  function canSpeakNow() {
+    return !!((window.hasDuduPlaced || window.hasStreetDuduPlaced));
   }
 
   // 로컬 기본 응답 (서버 실패 시)
@@ -347,25 +420,19 @@ if (
       append("bot", reply);
 
 
-      // 두두가 말해주기
-      if (window.hasDuduPlaced && typeof speakDudu === "function") {
-        speakDudu(reply);
-      }
-      
-      // !!!!! 두두 머리 위 말풍선에도 같은 텍스트 표시
-      if (duduLabel) {
-        if (window.hasDuduPlaced) {
-          duduLabel.textContent = reply;
-          duduLabel.style.display = "block";
-        } else {
-          // 두두가 없으면 중앙에 뜨지 않도록 강제 숨김
-          duduLabel.style.display = "none";
-        }
-      }
+  // 말풍선 표시 (AR/거리뷰 각각 조건으로)
+  showBubbleText(reply);
+
+  // 두두가 말해주기 (AR 우선, 없으면 거리뷰 두두 기준)
+  if (canSpeakNow() && typeof speakDudu === "function") {
+    speakDudu(reply);
+  }
     } catch (err) {
       console.error("Chat API error:", err);
       // 실패 시 로컬 기본 답변 (두두 버전)
-      append("bot", localBotReply(text));
+      const fallback = localBotReply(text);
+      append("bot", fallback);
+      showBubbleText(fallback);
     } finally {
       send.disabled = false;
       mic.disabled  = false;
@@ -378,19 +445,15 @@ if (
       playUiSound(3);
       sendMessage();
     }
-
-    if (duduLabel) duduLabel.style.display = "none";
   });
 
   msg.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-    if (msg.value.trim().length > 0) {
-      playUiSound(3);
-      sendMessage();
-    }
-
-      if (duduLabel) duduLabel.style.display = "none";
+      if (msg.value.trim().length > 0) {
+        playUiSound(3);
+        sendMessage();
+      }
     }
   });
 
@@ -506,13 +569,13 @@ if (
     // 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
     mic.addEventListener("pointerdown", (ev) => {
       // TTS 중단
-      if (synth) synth.cancel();
+      if (synth) {
+        synth.cancel();
+        setDuduOpacity(false);
+      } 
 
       // 마우스면 왼쪽 버튼만 허용
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
-
-      // 마이크 누르면 두두 라벨 숨김
-      if (duduLabel) duduLabel.style.display = "none";
 
       if (!listening) {
         // 듣기 시작
@@ -580,6 +643,7 @@ if (
         // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
         if (listeningOn) {
           synth.cancel();
+          setDuduOpacity(false);
 
           listeningBtn.textContent = "🔈";
           listeningOn = false;
@@ -643,6 +707,9 @@ if (
   updateCharButtonUI(currentCharNum);
 
   function setChar(index) {
+    if (charToggleLocked) return;
+    lockCharToggleTemporarily();
+
     if (index === currentCharNum) {
       console.log("같은 캐릭터라 스킵:", index);
       return;
@@ -654,12 +721,20 @@ if (
     playUiSound(1);
 
     // TTS도 중지
-    if (synth) synth.cancel();
+    if (synth) {
+      synth.cancel();
+      setDuduOpacity(false);
+    } 
 
     // 말풍선 완전히 닫기
     if (duduLabel) {
       duduLabel.style.display = "none";
       duduLabel.textContent = "";
+    }
+
+    if (streetDuduLabel) {
+      streetDuduLabel.style.display = "none";
+      streetDuduLabel.textContent = "";
     }
 
     // 실제 3D 캐릭터 교체 (AR 모듈에서 정의)
@@ -680,6 +755,26 @@ if (
     char3Toggle.addEventListener("click", () => setChar(2));
   }
 
+  // 캐릭터 토글 재사용 대기 시간
+  let charToggleLocked = false;
+  const CHAR_TOGGLE_LOCK_DURATION = 1500;
+
+  function lockCharToggleTemporarily() {
+    charToggleLocked = true;
+
+    if (char1Toggle) char1Toggle.disabled = true;
+    if (char2Toggle) char2Toggle.disabled = true;
+    if (char3Toggle) char3Toggle.disabled = true;
+
+    setTimeout(() => {
+      charToggleLocked = false;
+
+      if (char1Toggle) char1Toggle.disabled = false;
+      if (char2Toggle) char2Toggle.disabled = false;
+      if (char3Toggle) char3Toggle.disabled = false;
+    }, CHAR_TOGGLE_LOCK_DURATION);
+  }
+
 
   // 상태 & 타이머 ID
   let collegeBtnOpened = false;
@@ -687,7 +782,7 @@ if (
   let collegeBtnTimeoutId = null;
   let deptBtnTimeoutId = null;
 
-  // 5초 후 자동으로 숨기는 함수들
+  // 3초 후 자동으로 숨기는 함수들
   function scheduleHideCollegeBtn() {
     if (collegeBtnTimeoutId) clearTimeout(collegeBtnTimeoutId);
     collegeBtnTimeoutId = setTimeout(() => {
@@ -758,7 +853,8 @@ if (
   // =======================
   // 리모컨 컨트롤 (캠퍼스 이동)
   // =======================
-  let remoteIndex = 0;
+  //let remoteIndex = 0;
+  if (typeof window.remoteIndex !== "number") window.remoteIndex = 0;
 
   const REMOTE_SPOTS = [
     "공공인재대학으로",
@@ -788,10 +884,11 @@ if (
     const collegeName = getCollegeNameFromRemoteSpot(index);
 
     const HIDDEN_QUESTION =
-      `"대구대학교 ${collegeName}는 ○○○○○○○○○○!"\n` +
-      `○○○○○○○○○○는 ${collegeName}의 한 줄 소개 및 학과 목록의 내용을 축약한 내용이다.\n` +
-      `그리고 ${collegeName}을(를) 학생에게 친근하게 1~2줄 정도로 짧지만 유익하게 설명해.\n` +
-      `불필요한 안녕하세요!와 같은 인사도 절대로 하지 말고, 설명에 집중할 것.`;
+      `너는 대구대학교 ${collegeName} 단과대학에 도착해 학생에게 캠퍼스를 안내한다.\n` +
+      `첫 문장의 도입 멘트는 '여기는 / 이곳은 / 눈앞에 보이는 곳은' 등과 같이 현장감 있는 멘트로 시작한다.\n` +
+      `${collegeName}의 한 줄 소개와 학과 소개 등의 내용을 중심으로 축약해 설명한다.\n` +
+      `글자수는 120자 이내로 제한한다!\n` +
+      `불필요한 안녕하세요!나 궁금한 게 있으면 더 물어보세요! 같은 멘트는 금지. 설명에만 집중할 것.`;
 
     return sendMessage(HIDDEN_QUESTION, {
       skipUserLog: true,
@@ -799,6 +896,7 @@ if (
       promptExtraKind: promptKey,
     });
   }
+  window.requestRemotePromptAnswer = requestRemotePromptAnswer;
 
   // 숫자를 잠깐 보여주는 토스트 함수
   function showToastNumber(index) {
@@ -836,20 +934,27 @@ if (
     btnUp.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      // TTS도 중지
+      if (synth) {
+        synth.cancel();
+        setDuduOpacity(false);
+      }
+
       lockRemoteTemporarily();
       playUiSound(2);
 
-      switch (remoteIndex) {
+      switch (window.remoteIndex) {
         case 12:
-          remoteIndex = 0;
+          window.remoteIndex = 0;
           break;
         default:
-          remoteIndex = remoteIndex + 1;
+          window.remoteIndex = window.remoteIndex + 1;
           break;
       }
 
-      showToastNumber(remoteIndex);
-      requestRemotePromptAnswer(remoteIndex);
+      showToastNumber(window.remoteIndex);
+      window.moveRoadviewToIndex(window.remoteIndex);
+      requestRemotePromptAnswer(window.remoteIndex);
     });
   }
 
@@ -857,20 +962,59 @@ if (
     btnDown.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      // TTS도 중지
+      if (synth) {
+        synth.cancel();
+        setDuduOpacity(false);
+      }
+
       lockRemoteTemporarily();
       playUiSound(2);
 
-      switch (remoteIndex) {
+      switch (window.remoteIndex) {
         case 0:
-          remoteIndex = 12;
+          window.remoteIndex = 12;
           break;
         default:
-          remoteIndex = remoteIndex - 1;
+          window.remoteIndex = window.remoteIndex - 1;
           break;
       }
 
-      showToastNumber(remoteIndex);
-      requestRemotePromptAnswer(remoteIndex);
+      showToastNumber(window.remoteIndex);
+      window.moveRoadviewToIndex(window.remoteIndex);
+      requestRemotePromptAnswer(window.remoteIndex);
+    });
+  }
+
+
+
+  // 우측 상단 지도 버튼
+  let mapBtnLocked = false;
+  const MAPBTN_LOCK_DURATION = 2000;
+
+  function lockMapBtnTemporarily() {
+    mapBtnLocked = true;
+    if (mapBtn) mapBtn.disabled = true;
+
+    setTimeout(() => {
+      mapBtnLocked = false;
+      if (mapBtn) mapBtn.disabled = false;
+    }, MAPBTN_LOCK_DURATION);
+  }
+
+  if (mapBtn) {
+    mapBtn.addEventListener("click", () => {
+      if (mapBtnLocked) return;
+      lockMapBtnTemporarily();
+
+      playUiSound(2);
+
+      synth.cancel();
+      setDuduOpacity(false);
+
+      if (typeof window.toggleRoadviewOverlay === "function") {
+            window.toggleRoadviewOverlay();
+      }
     });
   }
 }

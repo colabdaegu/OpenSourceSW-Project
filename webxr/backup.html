@@ -1,26 +1,712 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--
+Copyright 2018 The Immersive Web Community Group
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>로드뷰 생성하기</title>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    <meta name='mobile-web-app-capable' content='yes'>
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <link rel='icon' type='image/png' sizes='32x32' href='../media/favicon/favicon-32x32.png'>
+    <link rel='icon' type='image/png' sizes='96x96' href='../media/favicon/favicon-96x96.png'>
+    <link rel='stylesheet' href='../css/common.css'>
+
+    <link rel="stylesheet" href="ar-screen.css">
+
+    <title>Hit Test</title>
+  </head>
+  <body>
+    <header id="ui-box">
+      <details open>
+        <summary>DU AR-Chat</summary>
+        <p>
+          이 샘플은 로드뷰 화면 위에 가상 객체를 배치하기 위해 히트 테스트를 사용하는 기능을 보여줍니다.
+          <a class="back" href="/">뒤로가기</a>
+        </p>
+      </details>
+    </header>
+
+    <!-- 두두 머리 위에 띄울 텍스트 -->
+    <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
+
+
+    <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
+    <button id="listeningBtn" class="listening-btn" type="button">🔊</button>
+    <button id="guitarBtn" class="guitar-btn" type="button">🎵</button>
+
+    <div class="char-toggle-group">
+      <button id="char1Toggle"
+              class="char-toggle-btn"
+              type="button">
+        1
+      </button>
+      <button id="char2Toggle"
+              class="char-toggle-btn"
+              type="button">
+        2
+      </button>
+      <button id="char3Toggle"
+              class="char-toggle-btn"
+              type="button">
+        3
+      </button>
+    </div>
+
+
+    <div id="remoteControlLabel">캠퍼스 이동</div>
+    <div id="remoteControl">
+      <button id="btnUp">▲</button>
+      <button id="btnDown">▼</button>
+    </div>
+
+    <div id="toast">0</div>
+
+
+    <style>
+      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
+       .char-toggle-group {
+        display: none; 
+      }
+
+
+      #dudu-label {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -120%);
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        font-size: 14px;
+        white-space: pre-line;
+        box-sizing: border-box;
+        width: 230px;  
+        pointer-events: none;
+        z-index: 9999;
+        will-change: transform, top, left;
+        display: none;
+      }
+    </style>
+
+
+    <!-- ====== 채팅 UI ====== -->
+    <!-- 대화 로그 영역 -->
+    <div id="log"></div>
+
+    <!-- 하단 채팅 바 -->
+    <div id="chatbar">
+      <input
+        id="msg"
+        type="text"
+        autocomplete="off"
+        placeholder="메시지를 입력하세요..."
+      />
+      <button id="mic" type="button">🎙</button>
+      <button id="send" type="button">전송</button>
+    </div>
+
     
-</head>
-<body>
-<!-- 로드뷰를 표시할 div 입니다 -->
-<div id="roadview" style="width:100%;height:300px;"></div>
+    <script src="/ngrok-address.js"></script>
+    <script src="chat.js"></script>
 
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=__KAKAO_MAP_APPKEY__"></script>
-<script>
-var roadviewContainer = document.getElementById('roadview'); //로드뷰를 표시할 div
-var roadview = new kakao.maps.Roadview(roadviewContainer); //로드뷰 객체
-var roadviewClient = new kakao.maps.RoadviewClient(); //좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
 
-var position = new kakao.maps.LatLng(33.450701, 126.570667);
+    <script type="module">
+      import {WebXRButton} from '../js/util/webxr-button.js';
+      import {Scene} from '../js/render/scenes/scene.js';
+      import {Renderer, createWebGLContext} from '../js/render/core/renderer.js';
+      import {Node} from '../js/render/core/node.js';
+      import {Gltf2Node} from '../js/render/nodes/gltf2.js';
+      import {DropShadowNode} from '../js/render/nodes/drop-shadow.js';
+      //import {vec3} from '../js/render/math/gl-matrix.js';
+      import {vec3, mat4, vec4} from '../js/render/math/gl-matrix.js';
+      import {Ray} from '../js/render/math/ray.js';
 
-// 특정 위치의 좌표와 가까운 로드뷰의 panoId를 추출하여 로드뷰를 띄운다.
-roadviewClient.getNearestPanoId(position, 50, function(panoId) {
-    roadview.setPanoId(panoId, position); //panoId와 중심좌표를 통해 로드뷰 실행
-});
-</script>
-</body>
+
+      // 두두 생성되지 않음
+      window.hasDuduPlaced = false;
+
+      // 줄바꿈 스크립트
+      function autoWrapText(text, maxChars = 20, maxSpaces = 5) {
+        let result = "";
+        let countChars = 0;
+        let countSpaces = 0;
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+
+          countChars++;
+          if (ch === " ") countSpaces++;
+
+          if (countChars > maxChars || countSpaces >= maxSpaces) {
+            result += "\n";
+            countChars = 0;
+            countSpaces = 0;
+          }
+
+          result += ch;
+        }
+        return result;
+      }
+
+      const duduLabelEl = document.getElementById("dudu-label");
+      if (duduLabelEl) {
+        const rawText = duduLabelEl.textContent;           // 원래 텍스트
+        const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
+        duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
+      }
+
+      const charGroup = document.querySelector(".char-toggle-group");
+
+      // 최근에 UI를 탭한 시점 (ms 기준)
+      let lastUiTapTime = 0;
+      const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
+
+      // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #remoteControl, #remoteControlLabel';
+      
+
+      window.addEventListener('pointerdown', (ev) => {
+        const target = ev.target;
+        if (!target) return;
+
+        // 위에서 정한 UI 영역 안에 있는지 확인
+        if (target.closest(UI_ROOT_SELECTOR)) {
+          lastUiTapTime = performance.now();
+          // console.log('UI tapped, suppress next XR select');
+        }
+      });
+
+      
+
+
+      /* =========================
+        버튼 배치
+        ========================= */
+
+
+      // XR globals.
+      let xrButton = null;
+      let xrRefSpace = null;
+      let xrViewerSpace = null;
+      let xrHitTestSource = null;
+
+      // WebGL scene globals.
+      let gl = null;
+      let renderer = null;
+      let scene = new Scene();
+      scene.enableStats(false);
+
+      let arObject = new Node();
+      arObject.visible = false;
+      scene.addNode(arObject);
+      
+
+      // ==== 캐릭터(두두) 기본 모델들 ====
+      const CHARACTER_URLS = [
+        '../media/gltf/dudu/dudu.gltf',       // char1
+        '../media/gltf/dudu_2/dudu_2.gltf',   // char2
+        '../media/gltf/dudu_3/dudu_3.gltf',   // char3
+      ];
+
+      let currentCharIndex = 0; // 0: dudu, 1: dudu_2, 2: dudu_3
+
+
+      function getHeadLocalPos() {
+        switch (currentCharIndex) {
+          case 0: // 캐릭터 1
+            return vec3.fromValues(-0.055, 0.40, 0);
+          case 1: // 캐릭터 2
+            return vec3.fromValues(0.03, 0.40, 0);   
+          case 2: // 캐릭터 3
+            return vec3.fromValues(0.03, 0.40, 0); 
+          default:
+            return vec3.fromValues(0, 0.40, 0);
+        }
+      }
+
+      function createCharacterNode(index) {
+        const node = new Gltf2Node({ url: CHARACTER_URLS[index] });
+        node.scale = [0.4, 0.4, 0.4];
+        return node;
+      }
+
+      // 기본 dudu는 char1 (index 0)
+      let dudu = createCharacterNode(currentCharIndex);
+      arObject.addNode(dudu);
+
+      // 버튼에서 호출할 캐릭터 교체 함수
+      function switchCharacter(index) {
+        if (index === currentCharIndex) return;
+
+        currentCharIndex = index;
+
+        // 기본 arObject 안의 모델 교체
+        if (dudu) {
+          arObject.removeNode(dudu);
+        }
+        dudu = createCharacterNode(index);
+        arObject.addNode(dudu);
+      }
+
+      // chat.js 에서 쓸 수 있게 전역으로 노출
+      window.switchDuduCharacter = switchCharacter;
+
+
+      let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
+      reticle.visible = false;
+      scene.addNode(reticle);
+
+      // Having a really simple drop shadow underneath an object helps ground
+      // it in the world without adding much complexity.
+      let shadow = new DropShadowNode();
+      vec3.set(shadow.scale, 0.15, 0.15, 0.15);
+      arObject.addNode(shadow);
+
+      const MAX_DUDUS = 1;
+      let dudus = [];
+
+      let currentDudu = null;   // 현재 씬에 있는 두두 하나 기억
+
+      // Ensure the background is transparent for AR.
+      scene.clear = false;
+
+      function initXR() {
+        xrButton = new WebXRButton({
+          onRequestSession: onRequestSession,
+          onEndSession: onEndSession,
+          textEnterXRTitle: "AR 시작하기",
+          textXRNotFoundTitle: "AR을 지원하지 않는 기기",
+          textExitXRTitle: "AR  종료하기",
+        });
+        document.querySelector('header').appendChild(xrButton.domElement);
+
+        if (navigator.xr) {
+          navigator.xr.isSessionSupported('immersive-ar')
+                      .then((supported) => {
+            xrButton.enabled = supported;
+          });
+        }
+      }
+
+      function onRequestSession() {
+        return navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['local', 'hit-test', 'dom-overlay'], 
+          domOverlay: { root: document.body }, 
+        }).then((session) => {
+          xrButton.setSession(session);
+          onSessionStarted(session);
+        });
+      }
+
+      function onSessionStarted(session) {
+        /* AR 카메라 화면에서는 WebXRButton UI 숨김 */
+        xrButton.domElement.style.display = 'none';
+
+        document.getElementById('ui-box').style.display = 'none';
+
+
+        // 아래부터 기존 오픈소스 내용
+        session.addEventListener('end', onSessionEnded);
+        session.addEventListener('select', onSelect);
+
+        if (!gl) {
+          gl = createWebGLContext({
+            xrCompatible: true
+          });
+
+          renderer = new Renderer(gl);
+
+          scene.setRenderer(renderer);
+        }
+
+        session.updateRenderState({ 
+          baseLayer: new XRWebGLLayer(session, gl),
+          domOverlay: { root: document.body }, // 2D UI overlay 권한 획득
+        });
+
+        // In this sample we want to cast a ray straight out from the viewer's
+        // position and render a reticle where it intersects with a real world
+        // surface. To do this we first get the viewer space, then create a
+        // hitTestSource that tracks it.
+        session.requestReferenceSpace('viewer').then((refSpace) => {
+          xrViewerSpace = refSpace;
+          session.requestHitTestSource({ space: xrViewerSpace }).then((hitTestSource) => {
+            xrHitTestSource = hitTestSource;
+          });
+        });
+
+        session.requestReferenceSpace('local').then((refSpace) => {
+          xrRefSpace = refSpace;
+
+          session.requestAnimationFrame(onXRFrame);
+        });
+
+        /* AR 진입 시 UI 표시 */
+
+
+        document.getElementById("log").style.display = "block";   
+        document.getElementById("chatbar").style.display = "flex";  
+
+        const chatToggle = document.getElementById("chatToggle");
+        const listeningBtn = document.getElementById("listeningBtn");
+        const guitarBtn = document.getElementById("guitarBtn");
+
+        const char1Toggle = document.getElementById("char1Toggle");
+        const char2Toggle = document.getElementById("char2Toggle");
+        const char3Toggle = document.getElementById("char3Toggle");
+
+        const remoteControl = document.getElementById("remoteControl");
+        const remoteLabel = document.getElementById("remoteControlLabel");
+
+
+        if (chatToggle)   chatToggle.style.display   = "block";
+        if (listeningBtn) listeningBtn.style.display = "block";
+        if (guitarBtn)    guitarBtn.style.display    = "block";
+
+        if (charGroup)    charGroup.style.display    = "inline-flex";
+        if (char1Toggle)    char1Toggle.style.display    = "block";
+        if (char2Toggle)    char2Toggle.style.display    = "block";
+        if (char3Toggle)    char3Toggle.style.display    = "block";
+
+        if (remoteControl) remoteControl.style.display = "flex";
+        if (remoteLabel) remoteLabel.style.display = "block";
+      }
+
+      
+
+      function onEndSession(session) {
+        xrHitTestSource.cancel();
+        xrHitTestSource = null;
+        session.end();
+
+        // TTS 중단
+        if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
+          window.speechSynthesis.cancel();
+        }
+
+        /* AR 종료 시 UI 숨김 */
+
+        document.getElementById("log").style.display = "none";    
+        document.getElementById("chatbar").style.display = "none";   
+
+        const chatToggle = document.getElementById("chatToggle");
+        const listeningBtn = document.getElementById("listeningBtn");
+        const guitarBtn = document.getElementById("guitarBtn");
+
+        const char1Toggle = document.getElementById("char1Toggle");
+        const char2Toggle = document.getElementById("char2Toggle");
+        const char3Toggle = document.getElementById("char3Toggle");
+
+        const remoteControl = document.getElementById("remoteControl");
+        const remoteLabel = document.getElementById("remoteControlLabel");
+
+
+        if (chatToggle)   chatToggle.style.display   = "none";
+        if (listeningBtn) listeningBtn.style.display = "none";
+        if (guitarBtn)    guitarBtn.style.display    = "none";
+
+        if (charGroup)    charGroup.style.display    = "none";
+        if (char1Toggle)    char1Toggle.style.display    = "none";
+        if (char2Toggle)    char2Toggle.style.display    = "none";
+        if (char3Toggle)    char3Toggle.style.display    = "none";
+
+        if (remoteControl) remoteControl.style.display = "none";
+        if (remoteLabel) remoteLabel.style.display = "none";
+
+
+        // 배경음악 중단
+        if (window.duBgm) {
+          try {
+            window.duBgm.pause();
+            window.duBgm.currentTime = 0;
+          } catch (e) {
+            console.warn("BGM stop error:", e);
+          }
+        }
+        const guitarBtnEl = document.getElementById("guitarBtn");
+        if (guitarBtnEl) {
+          guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
+        }
+
+        // AR 종료되면 WebXRButton UI 복원
+        xrButton.domElement.style.display = 'inline-flex';
+        document.getElementById('ui-box').style.display = 'block';
+
+        currentDudu = null;
+        window.hasDuduPlaced = false;
+
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl) {
+          labelEl.style.display = "none";
+          labelEl.textContent = "";
+        }
+      }
+
+      function onSessionEnded(event) {
+
+        // WebXRButton 내부 상태 정리
+        xrButton.setSession(null);
+
+        // TTS 중단
+        if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
+          window.speechSynthesis.cancel();
+        }
+
+        // 배경음악 중단
+        if (window.duBgm) {
+          try {
+            window.duBgm.pause();
+            window.duBgm.currentTime = 0;
+          } catch (e) {
+            console.warn("BGM stop error:", e);
+          }
+        }
+        const guitarBtnEl = document.getElementById("guitarBtn");
+        if (guitarBtnEl) {
+          guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
+        }
+
+        // 채팅창 제거
+        const log = document.getElementById("log");
+        const chatbar = document.getElementById("chatbar");
+        const chatToggle = document.getElementById("chatToggle");
+        const listeningBtn = document.getElementById("listeningBtn");
+        const guitarBtn = document.getElementById("guitarBtn");
+
+        const char1Toggle = document.getElementById("char1Toggle");
+        const char2Toggle = document.getElementById("char2Toggle");
+        const char3Toggle = document.getElementById("char3Toggle");
+
+        const remoteControl = document.getElementById("remoteControl");
+        const remoteLabel = document.getElementById("remoteControlLabel");
+
+
+        if (log) log.style.display = "none";
+        if (chatbar) chatbar.style.display = "none";
+        if (chatToggle)  chatToggle.style.display  = "none";
+        if (listeningBtn)listeningBtn.style.display= "none";
+        if (guitarBtn)   guitarBtn.style.display   = "none";
+
+        if (charGroup)    charGroup.style.display    = "none";
+        if (char1Toggle)   char1Toggle.style.display   = "none";
+        if (char2Toggle)   char2Toggle.style.display   = "none";
+        if (char3Toggle)   char3Toggle.style.display   = "none";
+
+        if (remoteControl) remoteControl.style.display = "none";
+        if (remoteLabel) remoteLabel.style.display = "none";
+
+
+
+        // 위에 설명 박스 다시 보이게
+        document.getElementById('ui-box').style.display = 'block';
+
+        // WebXRButton 다시 보여주기
+        if (xrButton && xrButton.domElement) {
+          xrButton.domElement.style.display = 'inline-flex';
+        }
+
+        currentDudu = null;
+        window.hasDuduPlaced = false;
+
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl) {
+          labelEl.style.display = "none";
+          labelEl.textContent = "";
+        }
+
+        window.location.href = "/index.html";
+      }
+
+      // Adds a new object to the scene at the
+      // specified transform.
+      function addARObjectAt(matrix) {
+        arObject.visible = true;
+
+        // matrix 복사
+        const m = mat4.clone(matrix);
+
+        /** Y축으로 아래로 내리기 (값 조절 포인트) **/
+        mat4.translate(m, m, [0, 0.4, 0]);
+
+        arObject.matrix = m;
+        currentDudu = arObject;
+      
+
+        // 필요하면 배열에 한 번만 넣어둠
+        if (!dudus.includes(arObject)) {
+          dudus.push(arObject);
+        }
+
+        if (typeof window.playUiSound === "function") {
+          window.playUiSound(5);
+        }
+
+        window.hasDuduPlaced = true;
+
+        // 두두 라벨도 켜기
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl) {
+          if (labelEl.textContent && labelEl.textContent.trim().length > 0) {
+            // 내용이 있을 때만 보여주기
+            labelEl.style.display = "block";
+          } else {
+            // 내용이 없으면 완전히 숨김
+            labelEl.style.display = "none";
+          }
+        }
+
+        // For performance reasons if we add too many objects start
+        // removing the oldest ones to keep the scene complexity
+        // from growing too much.
+        if (dudus.length > MAX_DUDUS) {
+          let oldDudu = dudus.shift();
+          scene.removeNode(oldDudu);
+        }
+      }
+
+      let rayOrigin = vec3.create();
+      let rayDirection = vec3.create();
+      function onSelect(event) {
+        if (reticle.visible) {
+          // 최근에 UI를 탭했다면 이 select는 무시
+          const now = performance.now();
+          if (now - lastUiTapTime < UI_TAP_IGNORE_WINDOW) {
+            // console.log('Ignoring XR select caused by UI tap');
+            return;
+          }
+
+          // The reticle should already be positioned at the latest hit point, 
+          // so we can just use it's matrix to save an unnecessary call to 
+          // event.frame.getHitTestResults.
+          addARObjectAt(reticle.matrix);
+        }
+      }
+
+      // Called every time a XRSession requests that a new frame be drawn.
+      function onXRFrame(t, frame) {
+        let session = frame.session;
+        let pose = frame.getViewerPose(xrRefSpace);
+
+        reticle.visible = false;
+
+        // If we have a hit test source, get its results for the frame
+        // and use the pose to display a reticle in the scene.
+        if (xrHitTestSource && pose) {
+          let hitTestResults = frame.getHitTestResults(xrHitTestSource);
+          if (hitTestResults.length > 0) {
+            // let pose = hitTestResults[0].getPose(xrRefSpace);
+            // reticle.visible = true;
+            // reticle.matrix = pose.transform.matrix;
+            
+            let pose = hitTestResults[0].getPose(xrRefSpace);
+            let m = pose.transform.matrix;
+
+            // Y축이 거의 1이면 = 0도 (바닥)
+            const yUp = m[5]; // column-major 기준
+
+            if (yUp > 0.99) {
+              reticle.visible = true;
+              reticle.matrix = m;
+            } else {
+              reticle.visible = false;
+            }
+          }
+        }
+
+
+        // 두두 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
+        const labelEl = document.getElementById("dudu-label");
+        if (labelEl && currentDudu && pose && pose.views.length > 0) {
+          const view = pose.views[0];
+
+          const viewMat = mat4.create();
+          mat4.invert(viewMat, view.transform.matrix);
+
+          const projMat = view.projectionMatrix;
+
+          // !!!!!!!!!!!!!!!!!!!!두두 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
+          const localHeadPos = getHeadLocalPos();
+          const worldHeadPos = vec3.create();
+          vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
+
+          // world → view → clip → NDC → screen
+          const worldPos4 = vec4.fromValues(
+            worldHeadPos[0],
+            worldHeadPos[1],
+            worldHeadPos[2],
+            1.0
+          );
+          const viewPos4 = vec4.create();
+          const clipPos4 = vec4.create();
+
+          vec4.transformMat4(viewPos4, worldPos4, viewMat);
+          vec4.transformMat4(clipPos4, viewPos4, projMat);
+
+          // 카메라 뒤에 있으면 숨김
+          if (clipPos4[3] <= 0) {
+            labelEl.style.visibility = "hidden";
+          } else {
+            labelEl.style.visibility = "visible";
+
+            const ndcX = clipPos4[0] / clipPos4[3];
+            const ndcY = clipPos4[1] / clipPos4[3];
+
+            const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
+            const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
+
+            labelEl.style.left = `${x}px`;
+
+            // Y 오프셋은 transform이 아니라 top에서 직접 빼기
+            // 말풍선 높이를 읽어서 머리 위로 올림
+            const bubbleH = labelEl.offsetHeight || 0;
+            const gapPx = 0;
+            labelEl.style.top = `${y - bubbleH - gapPx}px`;
+
+            // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
+            const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
+            const viewUp4  = vec4.create();
+            vec4.transformMat4(viewUp4, worldUp4, viewMat);
+
+            // roll
+            const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
+
+            // transform에는 X중앙정렬 + roll만
+            labelEl.style.transformOrigin = "50% 100%";
+            labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
+          }
+        }
+
+
+        scene.startFrame();
+
+        session.requestAnimationFrame(onXRFrame);
+
+        scene.drawXRFrame(frame, pose);
+
+        scene.endFrame();
+      }
+
+      // Start the XR application.
+      initXR();
+    </script>
+  </body>
 </html>

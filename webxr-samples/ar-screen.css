@@ -1,9 +1,23 @@
 /* 대화 로그 */
 #log{
-  position:fixed; left:0; right:0; bottom:64px;
-  max-height:40dvh; overflow:auto; -webkit-overflow-scrolling: touch;
-  background:rgba(0,0,0,.35); color:#fff; padding:8px;
-  font:14px/1.5 system-ui; z-index:9999;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 64px;
+
+  height: auto;   
+  max-height: 23vh; 
+  overflow-y: auto; 
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  padding: 8px;
+  font: 14px/1.5 system-ui;
+  z-index: 9999;
+
+  transition: max-height 0.2s ease;
 }
 #log p{ margin:.25rem 0 }
 
@@ -229,12 +243,6 @@ canvas, .a-canvas{
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   cursor: pointer;
-}
-
-.floating-dept-btn:active,
-.chat-toggle-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
 .floating-dept-btn:active {

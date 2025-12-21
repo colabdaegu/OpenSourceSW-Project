@@ -20,17 +20,41 @@ app.get("/", (req, res) => {
 
 app.use("/docs", express.static(path.join(__dirname, "docs")));
 
+app.get("/webxr/DU-AR-CHAT.html", (req, res) => {
+  const filePath = path.join(__dirname, "webxr", "DU-AR-CHAT.html");
+  if (!fs.existsSync(filePath)) return res.status(404).send("Not found");
+
+  const kakaoKey = process.env.KAKAO_MAP_APPKEY;
+  if (!kakaoKey) return res.status(500).send("KAKAO_MAP_APPKEY missing");
+
+  let html = fs.readFileSync(filePath, "utf8");
+  html = html.replaceAll("__KAKAO_MAP_APPKEY__", kakaoKey);
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+});
+
+app.get("/webxr/individual-Street-View.html", (req, res) => {
+  const filePath = path.join(__dirname, "webxr", "individual-Street-View.html");
+  if (!fs.existsSync(filePath)) return res.status(404).send("Not found");
+
+  const kakaoKey = process.env.KAKAO_MAP_APPKEY;
+  if (!kakaoKey) return res.status(500).send("KAKAO_MAP_APPKEY missing");
+
+  let html = fs.readFileSync(filePath, "utf8");
+  html = html.replaceAll("__KAKAO_MAP_APPKEY__", kakaoKey);
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+});
+
 app.get("/webxr/:page", (req, res, next) => {
+  const fs = require("fs");
   const file = path.join(__dirname, "webxr", req.params.page + ".html");
-  if (!fs.existsSync(file)) return next();
-
-  const html = fs.readFileSync(file, "utf8");
-  const replaced = html.replaceAll(
-    "__KAKAO_MAP_APPKEY__",
-    process.env.KAKAO_MAP_APPKEY || ""
-  );
-
-  return res.status(200).type("html").send(replaced);
+  if (fs.existsSync(file)) {
+    return res.sendFile(req.params.page + ".html", { root: path.join(__dirname, "webxr") });
+  }
+  next();
 });
 
 app.get("/webxr-samples/:page", (req, res, next) => {
@@ -60,7 +84,7 @@ app.post("/chat", async (req, res) => {
   try {
     const {
       message: userMessage,
-      messages, // ✅ 새로 추가: [{role, content}, ...]
+      messages,
       model = "gpt-4.1-mini",
       max_tokens = 200,
       temperature = 0.7,
