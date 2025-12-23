@@ -1,3 +1,26 @@
+#dudu-label {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 14px;
+
+  white-space: normal;
+  word-break: keep-all; 
+  overflow-wrap: break-word;
+
+  box-sizing: border-box;
+  width: 230px;  
+
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, top, left;
+}
+
 /* 대화 로그 */
 #log{
   position: fixed;

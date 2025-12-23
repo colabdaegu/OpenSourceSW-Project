@@ -3,7 +3,7 @@ if (
 ) {
   
   // =======================
-  //  두두 TTS (Web Speech)
+  //  TTS (Web Speech)
   // =======================
   const synth = window.speechSynthesis || null;
   let duduVoice = null;
@@ -15,7 +15,7 @@ if (
     duduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
-    console.log("🎙 선택된 두두 음성:", duduVoice?.name, duduVoice?.lang);
+    console.log("🎙 선택된 AI 음성:", duduVoice?.name, duduVoice?.lang);
   }
 
   // 크롬은 비동기로 로드됨
@@ -25,12 +25,12 @@ if (
   }
 
 
-  // TTS시 두두 강조(거리뷰 전용)
+  // TTS시 캐릭터 강조(거리뷰 전용)
   function setDuduOpacity(isSpeaking) {
     const mv = document.getElementById("dudu3d");
     if (!mv) return;
 
-    // 거리뷰 두두가 떠 있을 때만 적용하고 싶으면 아래 조건 유지
+    // 거리뷰 캐릭터가 떠 있을 때만 적용하고 싶으면 아래 조건 유지
     if (!window.hasStreetDuduPlaced) return;
 
     mv.style.opacity = isSpeaking ? "0.9" : "0.65";
@@ -86,6 +86,7 @@ if (
   function playUiSound(id) {
     const audio = soundPlayers[id];
     if (!audio) return;
+    if (!listeningOn) return false;
 
     try {
       audio.currentTime = 0;
@@ -178,6 +179,7 @@ if (
   const msg  = document.getElementById("msg");
   const send = document.getElementById("send");
   const mic  = document.getElementById("mic");
+  
   const deptBtn = document.getElementById("deptInfoBtn");
   const chatToggle = document.getElementById("chatToggle");
   const listeningBtn = document.getElementById("listeningBtn");
@@ -233,7 +235,15 @@ if (
 
     log.scrollTop = log.scrollHeight;
   }
-
+  // 공지용 (채팅 전용)
+  function appendNotice(text) {
+    const p = document.createElement("p");
+    p.textContent = text;
+    p.style.color = "orange";
+    p.style.fontWeight = "bold";
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
 
 
   // =======================
@@ -259,12 +269,12 @@ if (
         : t;
 
     // AR용
-    const wrappedForAR = wrap(text);
+    const wrappedForAR = text;
 
     // 거리뷰용
     const wrappedForStreet = text;
 
-    // AR 라벨: AR에 두두가 배치되었을 때만
+    // AR 라벨: AR에 3D 모델 캐릭터가 배치되었을 때만
     if (duduLabel) {
       if (window.hasStreetDuduPlaced) {
         duduLabel.style.display = "none";
@@ -278,7 +288,7 @@ if (
       }
     }
 
-    // 거리뷰 라벨: 거리뷰 오버레이 두두가 배치되었을 때만
+    // 거리뷰 라벨: 거리뷰 오버레이 캐릭터가 배치되었을 때만
     if (streetDuduLabel) {
       if (window.hasStreetDuduPlaced) {
         streetDuduLabel.textContent = wrappedForStreet;
@@ -290,7 +300,7 @@ if (
     }
   }
 
-  // "현재 활성 두두" 기준으로 TTS 읽기
+  // "현재 캐릭터가 활성화되어 있을 때만" 기준으로 TTS 읽기
   function canSpeakNow() {
     return !!((window.hasDuduPlaced || window.hasStreetDuduPlaced));
   }
@@ -310,6 +320,17 @@ if (
   }
   const MY_NGROK_ADDRESS = window.NGROK_CONFIG.NGROK_ADDRESS;
 
+
+  // 챗 보내기 중단
+  let chatAbortController = null;
+  let chatEpoch = 0;
+  function cancelPendingChat() {
+    chatEpoch++;
+    if (chatAbortController) {
+      try { chatAbortController.abort(); } catch (e) {}
+      chatAbortController = null;
+    }
+  }
   // =======================
   // 메시지 전송 로직
   // =======================
@@ -359,7 +380,6 @@ if (
     }
 
 
-
     // =======================
     // system prompt 구성
     // =======================
@@ -391,11 +411,14 @@ if (
 
 
 
+    const myEpoch = chatEpoch;
+    chatAbortController = new AbortController();
 
     try {
       const resp = await fetch(MY_NGROK_ADDRESS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: chatAbortController.signal,
         body: JSON.stringify({
           messages: messagesToSend,
           model: "gpt-4.1-mini",
@@ -417,19 +440,25 @@ if (
         data.answer ||
         (typeof data === "string" ? data : JSON.stringify(data));
 
+
+      // 모드 변경으로 무효화된 요청이면 화면 업데이트 하지 않고 종료
+      if (myEpoch !== chatEpoch) return;
+
+
+      // 채팅 로그에 답변 갱신
       append("bot", reply);
 
+      // 말풍선 표시 (AR/거리뷰 각각 조건으로)
+      showBubbleText(reply);
 
-  // 말풍선 표시 (AR/거리뷰 각각 조건으로)
-  showBubbleText(reply);
-
-  // 두두가 말해주기 (AR 우선, 없으면 거리뷰 두두 기준)
-  if (canSpeakNow() && typeof speakDudu === "function") {
-    speakDudu(reply);
-  }
+      // 캐릭터가 말해주기 (AR 우선, 없으면 거리뷰 캐릭터 기준)
+      if (canSpeakNow() && typeof speakDudu === "function") {
+        speakDudu(reply);
+      }
     } catch (err) {
+      if (err && err.name === "AbortError") return;
       console.error("Chat API error:", err);
-      // 실패 시 로컬 기본 답변 (두두 버전)
+      // 실패 시 로컬 기본 답변
       const fallback = localBotReply(text);
       append("bot", fallback);
       showBubbleText(fallback);
@@ -501,7 +530,7 @@ if (
   // 공통: 마이크 버튼 UI 리셋
   function resetMicUI() {
     mic.classList.remove("recording");
-    mic.textContent = "🎤";
+    mic.innerHTML = '<img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>';
   }
 
   // 브라우저에서 음성 인식 객체 지원 확인
@@ -639,22 +668,25 @@ if (
   let listeningOn = true;
 
   if (listeningBtn) {
-      listeningBtn.addEventListener("click", () => {
-        // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
-        if (listeningOn) {
-          synth.cancel();
-          setDuduOpacity(false);
+    listeningBtn.addEventListener("click", () => {
+      if (listeningOn) {
+        synth.cancel();
+        setDuduOpacity(false);
 
-          listeningBtn.textContent = "🔈";
-          listeningOn = false;
-          playUiSound(1);
-        } else {
-          listeningBtn.textContent = "🔊";
-          listeningOn = true;
-          playUiSound(2);
+        listeningBtn.textContent = "🔈";
+        if (!bgm.paused) {
+          bgm.pause();
+          guitarBtn.textContent = "🎵";
         }
-      });
-    }
+        playUiSound(1);
+        listeningOn = false;
+      } else {
+        listeningBtn.textContent = "🔊";
+        listeningOn = true;
+        playUiSound(2);
+      }
+    });
+  }
 
 
 
@@ -664,7 +696,7 @@ if (
 
   window.duBgm = bgm;
 
-  // 재생 가능한 기타 사운드 목록
+  // 재생 가능한 사운드 목록
   const backgroundMusics = [
     "../media/sound/guitar.ogg",
     "../media/sound/drums.ogg",
@@ -678,6 +710,13 @@ if (
     guitarBtn.addEventListener("click", () => {
       // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
       if (bgm.paused) {
+        if (!listeningOn) {
+          appendNotice(
+            "[음소거 상태입니다.]"
+          );
+          return false;
+        }
+
         // 랜덤 인덱스 선택
         const randomIndex = Math.floor(Math.random() * backgroundMusics.length);
         currentTrackIndex = randomIndex;
@@ -903,7 +942,7 @@ if (
     const toast = document.getElementById("toast");
     if (!toast) return;
 
-    toast.textContent = REMOTE_SPOTS[index] + " 이동...";
+    toast.textContent = REMOTE_SPOTS[index] + " 이동 중...";
     toast.style.display = "block";
 
     setTimeout(function () {
@@ -934,6 +973,8 @@ if (
     btnUp.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      streetDuduLabel.style.display = "none";
+      streetDuduLabel.textContent = "";
       // TTS도 중지
       if (synth) {
         synth.cancel();
@@ -962,6 +1003,8 @@ if (
     btnDown.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      streetDuduLabel.style.display = "none";
+      streetDuduLabel.textContent = "";
       // TTS도 중지
       if (synth) {
         synth.cancel();
@@ -1009,6 +1052,7 @@ if (
 
       playUiSound(2);
 
+      cancelPendingChat();
       synth.cancel();
       setDuduOpacity(false);
 

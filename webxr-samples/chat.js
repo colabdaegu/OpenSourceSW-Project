@@ -3,7 +3,7 @@ if (
 ) {
   
   // =======================
-  //  두두 TTS (Web Speech)
+  //  TTS (Web Speech)
   // =======================
   const synth = window.speechSynthesis || null;
   let duduVoice = null;
@@ -15,7 +15,7 @@ if (
     duduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
-    console.log("🎙 선택된 두두 음성:", duduVoice?.name, duduVoice?.lang);
+    console.log("🎙 선택된 AI 음성:", duduVoice?.name, duduVoice?.lang);
   }
 
   // 크롬은 비동기로 로드됨
@@ -68,6 +68,7 @@ if (
   function playUiSound(id) {
     const audio = soundPlayers[id];
     if (!audio) return;
+    if (!listeningOn) return false;
 
     try {
       audio.currentTime = 0;
@@ -148,6 +149,15 @@ if (
 
     log.appendChild(p);
 
+    log.scrollTop = log.scrollHeight;
+  }
+  // 공지용 (채팅 전용)
+  function appendNotice(text) {
+    const p = document.createElement("p");
+    p.textContent = text;
+    p.style.color = "orange";
+    p.style.fontWeight = "bold";
+    log.appendChild(p);
     log.scrollTop = log.scrollHeight;
   }
 
@@ -283,24 +293,23 @@ if (
       append("bot", reply);
 
 
-      // 두두가 말해주기
+      // 캐릭터가 말해주기
       if (window.hasDuduPlaced && typeof speakDudu === "function") {
         speakDudu(reply);
       }
       
-      // !!!!! 두두 머리 위 말풍선에도 같은 텍스트 표시
+      // AR 라벨: AR에 3D 모델 캐릭터가 배치되었을 때만
       if (duduLabel) {
         if (window.hasDuduPlaced) {
           duduLabel.textContent = reply;
           duduLabel.style.display = "block";
         } else {
-          // 두두가 없으면 중앙에 뜨지 않도록 강제 숨김
           duduLabel.style.display = "none";
         }
       }
     } catch (err) {
       console.error("Chat API error:", err);
-      // 실패 시 로컬 기본 답변 (두두 버전)
+      // 실패 시 로컬 기본 답변
       append("bot", localBotReply(text));
     } finally {
       send.disabled = false;
@@ -359,7 +368,7 @@ if (
   // 공통: 마이크 버튼 UI 리셋
   function resetMicUI() {
     mic.classList.remove("recording");
-    mic.textContent = "🎤";
+    mic.innerHTML = '<img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>';
   }
 
   // 브라우저에서 음성 인식 객체 지원 확인
@@ -494,21 +503,24 @@ if (
   let listeningOn = true;
 
   if (listeningBtn) {
-      listeningBtn.addEventListener("click", () => {
-        // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
-        if (listeningOn) {
-          synth.cancel();
+    listeningBtn.addEventListener("click", () => {
+      if (listeningOn) {
+        synth.cancel();
 
-          listeningBtn.textContent = "🔈";
-          listeningOn = false;
-          playUiSound(1);
-        } else {
-          listeningBtn.textContent = "🔊";
-          listeningOn = true;
-          playUiSound(2);
+        listeningBtn.textContent = "🔈";
+        if (!bgm.paused) {
+          bgm.pause();
+          guitarBtn.textContent = "🎵";
         }
-      });
-    }
+        playUiSound(1);
+        listeningOn = false;
+      } else {
+        listeningBtn.textContent = "🔊";
+        listeningOn = true;
+        playUiSound(2);
+      }
+    });
+  }
 
 
 
@@ -532,6 +544,13 @@ if (
     guitarBtn.addEventListener("click", () => {
       // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
       if (bgm.paused) {
+        if (!listeningOn) {
+          appendNotice(
+            "[음소거 상태입니다.]"
+          );
+          return false;
+        }
+
         // 랜덤 인덱스 선택
         const randomIndex = Math.floor(Math.random() * backgroundMusics.length);
         currentTrackIndex = randomIndex;
