@@ -44,7 +44,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </details>
     </header>
 
-    <!-- 두두 머리 위에 띄울 텍스트 -->
+    <!-- 3D 모델 캐릭터 머리 위에 띄울 텍스트 -->
     <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
 
 
@@ -53,19 +53,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <button id="guitarBtn" class="guitar-btn" type="button">🎵</button>
 
     <div class="char-toggle-group">
-      <button id="char1Toggle"
-              class="char-toggle-btn"
-              type="button">
+      <button id="char1Toggle" class="char-toggle-btn" type="button">
         1
       </button>
-      <button id="char2Toggle"
-              class="char-toggle-btn"
-              type="button">
+      <button id="char2Toggle" class="char-toggle-btn" type="button">
         2
       </button>
-      <button id="char3Toggle"
-              class="char-toggle-btn"
-              type="button">
+      <button id="char3Toggle" class="char-toggle-btn" type="button">
         3
       </button>
     </div>
@@ -81,29 +75,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
     <style>
-      #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
+      #dudu3d, #dudu-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
        .char-toggle-group {
         display: none; 
-      }
-
-
-      #dudu-label {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -120%);
-        padding: 4px 8px;
-        border-radius: 6px;
-        background: rgba(0, 0, 0, 0.65);
-        color: #fff;
-        font-size: 14px;
-        white-space: pre-line;
-        box-sizing: border-box;
-        width: 230px;  
-        pointer-events: none;
-        z-index: 9999;
-        will-change: transform, top, left;
-        display: none;
       }
     </style>
 
@@ -120,8 +94,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         autocomplete="off"
         placeholder="메시지를 입력하세요..."
       />
-      <button id="mic" type="button">🎙</button>
-      <button id="send" type="button">전송</button>
+      <button id="mic" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">
+        <img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>
+      </button>
+      <button id="send" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">전송</button>
     </div>
 
     
@@ -141,7 +117,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       import {Ray} from '../js/render/math/ray.js';
 
 
-      // 두두 생성되지 않음
+      // 3D 모델 캐릭터 생성되지 않음
       window.hasDuduPlaced = false;
 
       // 줄바꿈 스크립트
@@ -165,13 +141,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           result += ch;
         }
         return result;
-      }
-
-      const duduLabelEl = document.getElementById("dudu-label");
-      if (duduLabelEl) {
-        const rawText = duduLabelEl.textContent;           // 원래 텍스트
-        const wrapped = autoWrapText(rawText);             // 규칙에 따라 줄바꿈
-        duduLabelEl.textContent = wrapped;                 // 고정된 텍스트로 교체
       }
 
       const charGroup = document.querySelector(".char-toggle-group");
@@ -220,7 +189,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       scene.addNode(arObject);
       
 
-      // ==== 캐릭터(두두) 기본 모델들 ====
+      // ==== 3D 모델 캐릭터(두두) 기본 모델들 ====
       const CHARACTER_URLS = [
         '../media/gltf/dudu/dudu.gltf',       // char1
         '../media/gltf/dudu_2/dudu_2.gltf',   // char2
@@ -284,7 +253,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const MAX_DUDUS = 1;
       let dudus = [];
 
-      let currentDudu = null;   // 현재 씬에 있는 두두 하나 기억
+      let currentDudu = null;   // 현재 씬에 있는 3D 모델 캐릭터 하나 기억
 
       // Ensure the background is transparent for AR.
       scene.clear = false;
@@ -562,7 +531,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         window.hasDuduPlaced = true;
 
-        // 두두 라벨도 켜기
+        // 3D 모델 캐릭터 라벨도 켜기
         const labelEl = document.getElementById("dudu-label");
         if (labelEl) {
           if (labelEl.textContent && labelEl.textContent.trim().length > 0) {
@@ -613,10 +582,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (xrHitTestSource && pose) {
           let hitTestResults = frame.getHitTestResults(xrHitTestSource);
           if (hitTestResults.length > 0) {
-            // let pose = hitTestResults[0].getPose(xrRefSpace);
-            // reticle.visible = true;
-            // reticle.matrix = pose.transform.matrix;
-            
             let pose = hitTestResults[0].getPose(xrRefSpace);
             let m = pose.transform.matrix;
 
@@ -633,7 +598,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
 
-        // 두두 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
+        // 3D 모델 캐릭터 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
         const labelEl = document.getElementById("dudu-label");
         if (labelEl && currentDudu && pose && pose.views.length > 0) {
           const view = pose.views[0];
@@ -643,7 +608,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
           const projMat = view.projectionMatrix;
 
-          // !!!!!!!!!!!!!!!!!!!!두두 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
+          // 3D 모델 캐릭터 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
           const localHeadPos = getHeadLocalPos();
           const worldHeadPos = vec3.create();
           vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);

@@ -3,7 +3,7 @@ if (
 ) {
   
   // =======================
-  //  두두 TTS (Web Speech)
+  //  TTS (Web Speech)
   // =======================
   const synth = window.speechSynthesis || null;
   let duduVoice = null;
@@ -15,7 +15,7 @@ if (
     duduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
-    console.log("🎙 선택된 두두 음성:", duduVoice?.name, duduVoice?.lang);
+    console.log("🎙 선택된 AI 음성:", duduVoice?.name, duduVoice?.lang);
   }
 
   // 크롬은 비동기로 로드됨
@@ -25,12 +25,12 @@ if (
   }
 
 
-  // TTS시 두두 강조(거리뷰 전용)
+  // TTS시 캐릭터 강조(거리뷰 전용)
   function setDuduOpacity(isSpeaking) {
     const mv = document.getElementById("dudu3d");
     if (!mv) return;
 
-    // 거리뷰 두두가 떠 있을 때만 적용하고 싶으면 아래 조건 유지
+    // 거리뷰 캐릭터가 떠 있을 때만 적용하고 싶으면 아래 조건 유지
     if (!window.hasStreetDuduPlaced) return;
 
     mv.style.opacity = isSpeaking ? "0.9" : "0.65";
@@ -86,6 +86,7 @@ if (
   function playUiSound(id) {
     const audio = soundPlayers[id];
     if (!audio) return;
+    if (!listeningOn) return false;
 
     try {
       audio.currentTime = 0;
@@ -178,6 +179,7 @@ if (
   const msg  = document.getElementById("msg");
   const send = document.getElementById("send");
   const mic  = document.getElementById("mic");
+  
   const deptBtn = document.getElementById("deptInfoBtn");
   const chatToggle = document.getElementById("chatToggle");
   const listeningBtn = document.getElementById("listeningBtn");
@@ -195,6 +197,56 @@ if (
   const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
 
   const mapBtn = document.getElementById("mapBtn");
+
+
+  // =======================
+  // 키보드(visualViewport) 대응: #log, #chatbar만 키보드 따라 이동
+  // =======================
+  (function setupKeyboardFollowUI() {
+    const root = document.documentElement;
+
+    function updateKeyboardOffset() {
+      // visualViewport 미지원 브라우저는 보정 0
+      if (!window.visualViewport) {
+        root.style.setProperty("--keyboard-offset", "0px");
+        return;
+      }
+
+      const vv = window.visualViewport;
+
+      // 레이아웃 viewport(window.innerHeight) 기준으로
+      // 현재 "보이는 viewport"의 하단(vv.offsetTop + vv.height) 아래가 키보드/오버레이 영역
+      const overlap = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+
+      root.style.setProperty("--keyboard-offset", `${overlap}px`);
+    }
+
+    // 초기 1회
+    updateKeyboardOffset();
+
+    // 키보드 열림/닫힘 시점에 가장 잘 반응하는 이벤트들
+    window.addEventListener("resize", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateKeyboardOffset);
+      window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
+    }
+
+    // iOS에서 포커스 순간/해제 순간 보정(딜레이로 안정화)
+    window.addEventListener("focusin", () => {
+      updateKeyboardOffset();
+      setTimeout(updateKeyboardOffset, 50);
+      setTimeout(updateKeyboardOffset, 150);
+    });
+
+    window.addEventListener("focusout", () => {
+      updateKeyboardOffset();
+      setTimeout(updateKeyboardOffset, 50);
+      setTimeout(updateKeyboardOffset, 150);
+    });
+  })();
+
 
 
   // 어떤 버튼이 선택됐는지 UI 반영
@@ -233,7 +285,15 @@ if (
 
     log.scrollTop = log.scrollHeight;
   }
-
+  // 공지용 (채팅 전용)
+  function appendNotice(text) {
+    const p = document.createElement("p");
+    p.textContent = text;
+    p.style.color = "orange";
+    p.style.fontWeight = "bold";
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
 
 
   // =======================
@@ -259,12 +319,12 @@ if (
         : t;
 
     // AR용
-    const wrappedForAR = wrap(text);
+    const wrappedForAR = text;
 
     // 거리뷰용
     const wrappedForStreet = text;
 
-    // AR 라벨: AR에 두두가 배치되었을 때만
+    // AR 라벨: AR에 3D 모델 캐릭터가 배치되었을 때만
     if (duduLabel) {
       if (window.hasStreetDuduPlaced) {
         duduLabel.style.display = "none";
@@ -278,7 +338,7 @@ if (
       }
     }
 
-    // 거리뷰 라벨: 거리뷰 오버레이 두두가 배치되었을 때만
+    // 거리뷰 라벨: 거리뷰 오버레이 캐릭터가 배치되었을 때만
     if (streetDuduLabel) {
       if (window.hasStreetDuduPlaced) {
         streetDuduLabel.textContent = wrappedForStreet;
@@ -290,7 +350,7 @@ if (
     }
   }
 
-  // "현재 활성 두두" 기준으로 TTS 읽기
+  // "현재 캐릭터가 활성화되어 있을 때만" 기준으로 TTS 읽기
   function canSpeakNow() {
     return !!((window.hasDuduPlaced || window.hasStreetDuduPlaced));
   }
@@ -310,6 +370,17 @@ if (
   }
   const MY_NGROK_ADDRESS = window.NGROK_CONFIG.NGROK_ADDRESS;
 
+
+  // 챗 보내기 중단
+  let chatAbortController = null;
+  let chatEpoch = 0;
+  function cancelPendingChat() {
+    chatEpoch++;
+    if (chatAbortController) {
+      try { chatAbortController.abort(); } catch (e) {}
+      chatAbortController = null;
+    }
+  }
   // =======================
   // 메시지 전송 로직
   // =======================
@@ -328,6 +399,21 @@ if (
       : msg.value.trim();
 
     if (!text) return;
+
+
+    // 로드뷰 모드면 현재 위치 프롬프트를 자동으로 붙이기
+    const roadviewEl = document.getElementById("roadview");
+    const isRoadview = !!roadviewEl && roadviewEl.offsetParent !== null;
+    const rvIndex = (typeof window.remoteIndex === "number") ? window.remoteIndex : null;
+
+    // options로 받은 promptExtraKind를 수정할 수 있게 let으로 재선언
+    let effectivePromptExtraKind = promptExtraKind;
+
+    if (isRoadview) {
+      // 로드뷰에서는 기본적으로 현재 spot 프롬프트를 강제
+      effectivePromptExtraKind = "street" + rvIndex;
+    }
+
 
     // 사용자 메세지 로그에 추가
     if (!skipUserLog) {
@@ -359,7 +445,6 @@ if (
     }
 
 
-
     // =======================
     // system prompt 구성
     // =======================
@@ -372,11 +457,11 @@ if (
     }
 
     let extraPrompt = "";
-    if (promptExtraKind) {
+    if (effectivePromptExtraKind) {
       try {
-        extraPrompt = await loadPrompt(promptExtraKind);
+        extraPrompt = await loadPrompt(effectivePromptExtraKind);
       } catch (e) {
-        console.warn(`${promptExtraKind} prompt load failed:`, e);
+        console.warn(`${effectivePromptExtraKind} prompt load failed:`, e);
         extraPrompt = "";
       }
     }
@@ -391,11 +476,14 @@ if (
 
 
 
+    const myEpoch = chatEpoch;
+    chatAbortController = new AbortController();
 
     try {
       const resp = await fetch(MY_NGROK_ADDRESS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: chatAbortController.signal,
         body: JSON.stringify({
           messages: messagesToSend,
           model: "gpt-4.1-mini",
@@ -417,19 +505,25 @@ if (
         data.answer ||
         (typeof data === "string" ? data : JSON.stringify(data));
 
+
+      // 모드 변경으로 무효화된 요청이면 화면 업데이트 하지 않고 종료
+      if (myEpoch !== chatEpoch) return;
+
+
+      // 채팅 로그에 답변 갱신
       append("bot", reply);
 
+      // 말풍선 표시 (AR/거리뷰 각각 조건으로)
+      showBubbleText(reply);
 
-  // 말풍선 표시 (AR/거리뷰 각각 조건으로)
-  showBubbleText(reply);
-
-  // 두두가 말해주기 (AR 우선, 없으면 거리뷰 두두 기준)
-  if (canSpeakNow() && typeof speakDudu === "function") {
-    speakDudu(reply);
-  }
+      // 캐릭터가 말해주기 (AR 우선, 없으면 거리뷰 캐릭터 기준)
+      if (canSpeakNow() && typeof speakDudu === "function") {
+        speakDudu(reply);
+      }
     } catch (err) {
+      if (err && err.name === "AbortError") return;
       console.error("Chat API error:", err);
-      // 실패 시 로컬 기본 답변 (두두 버전)
+      // 실패 시 로컬 기본 답변
       const fallback = localBotReply(text);
       append("bot", fallback);
       showBubbleText(fallback);
@@ -501,7 +595,7 @@ if (
   // 공통: 마이크 버튼 UI 리셋
   function resetMicUI() {
     mic.classList.remove("recording");
-    mic.textContent = "🎤";
+    mic.innerHTML = '<img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>';
   }
 
   // 브라우저에서 음성 인식 객체 지원 확인
@@ -639,22 +733,25 @@ if (
   let listeningOn = true;
 
   if (listeningBtn) {
-      listeningBtn.addEventListener("click", () => {
-        // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
-        if (listeningOn) {
-          synth.cancel();
-          setDuduOpacity(false);
+    listeningBtn.addEventListener("click", () => {
+      if (listeningOn) {
+        synth.cancel();
+        setDuduOpacity(false);
 
-          listeningBtn.textContent = "🔈";
-          listeningOn = false;
-          playUiSound(1);
-        } else {
-          listeningBtn.textContent = "🔊";
-          listeningOn = true;
-          playUiSound(2);
+        listeningBtn.textContent = "🔈";
+        if (!bgm.paused) {
+          bgm.pause();
+          guitarBtn.textContent = "🎵";
         }
-      });
-    }
+        playUiSound(1);
+        listeningOn = false;
+      } else {
+        listeningBtn.textContent = "🔊";
+        listeningOn = true;
+        playUiSound(2);
+      }
+    });
+  }
 
 
 
@@ -664,7 +761,7 @@ if (
 
   window.duBgm = bgm;
 
-  // 재생 가능한 기타 사운드 목록
+  // 재생 가능한 사운드 목록
   const backgroundMusics = [
     "../media/sound/guitar.ogg",
     "../media/sound/drums.ogg",
@@ -678,6 +775,13 @@ if (
     guitarBtn.addEventListener("click", () => {
       // 아직 한 번도 안 틀었거나, 정지 상태라면 → 랜덤 트랙 선택 후 재생
       if (bgm.paused) {
+        if (!listeningOn) {
+          appendNotice(
+            "[음소거 상태입니다.]"
+          );
+          return false;
+        }
+
         // 랜덤 인덱스 선택
         const randomIndex = Math.floor(Math.random() * backgroundMusics.length);
         currentTrackIndex = randomIndex;
@@ -884,7 +988,7 @@ if (
     const collegeName = getCollegeNameFromRemoteSpot(index);
 
     const HIDDEN_QUESTION =
-      `너는 대구대학교 ${collegeName} 단과대학에 도착해 학생에게 캠퍼스를 안내한다.\n` +
+      `너는 지금 대구대학교 ${collegeName} 단과대학에 위치해 있고, 이용자는 로드뷰 화면을 통해 캠퍼스 모습을 보고 있다.\n` +
       `첫 문장의 도입 멘트는 '여기는 / 이곳은 / 눈앞에 보이는 곳은' 등과 같이 현장감 있는 멘트로 시작한다.\n` +
       `${collegeName}의 한 줄 소개와 학과 소개 등의 내용을 중심으로 축약해 설명한다.\n` +
       `글자수는 120자 이내로 제한한다!\n` +
@@ -903,7 +1007,7 @@ if (
     const toast = document.getElementById("toast");
     if (!toast) return;
 
-    toast.textContent = REMOTE_SPOTS[index] + " 이동...";
+    toast.textContent = REMOTE_SPOTS[index] + " 이동 중...";
     toast.style.display = "block";
 
     setTimeout(function () {
@@ -934,6 +1038,8 @@ if (
     btnUp.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      streetDuduLabel.style.display = "none";
+      streetDuduLabel.textContent = "";
       // TTS도 중지
       if (synth) {
         synth.cancel();
@@ -962,6 +1068,8 @@ if (
     btnDown.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      streetDuduLabel.style.display = "none";
+      streetDuduLabel.textContent = "";
       // TTS도 중지
       if (synth) {
         synth.cancel();
@@ -1009,6 +1117,7 @@ if (
 
       playUiSound(2);
 
+      cancelPendingChat();
       synth.cancel();
       setDuduOpacity(false);
 

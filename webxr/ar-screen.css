@@ -1,9 +1,77 @@
+/* 로드뷰용 3D 캐릭터 모델 */
+#dudu3d{
+  position: fixed;
+  left: calc(50% + 5px);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(55vw, 320px);
+  height: min(55vw, 320px);
+  z-index: 9999;
+  pointer-events: none;
+  background: transparent;
+  
+  opacity: 0.65;
+}
+/* model-viewer 로딩 프로그레스 숨김 */
+/* #dudu3d::part(default-progress-bar),
+#dudu3d::part(progress-bar),
+#dudu3d::part(progress-mask) {
+  display: none !important;
+} */
+
+#dudu-label {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 14px;
+
+  white-space: normal;
+  word-break: keep-all; 
+  overflow-wrap: break-word;
+
+  box-sizing: border-box;
+  width: 230px;  
+
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, top, left;
+}
+
+#dudu-street-view-label{
+  position: fixed;
+  left: 50%;
+  top: calc(50% - 70px);
+  transform: translate(-50%, -120%);
+  width: 175px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: left;
+
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+
+  box-sizing: border-box;
+  z-index: 10000;
+  pointer-events: none;
+}
+
 /* 대화 로그 */
 #log{
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 64px;
+
+  bottom: calc(64px + var(--keyboard-offset));
 
   height: auto;   
   max-height: 23vh; 
@@ -15,7 +83,7 @@
   color: #fff;
   padding: 8px;
   font: 14px/1.5 system-ui;
-  z-index: 9999;
+  z-index: 29999;
 
   transition: max-height 0.2s ease;
 }
@@ -23,13 +91,22 @@
 
 /* 하단 채팅 바 */
 #chatbar{
-  position:fixed; left:0; right:0; bottom:0;
+  position:fixed;
+  left:0;
+  right:0;
+
+  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom));
+
   background:rgba(0,0,0,.55);
   padding:8px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  display:flex; gap:8px; align-items:center;
-  z-index:10000;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  z-index:30000;
   box-sizing:border-box;
+
+  transition: bottom 0.12s ease;
 }
 
 /* 입력창 */
@@ -369,6 +446,7 @@ canvas, .a-canvas{
 :root{
   --remote-right: 20px;
   --remote-width: 60px;
+  --keyboard-offset: 0px; /* 키보드 겹침 보정값 */
 }
 
 
@@ -532,10 +610,14 @@ canvas, .a-canvas{
   width: 100vw;
   height: 100vh;
   display: none;
-  z-index: 9998;
+  z-index: 9997;
   background: #000;
 }
 #roadview{
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 9998;
+  display: none;
 }

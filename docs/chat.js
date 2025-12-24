@@ -187,7 +187,7 @@ let tempText  = "";
 // 공통: 마이크 버튼 UI 리셋
 function resetMicUI() {
   mic.classList.remove("recording");
-  mic.textContent = "🎤";
+  mic.innerHTML = '<img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>';
 }
 
 // 브라우저에서 음성 인식 객체 지원 확인
