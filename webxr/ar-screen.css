@@ -70,7 +70,8 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 64px;
+
+  bottom: calc(64px + var(--keyboard-offset));
 
   height: auto;   
   max-height: 23vh; 
@@ -82,7 +83,7 @@
   color: #fff;
   padding: 8px;
   font: 14px/1.5 system-ui;
-  z-index: 9999;
+  z-index: 29999;
 
   transition: max-height 0.2s ease;
 }
@@ -90,13 +91,22 @@
 
 /* 하단 채팅 바 */
 #chatbar{
-  position:fixed; left:0; right:0; bottom:0;
+  position:fixed;
+  left:0;
+  right:0;
+
+  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom));
+
   background:rgba(0,0,0,.55);
   padding:8px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  display:flex; gap:8px; align-items:center;
-  z-index:10000;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  z-index:30000;
   box-sizing:border-box;
+
+  transition: bottom 0.12s ease;
 }
 
 /* 입력창 */
@@ -436,6 +446,7 @@ canvas, .a-canvas{
 :root{
   --remote-right: 20px;
   --remote-width: 60px;
+  --keyboard-offset: 0px; /* 키보드 겹침 보정값 */
 }
 
 

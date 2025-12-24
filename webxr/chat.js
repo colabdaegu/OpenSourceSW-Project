@@ -199,6 +199,56 @@ if (
   const mapBtn = document.getElementById("mapBtn");
 
 
+  // =======================
+  // 키보드(visualViewport) 대응: #log, #chatbar만 키보드 따라 이동
+  // =======================
+  (function setupKeyboardFollowUI() {
+    const root = document.documentElement;
+
+    function updateKeyboardOffset() {
+      // visualViewport 미지원 브라우저는 보정 0
+      if (!window.visualViewport) {
+        root.style.setProperty("--keyboard-offset", "0px");
+        return;
+      }
+
+      const vv = window.visualViewport;
+
+      // 레이아웃 viewport(window.innerHeight) 기준으로
+      // 현재 "보이는 viewport"의 하단(vv.offsetTop + vv.height) 아래가 키보드/오버레이 영역
+      const overlap = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+
+      root.style.setProperty("--keyboard-offset", `${overlap}px`);
+    }
+
+    // 초기 1회
+    updateKeyboardOffset();
+
+    // 키보드 열림/닫힘 시점에 가장 잘 반응하는 이벤트들
+    window.addEventListener("resize", updateKeyboardOffset);
+    window.addEventListener("orientationchange", updateKeyboardOffset);
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateKeyboardOffset);
+      window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
+    }
+
+    // iOS에서 포커스 순간/해제 순간 보정(딜레이로 안정화)
+    window.addEventListener("focusin", () => {
+      updateKeyboardOffset();
+      setTimeout(updateKeyboardOffset, 50);
+      setTimeout(updateKeyboardOffset, 150);
+    });
+
+    window.addEventListener("focusout", () => {
+      updateKeyboardOffset();
+      setTimeout(updateKeyboardOffset, 50);
+      setTimeout(updateKeyboardOffset, 150);
+    });
+  })();
+
+
+
   // 어떤 버튼이 선택됐는지 UI 반영
   function updateCharButtonUI(activeIndex) {
     charButtons.forEach((btn, i) => {
@@ -350,6 +400,21 @@ if (
 
     if (!text) return;
 
+
+    // 로드뷰 모드면 현재 위치 프롬프트를 자동으로 붙이기
+    const roadviewEl = document.getElementById("roadview");
+    const isRoadview = !!roadviewEl && roadviewEl.offsetParent !== null;
+    const rvIndex = (typeof window.remoteIndex === "number") ? window.remoteIndex : null;
+
+    // options로 받은 promptExtraKind를 수정할 수 있게 let으로 재선언
+    let effectivePromptExtraKind = promptExtraKind;
+
+    if (isRoadview) {
+      // 로드뷰에서는 기본적으로 현재 spot 프롬프트를 강제
+      effectivePromptExtraKind = "street" + rvIndex;
+    }
+
+
     // 사용자 메세지 로그에 추가
     if (!skipUserLog) {
       append("user", text);
@@ -392,11 +457,11 @@ if (
     }
 
     let extraPrompt = "";
-    if (promptExtraKind) {
+    if (effectivePromptExtraKind) {
       try {
-        extraPrompt = await loadPrompt(promptExtraKind);
+        extraPrompt = await loadPrompt(effectivePromptExtraKind);
       } catch (e) {
-        console.warn(`${promptExtraKind} prompt load failed:`, e);
+        console.warn(`${effectivePromptExtraKind} prompt load failed:`, e);
         extraPrompt = "";
       }
     }
@@ -923,7 +988,7 @@ if (
     const collegeName = getCollegeNameFromRemoteSpot(index);
 
     const HIDDEN_QUESTION =
-      `너는 대구대학교 ${collegeName} 단과대학에 도착해 학생에게 캠퍼스를 안내한다.\n` +
+      `너는 지금 대구대학교 ${collegeName} 단과대학에 위치해 있고, 이용자는 로드뷰 화면을 통해 캠퍼스 모습을 보고 있다.\n` +
       `첫 문장의 도입 멘트는 '여기는 / 이곳은 / 눈앞에 보이는 곳은' 등과 같이 현장감 있는 멘트로 시작한다.\n` +
       `${collegeName}의 한 줄 소개와 학과 소개 등의 내용을 중심으로 축약해 설명한다.\n` +
       `글자수는 120자 이내로 제한한다!\n` +
