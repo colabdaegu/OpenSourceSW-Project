@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <html>
   <head>
     <meta charset='utf-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no, interactive-widget=overlays-content'>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <link rel='icon' type='image/png' sizes='32x32' href='../media/favicon/favicon-32x32.png'>
@@ -58,6 +58,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         display: none; 
       }
     </style>
+    <model-viewer
+      id="holding-phone-3d"
+      src="../media/gltf/holding-phone/holding-phone.gltf"
+      autoplay
+      camera-controls
+      interaction-prompt-style="wiggle"
+      disable-zoom
+      exposure="1"
+      environment-image="neutral"
+    ></model-viewer>
 
 
     <!-- ====== 채팅 UI ====== -->
@@ -148,6 +158,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
         return result;
       }
+      window.autoWrapText = autoWrapText;
 
       // 최근에 UI를 탭한 시점 (ms 기준)
       let lastUiTapTime = 0;
@@ -200,6 +211,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
       reticle.visible = false;
       scene.addNode(reticle);
+      // AR 인식 전 안내용(holding-phone) 3D 오버레이 표시 유무
+      function updateHoldingPhoneVisibility(visible) {
+        const hp = document.getElementById("holding-phone-3d");
+        if (!hp) return;
+        hp.classList.toggle("is-visible", visible);
+      }
+      let reticleMissingSince = null;   // reticle이 안 보이기 시작한 시점(performance.now)
+      let holdingPhoneShown = false;    // 현재 holding-phone-3d 표시 상태
+      const HOLDING_PHONE_DELAY_MS = 3000;
 
       // Having a really simple drop shadow underneath an object helps ground
       // it in the world without adding much complexity.
@@ -211,6 +231,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let dudus = [];
 
       let currentDudu = null;   // 현재 씬에 있는 3D 모델 캐릭터 하나 기억
+      let isDuduVisibleToCamera = false; // 3D 캐릭터 모델이 화면에 보이는 상태인가
 
       // Ensure the background is transparent for AR.
       scene.clear = false;
@@ -296,6 +317,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
 
+
+
+        holdingPhoneShown = false;
+        reticleMissingSince = null;
+
         if (chatToggle)   chatToggle.style.display   = "block";
         if (listeningBtn) listeningBtn.style.display = "block";
         if (guitarBtn)    guitarBtn.style.display    = "block";
@@ -319,6 +345,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
+
+
+
+        updateHoldingPhoneVisibility(false);
+        holdingPhoneShown = false;
+        reticleMissingSince = null;
 
         if (chatToggle)   chatToggle.style.display   = "none";
         if (listeningBtn) listeningBtn.style.display = "none";
@@ -357,6 +389,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
+
+
+
+        updateHoldingPhoneVisibility(false);
+        holdingPhoneShown = false;
+        reticleMissingSince = null;
 
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";
@@ -476,66 +514,105 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           }
         }
 
+                
+        // 안내 3D 토글
+        {
+          const now = performance.now();
+
+          // reticle이 보이거나(공간 인식 성공) OR AR 캐릭터로부터 카메라 시점이 이탈한 상태이면
+          if (reticle.visible || (window.hasDuduPlaced && isDuduVisibleToCamera)) {
+            reticleMissingSince = null;
+
+            if (holdingPhoneShown) {
+              updateHoldingPhoneVisibility(false);
+              holdingPhoneShown = false;
+            }
+          } else {
+            // reticle이 안 보이는 상태(=공간 인식 실패)가 지속되는지 체크
+            if (reticleMissingSince === null) reticleMissingSince = now;
+
+            const missingFor = now - reticleMissingSince;
+
+            // 실패 시간이 임계값을 넘었을 때
+            if (missingFor >= HOLDING_PHONE_DELAY_MS) {
+              if (!holdingPhoneShown) {
+                updateHoldingPhoneVisibility(true);
+                holdingPhoneShown = true;
+              }
+            } else {
+              // 해당 구간에서는 절대 안내 3D를 띄우지 않음
+              if (holdingPhoneShown) {
+                updateHoldingPhoneVisibility(false);
+                holdingPhoneShown = false;
+              }
+            }
+          }
+        }
+
 
         // 3D 모델 캐릭터 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
-        const labelEl = document.getElementById("dudu-label");
-        if (labelEl && currentDudu && pose && pose.views.length > 0) {
-          const view = pose.views[0];
+        {
+          const labelEl = document.getElementById("dudu-label");
+          if (labelEl && currentDudu && pose && pose.views.length > 0) {
+            const view = pose.views[0];
 
-          const viewMat = mat4.create();
-          mat4.invert(viewMat, view.transform.matrix);
+            const viewMat = mat4.create();
+            mat4.invert(viewMat, view.transform.matrix);
 
-          const projMat = view.projectionMatrix;
+            const projMat = view.projectionMatrix;
 
-          // 3D 모델 캐릭터 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
-          const localHeadPos = vec3.fromValues(0, window.SAY_Y_OFFSET, 0);
-          const worldHeadPos = vec3.create();
-          vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
+            // 3D 모델 캐릭터 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
+            const localHeadPos = vec3.fromValues(0, window.SAY_Y_OFFSET, 0);
+            const worldHeadPos = vec3.create();
+            vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
 
-          // world → view → clip → NDC → screen
-          const worldPos4 = vec4.fromValues(
-            worldHeadPos[0],
-            worldHeadPos[1],
-            worldHeadPos[2],
-            1.0
-          );
-          const viewPos4 = vec4.create();
-          const clipPos4 = vec4.create();
+            // world → view → clip → NDC → screen
+            const worldPos4 = vec4.fromValues(
+              worldHeadPos[0],
+              worldHeadPos[1],
+              worldHeadPos[2],
+              1.0
+            );
+            const viewPos4 = vec4.create();
+            const clipPos4 = vec4.create();
 
-          vec4.transformMat4(viewPos4, worldPos4, viewMat);
-          vec4.transformMat4(clipPos4, viewPos4, projMat);
+            vec4.transformMat4(viewPos4, worldPos4, viewMat);
+            vec4.transformMat4(clipPos4, viewPos4, projMat);
 
-          // 카메라 뒤에 있으면 숨김
-          if (clipPos4[3] <= 0) {
-            labelEl.style.visibility = "hidden";
-          } else {
-            labelEl.style.visibility = "visible";
+            // 카메라 뒤에 있으면 숨김
+            if (clipPos4[3] <= 0) {
+              labelEl.style.visibility = "hidden";
+              isDuduVisibleToCamera = false;
+            } else {
+              labelEl.style.visibility = "visible";
+              isDuduVisibleToCamera = true;
 
-            const ndcX = clipPos4[0] / clipPos4[3];
-            const ndcY = clipPos4[1] / clipPos4[3];
+              const ndcX = clipPos4[0] / clipPos4[3];
+              const ndcY = clipPos4[1] / clipPos4[3];
 
-            const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
-            const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
+              const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
+              const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
 
-            labelEl.style.left = `${x}px`;
+              labelEl.style.left = `${x}px`;
 
-            // Y 오프셋은 transform이 아니라 top에서 직접 빼기
-            // 말풍선 높이를 읽어서 머리 위로 올림
-            const bubbleH = labelEl.offsetHeight || 0;
-            const gapPx = 0;
-            labelEl.style.top = `${y - bubbleH - gapPx}px`;
+              // Y 오프셋은 transform이 아니라 top에서 직접 빼기
+              // 말풍선 높이를 읽어서 머리 위로 올림
+              const bubbleH = labelEl.offsetHeight || 0;
+              const gapPx = 0;
+              labelEl.style.top = `${y - bubbleH - gapPx}px`;
 
-            // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
-            const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
-            const viewUp4  = vec4.create();
-            vec4.transformMat4(viewUp4, worldUp4, viewMat);
+              // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
+              const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
+              const viewUp4  = vec4.create();
+              vec4.transformMat4(viewUp4, worldUp4, viewMat);
 
-            // roll
-            const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
+              // roll
+              const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
 
-            // transform에는 X중앙정렬 + roll만
-            labelEl.style.transformOrigin = "50% 100%";
-            labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
+              // transform에는 X중앙정렬 + roll만
+              labelEl.style.transformOrigin = "50% 100%";
+              labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
+            }
           }
         }
 
@@ -552,5 +629,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // Start the XR application.
       initXR();
     </script>
+
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   </body>
 </html>

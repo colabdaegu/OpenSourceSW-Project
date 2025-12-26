@@ -1,3 +1,33 @@
+/* AR 인식 전 안내용(holding-phone) 3D 오버레이 */
+#holding-phone-3d{
+  position: fixed;
+  left: 50%;
+  top: 50%;
+
+  /* 기본 상태: 화면 아래 바깥으로 "추방" */
+  transform: translate3d(-50%, calc(100vh + 50%), 0);
+
+  width: min(80vw, 420px);
+  height: min(80vw, 420px);
+  z-index: 9990;
+  pointer-events: none;
+  background: transparent;
+
+  opacity: 0;
+
+  transition: opacity 1300ms ease, transform 1300ms ease;
+  will-change: transform, opacity;
+}
+#holding-phone-3d.is-visible{
+  /* 정중앙으로 복귀 */
+  transform: translate3d(-50%, -50%, 0);
+  opacity: 0.75;
+}
+#holding-phone-3d::part(default-progress-bar),
+#holding-phone-3d::part(progress-bar),
+#holding-phone-3d::part(progress-mask) {
+  display: none !important;
+}
 /* 로드뷰용 3D 캐릭터 모델 */
 #dudu3d{
   position: fixed;
@@ -70,12 +100,11 @@
   position: fixed;
   left: 0;
   right: 0;
+  bottom: 64px;
 
-  bottom: calc(64px + var(--keyboard-offset));
-
-  height: auto;   
-  max-height: 23vh; 
-  overflow-y: auto; 
+  height: auto;
+  max-height: 23vh;
+  overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 
@@ -83,30 +112,26 @@
   color: #fff;
   padding: 8px;
   font: 14px/1.5 system-ui;
-  z-index: 29999;
+  z-index: 19999;
 
   transition: max-height 0.2s ease;
 }
-#log p{ margin:.25rem 0 }
+#log p{ margin:.25rem 0 } 
 
 /* 하단 채팅 바 */
 #chatbar{
   position:fixed;
   left:0;
   right:0;
-
-  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom));
-
+  bottom:0;
   background:rgba(0,0,0,.55);
   padding:8px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   display:flex;
   gap:8px;
   align-items:center;
-  z-index:30000;
+  z-index:20000;
   box-sizing:border-box;
-
-  transition: bottom 0.12s ease;
 }
 
 /* 입력창 */
@@ -542,7 +567,7 @@ canvas, .a-canvas{
   border-radius: 999px;
 
   font-size: 12px;
-  z-index: 10001;
+  z-index: 30001;
 
   display: none;                
 }
@@ -602,9 +627,16 @@ canvas, .a-canvas{
 
 
 
-
+#streetView{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 9998;
+  display: none;
+}
 /* 로드뷰 덮개 */
-#roadviewStage{
+#streetViewStage{
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -612,12 +644,4 @@ canvas, .a-canvas{
   display: none;
   z-index: 9997;
   background: #000;
-}
-#roadview{
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100dvh;
-  z-index: 9998;
-  display: none;
 }

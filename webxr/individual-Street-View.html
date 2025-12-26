@@ -44,9 +44,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </details>
     </header>
 
-    <!-- 3D 모델 캐릭터 머리 위에 띄울 텍스트 -->
-    <div id="dudu-label">반가워요! 저는 대구대학교 마스코트 두두라고 해요!</div>
-
     <!-- 로드뷰(고정 캐릭터) 전용 말풍선 -->
     <div id="dudu-street-view-label"></div>
 
@@ -78,7 +75,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
     <style>
-      #dudu3d, #dudu-label, #dudu-street-view-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
+      #dudu3d, #dudu-street-view-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel,
        .char-toggle-group {
         display: none; 
       }
@@ -118,8 +115,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <script src="/ngrok-address.js"></script>
     <script src="chat.js"></script>
 
-    <div id="roadviewStage"></div>
-    <div id="roadview"></div>
+    <div id="streetViewStage"></div>
+    <div id="streetView"></div>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=__KAKAO_MAP_APPKEY__"></script>
 
@@ -140,16 +137,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       window.hasStreetDuduPlaced = false;
 
       // 로드뷰 전역 객체
-      let roadview = null;
-      let roadviewClient = null;
+      let streetView = null;
+      let streetViewClient = null;
 
-      let roadviewReady = false;
+      // AR용 reticle 표시여부
+      let arSwitch = false;
 
       // =======================
       // 로드뷰 좌표 테이블 (0~12)
       // https://apis.map.kakao.com/web/sample/addMapClickEventWithMarker/
       // =======================
-      const ROADVIEW_POSITIONS = [
+      const STREETVIEW_POSITIONS = [
         { lat: 35.902330854481235,  lng: 128.84372684313558, pan: 0  },  // 0 - 공공인재대학
         { lat: 35.901387001082604,  lng: 128.85060488923892, pan: 130  },  // 1 - 글로벌경영대학
         { lat: 35.901364764471964,  lng: 128.84179669881323, pan: 105  },  // 2 - 사회과학대학
@@ -261,13 +259,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
       // 로드뷰 이동 함수
-      function moveRoadviewToIndex(index) {
-        if (!roadview || !roadviewClient) {
+      function moveStreetViewToIndex(index) {
+        if (!streetView || !streetViewClient) {
           console.warn("로드뷰 아직 초기화 안됨");
           return;
         }
 
-        const pos = ROADVIEW_POSITIONS[index];
+        const pos = STREETVIEW_POSITIONS[index];
         if (!pos) {
           console.warn("좌표 없음:", index);
           return;
@@ -275,15 +273,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         const latLng = new kakao.maps.LatLng(pos.lat, pos.lng);
 
-        roadviewClient.getNearestPanoId(latLng, 50, function (panoId) {
+        streetViewClient.getNearestPanoId(latLng, 50, function (panoId) {
           if (!panoId) {
             console.warn("panoId 없음:", index);
             return;
           }
-          roadview.setPanoId(panoId, latLng);
+          streetView.setPanoId(panoId, latLng);
 
           // 방향 적용
-          roadview.setViewpoint({
+          streetView.setViewpoint({
               pan: pos.pan,
               tilt: 0,
               zoom: -100
@@ -333,11 +331,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       // chat.js 에서 쓸 수 있게 전역으로 노출
       window.switchDuduCharacter = switchCharacter;
-
-      // 이 페이지의 1/2/3 버튼도 동일 함수로 연결
-      document.getElementById("char1Toggle")?.addEventListener("click", () => switchCharacter(0));
-      document.getElementById("char2Toggle")?.addEventListener("click", () => switchCharacter(1));
-      document.getElementById("char3Toggle")?.addEventListener("click", () => switchCharacter(2));
 
 
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
@@ -437,15 +430,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           );
         }
 
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "block";
-        if (roadviewEl) roadviewEl.style.display = "block";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "block";
+        if (streetViewEl) streetViewEl.style.display = "block";
 
         try {
-          const roadviewContainer = document.getElementById('roadview'); //로드뷰를 표시할 div
-          roadview = new kakao.maps.Roadview(roadviewContainer); //로드뷰 객체
-          roadviewClient = new kakao.maps.RoadviewClient(); //좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
+          const streetViewContainer = document.getElementById('streetView'); //로드뷰를 표시할 div
+          streetView = new kakao.maps.Roadview(streetViewContainer); //로드뷰 객체
+          streetViewClient = new kakao.maps.RoadviewClient(); //좌표로부터 로드뷰 파노ID를 가져올 로드뷰 helper객체
 
           // var position = new kakao.maps.LatLng(33.450701, 126.570667);
 
@@ -455,16 +448,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           // });
 
           // 시작 시 0번으로 이동
-          moveRoadviewToIndex(0);
+          moveStreetViewToIndex(0);
           setDuduOpacity(false);
-
-          roadviewReady = true;
         } catch (e) {
           console.warn("로드뷰 초기화 실패:", e);
-          roadviewReady = false;
         }
 
-        window.moveRoadviewToIndex = moveRoadviewToIndex;
+        window.moveStreetViewToIndex = moveStreetViewToIndex;
         setTimeout(() => {
           window.requestRemotePromptAnswer?.(0);
         }, 300);
@@ -476,12 +466,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // 로드뷰 켜지는 순간 AR 라벨은 즉시 OFF
         window.hasDuduPlaced = false;
         currentDudu = null;
-
-        const arLabel = document.getElementById("dudu-label");
-        if (arLabel) {
-          arLabel.style.display = "none";
-          arLabel.textContent = "";
-        }
 
         /* 진입 시 UI 표시 */
         document.getElementById("log").style.display = "block";   
@@ -526,10 +510,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
         // 로드뷰 종료
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "none";
-        if (roadviewEl) roadviewEl.style.display = "none";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "none";
+        if (streetViewEl) streetViewEl.style.display = "none";
 
         /* AR 종료 시 UI 숨김 */
 
@@ -586,11 +570,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         currentDudu = null;
         window.hasDuduPlaced = false;
 
-        const labelEl = document.getElementById("dudu-label");
-        if (labelEl) {
-          labelEl.style.display = "none";
-          labelEl.textContent = "";
-        }
         const streetLabelEl = document.getElementById("dudu-street-view-label");
         if (streetLabelEl) {
           streetLabelEl.style.display = "none";
@@ -610,10 +589,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
         // 로드뷰 종료
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "none";
-        if (roadviewEl) roadviewEl.style.display = "none";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "none";
+        if (streetViewEl) streetViewEl.style.display = "none";
 
         // 배경음악 중단
         if (window.duBgm) {
@@ -675,11 +654,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         currentDudu = null;
         window.hasDuduPlaced = false;
 
-        const labelEl = document.getElementById("dudu-label");
-        if (labelEl) {
-          labelEl.style.display = "none";
-          labelEl.textContent = "";
-        }
         const streetLabelEl = document.getElementById("dudu-street-view-label");
         if (streetLabelEl) {
           streetLabelEl.style.display = "none";
@@ -715,21 +689,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         window.hasDuduPlaced = true;
 
-        // 3D 모델 캐릭터 라벨도 켜기
-        const labelEl = document.getElementById("dudu-label");
-        if (labelEl) {
-          if (window.hasStreetDuduPlaced) {
-            labelEl.style.display = "none";
-          } else {
-            if (labelEl.textContent && labelEl.textContent.trim().length > 0) {
-              // 내용이 있을 때만 보여주기
-              labelEl.style.display = "block";
-            } else {
-              // 내용이 없으면 완전히 숨김
-              labelEl.style.display = "none";
-            }
-          }
-        }
 
         // For performance reasons if we add too many objects start
         // removing the oldest ones to keep the scene complexity
@@ -743,7 +702,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let rayOrigin = vec3.create();
       let rayDirection = vec3.create();
       function onSelect(event) {
-        if (!roadviewReady) {
+        if (!arSwitch) {
           reticle.visible = false;
           return;
         }
@@ -771,7 +730,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         reticle.visible = false;
 
         // 로드뷰 켜져 있으면 reticle 업데이트 자체를 스킵
-        if (!roadviewReady) {
+        if (!arSwitch) {
           scene.startFrame();
           session.requestAnimationFrame(onXRFrame);
           scene.drawXRFrame(frame, pose);
@@ -790,78 +749,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             // Y축이 거의 1이면 = 0도 (바닥)
             const yUp = m[5]; // column-major 기준
 
-            if (yUp >= 0) {
+            if (yUp >= 0.9) {
               reticle.visible = true;
               reticle.matrix = m;
             } else {
               reticle.visible = false;
             }
-          }
-        }
-
-
-        // 3D 모델 캐릭터 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
-        const labelEl = document.getElementById("dudu-label");
-        if (labelEl && window.hasStreetDuduPlaced) {
-          labelEl.style.display = "none";
-          labelEl.textContent = "";
-        } else if (labelEl && currentDudu && pose && pose.views.length > 0) {
-          const view = pose.views[0];
-
-          const viewMat = mat4.create();
-          mat4.invert(viewMat, view.transform.matrix);
-
-          const projMat = view.projectionMatrix;
-
-          // 3D 모델 캐릭터 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
-          const localHeadPos = getHeadLocalPos();
-          const worldHeadPos = vec3.create();
-          vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
-
-          // world → view → clip → NDC → screen
-          const worldPos4 = vec4.fromValues(
-            worldHeadPos[0],
-            worldHeadPos[1],
-            worldHeadPos[2],
-            1.0
-          );
-          const viewPos4 = vec4.create();
-          const clipPos4 = vec4.create();
-
-          vec4.transformMat4(viewPos4, worldPos4, viewMat);
-          vec4.transformMat4(clipPos4, viewPos4, projMat);
-
-          // 카메라 뒤에 있으면 숨김
-          if (clipPos4[3] <= 0) {
-            labelEl.style.visibility = "hidden";
-          } else {
-            labelEl.style.visibility = "visible";
-
-            const ndcX = clipPos4[0] / clipPos4[3];
-            const ndcY = clipPos4[1] / clipPos4[3];
-
-            const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
-            const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
-
-            labelEl.style.left = `${x}px`;
-
-            // Y 오프셋은 transform이 아니라 top에서 직접 빼기
-            // 말풍선 높이를 읽어서 머리 위로 올림
-            const bubbleH = labelEl.offsetHeight || 0;
-            const gapPx = 0;
-            labelEl.style.top = `${y - bubbleH - gapPx}px`;
-
-            // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
-            const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
-            const viewUp4  = vec4.create();
-            vec4.transformMat4(viewUp4, worldUp4, viewMat);
-
-            // roll
-            const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
-
-            // transform에는 X중앙정렬 + roll만
-            labelEl.style.transformOrigin = "50% 100%";
-            labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
           }
         }
 
