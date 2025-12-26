@@ -89,6 +89,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
     </style>
     <model-viewer
+      id="holding-phone-3d"
+      src="../media/gltf/holding-phone/holding-phone.gltf"
+      autoplay
+      camera-controls
+      interaction-prompt-style="wiggle"
+      disable-zoom
+      exposure="1"
+      environment-image="neutral"
+    ></model-viewer>
+    <model-viewer
       id="dudu3d"
       src="../media/gltf/dudu/dudu.gltf"
       autoplay
@@ -98,7 +108,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       shadow-intensity="1"
       shadow-softness="1"
       interaction-prompt="none"
-      style="display:none;"
     ></model-viewer>
 
     <!-- ====== 채팅 UI ====== -->
@@ -123,8 +132,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <script src="/ngrok-address.js"></script>
     <script src="chat.js"></script>
 
-    <div id="roadviewStage"></div>
-    <div id="roadview"></div>
+    <div id="streetViewStage"></div>
+    <div id="streetView"></div>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=__KAKAO_MAP_APPKEY__"></script>
 
@@ -145,14 +154,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       window.hasStreetDuduPlaced = false;
 
       // 로드뷰 전역 객체
-      let roadview = null;
-      let roadviewClient = null;
+      let streetView = null;
+      let streetViewClient = null;
 
       // =======================
       // 로드뷰 좌표 테이블 (0~12)
       // https://apis.map.kakao.com/web/sample/addMapClickEventWithMarker/
       // =======================
-      const ROADVIEW_POSITIONS = [
+      const STREETVIEW_POSITIONS = [
         { lat: 35.902330854481235,  lng: 128.84372684313558, pan: 0  },  // 0 - 공공인재대학
         { lat: 35.901387001082604,  lng: 128.85060488923892, pan: 130  },  // 1 - 글로벌경영대학
         { lat: 35.901364764471964,  lng: 128.84179669881323, pan: 105  },  // 2 - 사회과학대학
@@ -265,13 +274,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
       // 로드뷰 이동 함수
-      function moveRoadviewToIndex(index) {
-        if (!roadview || !roadviewClient) {
+      function moveStreetViewToIndex(index) {
+        if (!streetView || !streetViewClient) {
           console.warn("로드뷰 아직 초기화 안됨");
           return;
         }
 
-        const pos = ROADVIEW_POSITIONS[index];
+        const pos = STREETVIEW_POSITIONS[index];
         if (!pos) {
           console.warn("좌표 없음:", index);
           return;
@@ -279,30 +288,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         const latLng = new kakao.maps.LatLng(pos.lat, pos.lng);
 
-        roadviewClient.getNearestPanoId(latLng, 50, function (panoId) {
+        streetViewClient.getNearestPanoId(latLng, 50, function (panoId) {
           if (!panoId) {
             console.warn("panoId 없음:", index);
             return;
           }
-          roadview.setPanoId(panoId, latLng);
+          streetView.setPanoId(panoId, latLng);
 
           // 방향 적용
-          roadview.setViewpoint({
+          streetView.setViewpoint({
               pan: pos.pan,
               tilt: 0,
               zoom: -100
           });
         });
       }
-      window.moveRoadviewToIndex = moveRoadviewToIndex;
+      window.moveStreetViewToIndex = moveStreetViewToIndex;
 
 
 
 
       // =======================
-      // roadview overlay toggle
+      // streetView overlay toggle
       // =======================
-      let roadviewVisible = false;
+      let streetViewVisible = false;
 
       // 맵(로드뷰) 진입 전 AR - 3D 모델 캐릭터 상태 백업용
       let prevARState = {
@@ -311,24 +320,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         arVisible: false,
       };
 
-      function ensureRoadviewCreated() {
+      function ensureStreetViewCreated() {
         if (!window.kakao || !window.kakao.maps) {
           return false;
         }
-        if (roadview && roadviewClient) return;
+        if (streetView && streetViewClient) return;
 
-        const roadviewContainer = document.getElementById("roadview");
-        roadview = new kakao.maps.Roadview(roadviewContainer);
-        roadviewClient = new kakao.maps.RoadviewClient();
+        const streetViewContainer = document.getElementById("streetView");
+        streetView = new kakao.maps.Roadview(streetViewContainer);
+        streetViewClient = new kakao.maps.RoadviewClient();
       }
 
-      function showRoadviewOverlay() {
+      function showStreetViewOverlay() {
         // 맵 들어가기 전 AR 상태 백업
         prevARState.hasDuduPlaced = window.hasDuduPlaced;
         prevARState.currentDudu = currentDudu;
         prevARState.arVisible = arObject.visible;
 
-        ensureRoadviewCreated();
+        ensureStreetViewCreated();
 
         // 로드뷰 진입 안내
         if (typeof appendNotice === "function") {
@@ -337,13 +346,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           );
         }
 
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "block";
-        if (roadviewEl) roadviewEl.style.display = "block";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "block";
+        if (streetViewEl) streetViewEl.style.display = "block";
 
         // 로드뷰 시작 위치
-        moveRoadviewToIndex(
+        moveStreetViewToIndex(
           (typeof window.remoteIndex === "number") ? window.remoteIndex : 0
         );
 
@@ -388,15 +397,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (mapBtnImg) mapBtnImg.src = "../media/textures/cube-sea.png";
 
         reticle.visible = false;
-        roadviewVisible = true;
+        streetViewVisible = true;
       }
 
-      function hideRoadviewOverlay() {
+      function hideStreetViewOverlay() {
         // 로드뷰 화면 숨김(객체 파괴까지는 안 하고 display만 끔)
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "none";
-        if (roadviewEl) roadviewEl.style.display = "none";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "none";
+        if (streetViewEl) streetViewEl.style.display = "none";
 
         // 오버레이용 캐릭터 OFF
         const mv = document.getElementById("dudu3d");
@@ -442,15 +451,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const mapBtnImg = document.querySelector("#mapBtn img");
         if (mapBtnImg) mapBtnImg.src = "../media/textures/map-logo.png";
 
-        roadviewVisible = false;
+        streetViewVisible = false;
       }
 
-      function toggleRoadviewOverlay() {
-        if (roadviewVisible) hideRoadviewOverlay();
-        else showRoadviewOverlay();
+      function toggleStreetViewOverlay() {
+        if (streetViewVisible) hideStreetViewOverlay();
+        else showStreetViewOverlay();
       }
 
-      window.toggleRoadviewOverlay = toggleRoadviewOverlay;
+      window.toggleStreetViewOverlay = toggleStreetViewOverlay;
 
       
 
@@ -496,15 +505,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // chat.js 에서 쓸 수 있게 전역으로 노출
       window.switchDuduCharacter = switchCharacter;
 
-      // 이 페이지의 1/2/3 버튼도 동일 함수로 연결
-      document.getElementById("char1Toggle")?.addEventListener("click", () => switchCharacter(0));
-      document.getElementById("char2Toggle")?.addEventListener("click", () => switchCharacter(1));
-      document.getElementById("char3Toggle")?.addEventListener("click", () => switchCharacter(2));
-
 
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
       reticle.visible = false;
       scene.addNode(reticle);
+      // AR 인식 전 안내용(holding-phone) 3D 오버레이 표시 유무
+      function updateHoldingPhoneVisibility(visible) {
+        const hp = document.getElementById("holding-phone-3d");
+        if (!hp) return;
+        hp.classList.toggle("is-visible", visible);
+      }
+      let reticleMissingSince = null;   // reticle이 안 보이기 시작한 시점(performance.now)
+      let holdingPhoneShown = false;    // 현재 holding-phone-3d 표시 상태
+      const HOLDING_PHONE_DELAY_MS = 3000;
 
       // Having a really simple drop shadow underneath an object helps ground
       // it in the world without adding much complexity.
@@ -516,6 +529,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let dudus = [];
 
       let currentDudu = null;   // 현재 씬에 있는 3D 모델 캐릭터 하나 기억
+      let isDuduVisibleToCamera = false; // 3D 캐릭터 모델이 화면에 보이는 상태인가
 
       // Ensure the background is transparent for AR.
       scene.clear = false;
@@ -613,6 +627,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const mapBtn = document.getElementById("mapBtn");
 
 
+
+        holdingPhoneShown = false;
+        reticleMissingSince = null;
+
         if (chatToggle)   chatToggle.style.display   = "block";
         if (listeningBtn) listeningBtn.style.display = "block";
         if (guitarBtn)    guitarBtn.style.display    = "block";
@@ -642,13 +660,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
         // 로드뷰 종료
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "none";
-        if (roadviewEl) roadviewEl.style.display = "none";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "none";
+        if (streetViewEl) streetViewEl.style.display = "none";
 
 
-        roadviewVisible = false;
+        streetViewVisible = false;
         window.hasStreetDuduPlaced = false;
 
         /* AR 종료 시 UI 숨김 */
@@ -672,6 +690,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         const mapBtn = document.getElementById("mapBtn");
 
+
+
+        updateHoldingPhoneVisibility(false);
+        holdingPhoneShown = false;
+        reticleMissingSince = null;
 
         if (chatToggle)   chatToggle.style.display   = "none";
         if (listeningBtn) listeningBtn.style.display = "none";
@@ -740,12 +763,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
         // 로드뷰 종료
-        const roadviewStageEl = document.getElementById("roadviewStage");
-        const roadviewEl = document.getElementById("roadview");
-        if (roadviewStageEl) roadviewStageEl.style.display = "none";
-        if (roadviewEl) roadviewEl.style.display = "none";
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        const streetViewEl = document.getElementById("streetView");
+        if (streetViewStageEl) streetViewStageEl.style.display = "none";
+        if (streetViewEl) streetViewEl.style.display = "none";
 
-        roadviewVisible = false;
+        streetViewVisible = false;
         window.hasStreetDuduPlaced = false;
 
 
@@ -782,6 +805,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         const mapBtn = document.getElementById("mapBtn");
 
+
+
+        updateHoldingPhoneVisibility(false);
+        holdingPhoneShown = false;
+        reticleMissingSince = null;
 
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";
@@ -888,7 +916,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let rayDirection = vec3.create();
       function onSelect(event) {
         // 로드뷰 켜져 있으면 AR - reticle 배치 금지
-        if (roadviewVisible) {
+        if (streetViewVisible) {
           reticle.visible = false;
           return;
         }
@@ -916,7 +944,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         reticle.visible = false;
 
         // 로드뷰 켜져 있으면 reticle 업데이트 자체를 스킵
-        if (roadviewVisible) {
+        if (streetViewVisible) {
+          // 로드뷰 켜져 있으면 안내 3D도 숨김
+          updateHoldingPhoneVisibility(false);
+          holdingPhoneShown = false;
+          reticleMissingSince = null;
+
+          // 로드뷰 켜져 있으면 reticle 업데이트 자체를 스킵
           scene.startFrame();
           session.requestAnimationFrame(onXRFrame);
           scene.drawXRFrame(frame, pose);
@@ -945,68 +979,107 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
 
-        // 3D 모델 캐릭터 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
-        const labelEl = document.getElementById("dudu-label");
-        if (labelEl && window.hasStreetDuduPlaced) {
-          labelEl.style.display = "none";
-          labelEl.textContent = "";
-        } else if (labelEl && currentDudu && pose && pose.views.length > 0) {
-          const view = pose.views[0];
+        // 안내 3D 토글
+        {
+          const now = performance.now();
 
-          const viewMat = mat4.create();
-          mat4.invert(viewMat, view.transform.matrix);
+          // reticle이 보이거나(공간 인식 성공) OR AR 캐릭터로부터 카메라 시점이 이탈한 상태이면
+          if (reticle.visible || (window.hasDuduPlaced && isDuduVisibleToCamera)) {
+            reticleMissingSince = null;
 
-          const projMat = view.projectionMatrix;
-
-          // 3D 모델 캐릭터 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
-          const localHeadPos = getHeadLocalPos();
-          const worldHeadPos = vec3.create();
-          vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
-
-          // world → view → clip → NDC → screen
-          const worldPos4 = vec4.fromValues(
-            worldHeadPos[0],
-            worldHeadPos[1],
-            worldHeadPos[2],
-            1.0
-          );
-          const viewPos4 = vec4.create();
-          const clipPos4 = vec4.create();
-
-          vec4.transformMat4(viewPos4, worldPos4, viewMat);
-          vec4.transformMat4(clipPos4, viewPos4, projMat);
-
-          // 카메라 뒤에 있으면 숨김
-          if (clipPos4[3] <= 0) {
-            labelEl.style.visibility = "hidden";
+            if (holdingPhoneShown) {
+              updateHoldingPhoneVisibility(false);
+              holdingPhoneShown = false;
+            }
           } else {
-            labelEl.style.visibility = "visible";
+            // reticle이 안 보이는 상태(=공간 인식 실패)가 지속되는지 체크
+            if (reticleMissingSince === null) reticleMissingSince = now;
 
-            const ndcX = clipPos4[0] / clipPos4[3];
-            const ndcY = clipPos4[1] / clipPos4[3];
+            const missingFor = now - reticleMissingSince;
 
-            const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
-            const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
+            // 실패 시간이 임계값을 넘었을 때
+            if (missingFor >= HOLDING_PHONE_DELAY_MS) {
+              if (!holdingPhoneShown) {
+                updateHoldingPhoneVisibility(true);
+                holdingPhoneShown = true;
+              }
+            } else {
+              // 해당 구간에서는 절대 안내 3D를 띄우지 않음
+              if (holdingPhoneShown) {
+                updateHoldingPhoneVisibility(false);
+                holdingPhoneShown = false;
+              }
+            }
+          }
+        }
 
-            labelEl.style.left = `${x}px`;
 
-            // Y 오프셋은 transform이 아니라 top에서 직접 빼기
-            // 말풍선 높이를 읽어서 머리 위로 올림
-            const bubbleH = labelEl.offsetHeight || 0;
-            const gapPx = 0;
-            labelEl.style.top = `${y - bubbleH - gapPx}px`;
+        // 3D 모델 캐릭터 머리 3D 위치를 2D 화면 좌표로 투영해서 라벨 위치를 맞춰줌
+        {
+          const labelEl = document.getElementById("dudu-label");
+          if (labelEl && window.hasStreetDuduPlaced) {
+            labelEl.style.display = "none";
+            labelEl.textContent = "";
+          } else if (labelEl && currentDudu && pose && pose.views.length > 0) {
+            const view = pose.views[0];
 
-            // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
-            const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
-            const viewUp4  = vec4.create();
-            vec4.transformMat4(viewUp4, worldUp4, viewMat);
+            const viewMat = mat4.create();
+            mat4.invert(viewMat, view.transform.matrix);
 
-            // roll
-            const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
+            const projMat = view.projectionMatrix;
 
-            // transform에는 X중앙정렬 + roll만
-            labelEl.style.transformOrigin = "50% 100%";
-            labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
+            // 3D 모델 캐릭터 로컬 좌표계 기준 "머리 위" 위치 (원하면 Y값 조절)
+            const localHeadPos = getHeadLocalPos();
+            const worldHeadPos = vec3.create();
+            vec3.transformMat4(worldHeadPos, localHeadPos, currentDudu.matrix);
+
+            // world → view → clip → NDC → screen
+            const worldPos4 = vec4.fromValues(
+              worldHeadPos[0],
+              worldHeadPos[1],
+              worldHeadPos[2],
+              1.0
+            );
+            const viewPos4 = vec4.create();
+            const clipPos4 = vec4.create();
+
+            vec4.transformMat4(viewPos4, worldPos4, viewMat);
+            vec4.transformMat4(clipPos4, viewPos4, projMat);
+
+            // 카메라 뒤에 있으면 숨김
+            if (clipPos4[3] <= 0) {
+              labelEl.style.visibility = "hidden";
+              isDuduVisibleToCamera = false;
+            } else {
+              labelEl.style.visibility = "visible";
+              isDuduVisibleToCamera = true;
+
+              const ndcX = clipPos4[0] / clipPos4[3];
+              const ndcY = clipPos4[1] / clipPos4[3];
+
+              const x = (ndcX * 0.5 + 0.5) * window.innerWidth;
+              const y = (-ndcY * 0.5 + 0.5) * window.innerHeight;
+
+              labelEl.style.left = `${x}px`;
+
+              // Y 오프셋은 transform이 아니라 top에서 직접 빼기
+              // 말풍선 높이를 읽어서 머리 위로 올림
+              const bubbleH = labelEl.offsetHeight || 0;
+              const gapPx = 0;
+              labelEl.style.top = `${y - bubbleH - gapPx}px`;
+
+              // world-up(0,1,0)을 view 공간으로 보낸 뒤, x/y로 roll 각도 계산
+              const worldUp4 = vec4.fromValues(0, 1, 0, 0); // 방향벡터라 w=0
+              const viewUp4  = vec4.create();
+              vec4.transformMat4(viewUp4, worldUp4, viewMat);
+
+              // roll
+              const rollRad = Math.atan2(viewUp4[0], viewUp4[1]);
+
+              // transform에는 X중앙정렬 + roll만
+              labelEl.style.transformOrigin = "50% 100%";
+              labelEl.style.transform = `translateX(-50%) rotate(${rollRad}rad)`;
+            }
           }
         }
 

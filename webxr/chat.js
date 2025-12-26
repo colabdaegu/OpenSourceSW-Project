@@ -202,50 +202,50 @@ if (
   // =======================
   // 키보드(visualViewport) 대응: #log, #chatbar만 키보드 따라 이동
   // =======================
-  (function setupKeyboardFollowUI() {
-    const root = document.documentElement;
+  // (function setupKeyboardFollowUI() {
+  //   const root = document.documentElement;
 
-    function updateKeyboardOffset() {
-      // visualViewport 미지원 브라우저는 보정 0
-      if (!window.visualViewport) {
-        root.style.setProperty("--keyboard-offset", "0px");
-        return;
-      }
+  //   function updateKeyboardOffset() {
+  //     // visualViewport 미지원 브라우저는 보정 0
+  //     if (!window.visualViewport) {
+  //       root.style.setProperty("--keyboard-offset", "0px");
+  //       return;
+  //     }
 
-      const vv = window.visualViewport;
+  //     const vv = window.visualViewport;
 
-      // 레이아웃 viewport(window.innerHeight) 기준으로
-      // 현재 "보이는 viewport"의 하단(vv.offsetTop + vv.height) 아래가 키보드/오버레이 영역
-      const overlap = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+  //     // 레이아웃 viewport(window.innerHeight) 기준으로
+  //     // 현재 "보이는 viewport"의 하단(vv.offsetTop + vv.height) 아래가 키보드/오버레이 영역
+  //     const overlap = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
 
-      root.style.setProperty("--keyboard-offset", `${overlap}px`);
-    }
+  //     root.style.setProperty("--keyboard-offset", `${overlap}px`);
+  //   }
 
-    // 초기 1회
-    updateKeyboardOffset();
+  //   // 초기 1회
+  //   updateKeyboardOffset();
 
-    // 키보드 열림/닫힘 시점에 가장 잘 반응하는 이벤트들
-    window.addEventListener("resize", updateKeyboardOffset);
-    window.addEventListener("orientationchange", updateKeyboardOffset);
+  //   // 키보드 열림/닫힘 시점에 가장 잘 반응하는 이벤트들
+  //   window.addEventListener("resize", updateKeyboardOffset);
+  //   window.addEventListener("orientationchange", updateKeyboardOffset);
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", updateKeyboardOffset);
-      window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
-    }
+  //   if (window.visualViewport) {
+  //     window.visualViewport.addEventListener("resize", updateKeyboardOffset);
+  //     window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
+  //   }
 
-    // iOS에서 포커스 순간/해제 순간 보정(딜레이로 안정화)
-    window.addEventListener("focusin", () => {
-      updateKeyboardOffset();
-      setTimeout(updateKeyboardOffset, 50);
-      setTimeout(updateKeyboardOffset, 150);
-    });
+  //   // iOS에서 포커스 순간/해제 순간 보정(딜레이로 안정화)
+  //   window.addEventListener("focusin", () => {
+  //     updateKeyboardOffset();
+  //     setTimeout(updateKeyboardOffset, 50);
+  //     setTimeout(updateKeyboardOffset, 150);
+  //   });
 
-    window.addEventListener("focusout", () => {
-      updateKeyboardOffset();
-      setTimeout(updateKeyboardOffset, 50);
-      setTimeout(updateKeyboardOffset, 150);
-    });
-  })();
+  //   window.addEventListener("focusout", () => {
+  //     updateKeyboardOffset();
+  //     setTimeout(updateKeyboardOffset, 50);
+  //     setTimeout(updateKeyboardOffset, 150);
+  //   });
+  // })();
 
 
 
@@ -271,6 +271,7 @@ if (
   // 공용 UI 함수
   // =======================
   function append(role, text) {
+    if (!log) return;
     const p = document.createElement("p");
 
     if (role === "user") {
@@ -402,14 +403,14 @@ if (
 
 
     // 로드뷰 모드면 현재 위치 프롬프트를 자동으로 붙이기
-    const roadviewEl = document.getElementById("roadview");
-    const isRoadview = !!roadviewEl && roadviewEl.offsetParent !== null;
+    const streetViewEl = document.getElementById("streetView");
+    const isStreetView = !!streetViewEl && streetViewEl.offsetParent !== null;
     const rvIndex = (typeof window.remoteIndex === "number") ? window.remoteIndex : null;
 
     // options로 받은 promptExtraKind를 수정할 수 있게 let으로 재선언
     let effectivePromptExtraKind = promptExtraKind;
 
-    if (isRoadview) {
+    if (isStreetView) {
       // 로드뷰에서는 기본적으로 현재 spot 프롬프트를 강제
       effectivePromptExtraKind = "street" + rvIndex;
     }
@@ -1038,8 +1039,10 @@ if (
     btnUp.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      if (streetDuduLabel) {
       streetDuduLabel.style.display = "none";
       streetDuduLabel.textContent = "";
+      }
       // TTS도 중지
       if (synth) {
         synth.cancel();
@@ -1059,7 +1062,7 @@ if (
       }
 
       showToastNumber(window.remoteIndex);
-      window.moveRoadviewToIndex(window.remoteIndex);
+      window.moveStreetViewToIndex(window.remoteIndex);
       requestRemotePromptAnswer(window.remoteIndex);
     });
   }
@@ -1068,8 +1071,10 @@ if (
     btnDown.addEventListener("click", () => {
       if (remoteLocked) return;
 
+      if (streetDuduLabel) {
       streetDuduLabel.style.display = "none";
       streetDuduLabel.textContent = "";
+      }
       // TTS도 중지
       if (synth) {
         synth.cancel();
@@ -1089,7 +1094,7 @@ if (
       }
 
       showToastNumber(window.remoteIndex);
-      window.moveRoadviewToIndex(window.remoteIndex);
+      window.moveStreetViewToIndex(window.remoteIndex);
       requestRemotePromptAnswer(window.remoteIndex);
     });
   }
@@ -1121,8 +1126,8 @@ if (
       synth.cancel();
       setDuduOpacity(false);
 
-      if (typeof window.toggleRoadviewOverlay === "function") {
-            window.toggleRoadviewOverlay();
+      if (typeof window.toggleStreetViewOverlay === "function") {
+            window.toggleStreetViewOverlay();
       }
     });
   }
