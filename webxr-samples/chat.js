@@ -87,7 +87,7 @@ if (
 
   const SAMPLE_SYSTEM_PROMPT =
     "너는 " + BOT_NAME + "(이)야.\n" +
-    "모든 답변은 2~3줄 정도로 대답해.\n";
+    "모든 답변은 무조건 20글자 이상으로 대답해.\n";
 
   // const PROMPT_URLS = {
   //   base: "/media/prompt/dudu-system-prompt.txt",
