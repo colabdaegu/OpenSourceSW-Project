@@ -99,23 +99,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // 기본값(캐릭터1)
         window.CHAR_NAME = "캐릭터 1";
         window.CHAR_LABEL = "안녕하세요! 저는 캐릭터 1이라고 해요!";
-        window.CHAR_GLTF  = "../media/gltf/human_1/human_1.gltf";
-        window.SAY_Y_OFFSET = 0.6;
-        window.CHAR_Y_OFFSET = 0.65;
+        window.CHAR_GLTF  = "../media/gltf/char_1/char_1.gltf";
+        window.SAY_Y_OFFSET = 0.9;
+        window.CHAR_Y_OFFSET = 0.0;
       if (char === "2") {
         // (캐릭터2)
         window.CHAR_NAME = "캐릭터 2";
         window.CHAR_LABEL = "반갑습니다! 저는 캐릭터 2라고 합니다!";
-        window.CHAR_GLTF  = "../media/gltf/human_2/human_2.gltf";
-        window.SAY_Y_OFFSET = 0.5;
-        window.CHAR_Y_OFFSET = 0.3;
+        window.CHAR_GLTF  = "../media/gltf/char_2/char_2.gltf";
+        window.SAY_Y_OFFSET = 0.9;
+        window.CHAR_Y_OFFSET = 0.0;
       } else if (char === "3") {
         // (캐릭터3)
         window.CHAR_NAME = "캐릭터 3";
         window.CHAR_LABEL = "안녕하세요! 저는 캐릭터 3이라고 해요!";
-        window.CHAR_GLTF  = "../media/gltf/human_3/human_3.gltf";
-        window.SAY_Y_OFFSET = 0.6;
-        window.CHAR_Y_OFFSET = 0.65;
+        window.CHAR_GLTF  = "../media/gltf/char_3/char_3.gltf";
+        window.SAY_Y_OFFSET = 0.33;
+        window.CHAR_Y_OFFSET = 0.0;
       }
     </script>
 
@@ -202,6 +202,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       arObject.visible = false;
       scene.addNode(arObject);
       
+
       //let dudu = new Gltf2Node({url: '../media/gltf/sunflower/sunflower.gltf'});
       let dudu = new Gltf2Node({ url: window.CHAR_GLTF });
       dudu.scale = [0.6, 0.6, 0.6];
