@@ -5,8 +5,7 @@
 
 ----------------------
 # 주요 경로 설명
-- `api/chatApi.js` — (초안 / 더미) LLM 오케스트레이터
-- `docs/` — Chat-Bot 테스트의 디렉터리
+- `docs/` — (초안)Chat-Bot 테스트의 디렉터리
 - `js/` — WebXR용 모듈
 - `media/gltf/` — 3D 모델 리소스
 - `media/prompt/` — 챗봇 프롬프트
@@ -34,11 +33,11 @@ ngrok config add-authtoken 362k...
 ngrok http 8000
 ```
 ### 3.2. 터미널에 ngrok 서버가 정상적으로 실행된 경우 → Forwarding 줄의 ngrok-free 도메인 주소 복사
-> (https://wilson-unscented-dissidently.ngrok-free.dev) <- 본인 ngrok-free 주소로 하셔야 됩니다.
+> (https://nondeflected-unbeneficial-jimmie.ngrok-free.dev) <- 본인 ngrok-free 주소로 하셔야 됩니다.
 
 ### 3.3. 프로젝트 파일의 루트에 있는 ngrok-address.js 내부의 BASE_URL에 ngrok-free 도메인 주소 붙여넣기
 ```
-const BASE_URL = "https://wilson-unscented-dissidently.ngrok-free.dev";
+const BASE_URL = "https://nondeflected-unbeneficial-jimmie.ngrok-free.dev";
 ```
 
 ## 4. 2개의 터미널(Bash) 실행 - 백엔드 서버와 ngrok 서버 각각 열기
@@ -50,7 +49,7 @@ ngrok http 8000
 ```
 
 ## 5. 본인의 ngrok 사이트 접속 테스트
-> https://wilson-unscented-dissidently.ngrok-free.dev
+> https://nondeflected-unbeneficial-jimmie.ngrok-free.dev
 
 
 ----------------------

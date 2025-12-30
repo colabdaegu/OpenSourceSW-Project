@@ -199,56 +199,6 @@ if (
   const mapBtn = document.getElementById("mapBtn");
 
 
-  // =======================
-  // 키보드(visualViewport) 대응: #log, #chatbar만 키보드 따라 이동
-  // =======================
-  // (function setupKeyboardFollowUI() {
-  //   const root = document.documentElement;
-
-  //   function updateKeyboardOffset() {
-  //     // visualViewport 미지원 브라우저는 보정 0
-  //     if (!window.visualViewport) {
-  //       root.style.setProperty("--keyboard-offset", "0px");
-  //       return;
-  //     }
-
-  //     const vv = window.visualViewport;
-
-  //     // 레이아웃 viewport(window.innerHeight) 기준으로
-  //     // 현재 "보이는 viewport"의 하단(vv.offsetTop + vv.height) 아래가 키보드/오버레이 영역
-  //     const overlap = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
-
-  //     root.style.setProperty("--keyboard-offset", `${overlap}px`);
-  //   }
-
-  //   // 초기 1회
-  //   updateKeyboardOffset();
-
-  //   // 키보드 열림/닫힘 시점에 가장 잘 반응하는 이벤트들
-  //   window.addEventListener("resize", updateKeyboardOffset);
-  //   window.addEventListener("orientationchange", updateKeyboardOffset);
-
-  //   if (window.visualViewport) {
-  //     window.visualViewport.addEventListener("resize", updateKeyboardOffset);
-  //     window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
-  //   }
-
-  //   // iOS에서 포커스 순간/해제 순간 보정(딜레이로 안정화)
-  //   window.addEventListener("focusin", () => {
-  //     updateKeyboardOffset();
-  //     setTimeout(updateKeyboardOffset, 50);
-  //     setTimeout(updateKeyboardOffset, 150);
-  //   });
-
-  //   window.addEventListener("focusout", () => {
-  //     updateKeyboardOffset();
-  //     setTimeout(updateKeyboardOffset, 50);
-  //     setTimeout(updateKeyboardOffset, 150);
-  //   });
-  // })();
-
-
-
   // 어떤 버튼이 선택됐는지 UI 반영
   function updateCharButtonUI(activeIndex) {
     charButtons.forEach((btn, i) => {
