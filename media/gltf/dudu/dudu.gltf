@@ -15,7 +15,12 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Mesh_0"
+			"name":"Mesh_0",
+			"translation":[
+				0.1599999964237213,
+				1,
+				0
+			]
 		}
 	],
 	"materials":[
