@@ -29,7 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <link rel='icon' type='image/png' sizes='96x96' href='../media/favicon/favicon-96x96.png'>
     <link rel='stylesheet' href='../css/common.css'>
 
-    <link rel="stylesheet" href="ar-screen.css">
+    <link rel="stylesheet" href="style.css">
 
     <title>DU AR-CHAT</title>
   </head>
@@ -83,7 +83,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </button>
 
     <style>
-      #dudu3d, #dudu-label, #dudu-street-view-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn,
+      #dudu3d, #dudu-label, #dudu-street-view-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn, #streetViewStage, #btnRoadviewToggle,
        .char-toggle-group {
         display: none; 
       }
@@ -128,12 +128,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <button id="send" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">전송</button>
     </div>
 
+    <div id="streetViewStage">
+      <div id="kakaoContainer" class="view_roadview">
+        <!-- 지도 -->
+        <div id="mapWrapper">
+          <div id="kakaoMap"></div>
+        </div>
+
+        <!-- 로드뷰 -->
+        <div id="rvWrapper">
+          <div id="streetView"></div>
+        </div>
+
+        <!-- 왼쪽 상단 전환 버튼 -->
+        <button id="btnRoadviewToggle" type="button">로드뷰</button>
+      </div>
+    </div>
+
     
     <script src="/ngrok-address.js"></script>
-    <script src="chat.js"></script>
-
-    <div id="streetViewStage"></div>
-    <div id="streetView"></div>
+    <script src="app.js"></script>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=__KAKAO_MAP_APPKEY__"></script>
 
@@ -157,6 +171,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       let streetView = null;
       let streetViewClient = null;
 
+      // 카카오 지도 전역
+      let kakaoMap = null;
+      let kakaoMapMarker = null;
+
+      // 모드: true=로드뷰, false=지도 (컨테이너 class로 제어)
+      let isRoadviewMode = true;
+      window.isKakaoMapMode = false;
+
       // =======================
       // 로드뷰 좌표 테이블 (0~12)
       // https://apis.map.kakao.com/web/sample/addMapClickEventWithMarker/
@@ -175,6 +197,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         { lat: 35.89897618587197, lng: 128.84989809487084, pan: 108 },  // 10 - 자유전공학부
         { lat: 35.85665449257892, lng: 128.5753815771618, pan: 63 },  // 11 - 글로컬라이프대학
         { lat: 35.85529786579435, lng: 128.57627072633176, pan: 106 },  // 12 - 간호대학
+      ];
+
+      // =======================
+      // 지도 좌표 테이블 (0~12)
+      // https://apis.map.kakao.com/web/sample/addMapClickEventWithMarker/
+      // =======================
+      const KAKAOMAP_POSITIONS = [
+        { lat: 35.902609034735455,  lng: 128.84365576861956  },  // 0 - 공공인재대학
+        { lat: 35.90092057376448,  lng: 128.85090413545583  },  // 1 - 글로벌경영대학
+        { lat: 35.90136145545498,  lng: 128.8427463340613  },  // 2 - 사회과학대학
+        { lat: 35.90285268539933,  lng: 128.8559137500071  },  // 3 - 보건바이오대학
+        { lat: 35.89906796851798,  lng: 128.85519132096226   },  // 4 - IT·공과대학 
+        { lat: 35.90300793906611,  lng: 128.845697393005  },  // 5 - 디자인예술대학
+        { lat: 35.90011212258426,  lng: 128.84649677011055  },  // 6 - 사범대학
+        { lat: 35.89994162534254,  lng: 128.85302991315424  },  // 7 - 재활과학대학
+        { lat: 35.90383394163952,  lng: 128.84896729457327  },  // 8 - 체육레저학부
+        { lat: 35.89882812876081,  lng: 128.85029611704235  },  // 9 - 문화콘텐츠학부
+        { lat: 35.89882812876081, lng: 128.85029611704235  },  // 10 - 자유전공학부
+        { lat: 35.856763661667046, lng: 128.57581822048442  },  // 11 - 글로컬라이프대학
+        { lat: 35.85529917541896, lng: 128.5765142795892  },  // 12 - 간호대학
       ];
 
       
@@ -212,7 +254,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn';
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn, #streetViewStage, #btnRoadviewToggle';
       
 
       window.addEventListener('pointerdown', (ev) => {
@@ -275,32 +317,35 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       // 로드뷰 이동 함수
       function moveStreetViewToIndex(index) {
-        if (!streetView || !streetViewClient) {
-          console.warn("로드뷰 아직 초기화 안됨");
-          return;
-        }
+        if (!ensureStreetViewCreated()) return;
 
-        const pos = STREETVIEW_POSITIONS[index];
-        if (!pos) {
+        const rvPos = STREETVIEW_POSITIONS[index];   // 로드뷰용
+        const mapPos = KAKAOMAP_POSITIONS[index];    // 지도용
+
+        if (!rvPos || !mapPos) {
           console.warn("좌표 없음:", index);
           return;
         }
+        
+        const mapLatLng = new kakao.maps.LatLng(mapPos.lat, mapPos.lng);
+        const rvLatLng  = new kakao.maps.LatLng(rvPos.lat, rvPos.lng);
 
-        const latLng = new kakao.maps.LatLng(pos.lat, pos.lng);
+        // 1) 지도도 같이 이동
+        if (kakaoMap) {
+          kakaoMap.setCenter(mapLatLng);
+        }
+        if (kakaoMapMarker) {
+          kakaoMapMarker.setPosition(mapLatLng);
+        }
 
-        streetViewClient.getNearestPanoId(latLng, 50, function (panoId) {
+        // 2) 로드뷰 이동
+        streetViewClient.getNearestPanoId(rvLatLng, 50, function (panoId) {
           if (!panoId) {
             console.warn("panoId 없음:", index);
             return;
           }
-          streetView.setPanoId(panoId, latLng);
-
-          // 방향 적용
-          streetView.setViewpoint({
-              pan: pos.pan,
-              tilt: 0,
-              zoom: -100
-          });
+          streetView.setPanoId(panoId, rvLatLng);
+          streetView.setViewpoint({ pan: rvPos.pan, tilt: 0, zoom: -100 });
         });
       }
       window.moveStreetViewToIndex = moveStreetViewToIndex;
@@ -320,16 +365,94 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         arVisible: false,
       };
 
-      function ensureStreetViewCreated() {
-        if (!window.kakao || !window.kakao.maps) {
-          return false;
+      function applyModeUI(isRoadview) {
+        const container = document.getElementById("kakaoContainer");
+        if (!container) return;
+
+        container.className = isRoadview ? "view_roadview" : "view_map";
+        isRoadviewMode = isRoadview;
+
+        const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
+        if (btnRoadviewToggle) {
+          btnRoadviewToggle.textContent = isRoadview ? "지도" : "로드뷰";
         }
-        if (streetView && streetViewClient) return;
+
+        const mv = document.getElementById("dudu3d");
+        const streetLabelEl = document.getElementById("dudu-street-view-label");
+
+        const charGroupEl = document.querySelector(".char-toggle-group");
+        if (charGroupEl) {
+          // 로드뷰면 보이게, 지도면 숨기기
+          charGroupEl.style.display = isRoadview ? "inline-flex" : "none";
+        }
+
+        if (isRoadview) {
+          // 로드뷰: 캐릭터/말풍선 정상
+          if (mv) mv.style.display = "block";
+          window.hasStreetDuduPlaced = true;
+          window.isKakaoMapMode = false;
+        } else {
+          // 지도: 캐릭터/말풍선/TTS 비활성
+          if (mv) mv.style.display = "none";
+          window.hasStreetDuduPlaced = false;
+
+          if (streetLabelEl) {
+            streetLabelEl.style.display = "none";
+            streetLabelEl.textContent = "";
+          }
+
+          // TTS 강제 중단
+          if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+          }
+          window.isKakaoMapMode = true;
+        }
+      }
+
+      function toggleRoadviewMapMode() {
+        // 현재 모드 반전
+        applyModeUI(!isRoadviewMode);
+      }
+      window.toggleRoadviewMapMode = toggleRoadviewMapMode;
+
+
+      function ensureStreetViewCreated() {
+        if (!window.kakao || !window.kakao.maps) return false;
+        if (streetView && streetViewClient && kakaoMap) return true;
 
         const streetViewContainer = document.getElementById("streetView");
-        streetView = new kakao.maps.Roadview(streetViewContainer);
+        const mapContainer = document.getElementById("kakaoMap");
+
+        streetView = new kakao.maps.Roadview(streetViewContainer, {
+          zoomControl: false,
+          viewpointControl: false,
+        });
         streetViewClient = new kakao.maps.RoadviewClient();
+
+        // 지도 생성 (기본 center는 0번으로)
+        const idx = (typeof window.remoteIndex === "number") ? window.remoteIndex : 0;
+        const pos = STREETVIEW_POSITIONS[idx];
+        const center = new kakao.maps.LatLng(pos.lat, pos.lng);
+
+        kakaoMap = new kakao.maps.Map(mapContainer, {
+          center,
+          level: 3,
+        });
+
+        kakaoMapMarker = new kakao.maps.Marker({ position: center });
+        kakaoMapMarker.setMap(kakaoMap);
+
+        // 생성 직후 강제 relayout (display:none 상태에서 생성됐을 수 있으니까)
+        setTimeout(() => {
+          if (kakaoMap) kakaoMap.relayout();
+          if (streetView && typeof streetView.relayout === "function") streetView.relayout();
+          // 중심도 한 번 더 잡아주면 더 안정적
+          if (kakaoMap) kakaoMap.setCenter(center);
+        }, 0);
+
+        return true;
       }
+
 
       function showStreetViewOverlay() {
         // 맵 들어가기 전 AR 상태 백업
@@ -347,9 +470,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
         const streetViewStageEl = document.getElementById("streetViewStage");
-        const streetViewEl = document.getElementById("streetView");
         if (streetViewStageEl) streetViewStageEl.style.display = "block";
-        if (streetViewEl) streetViewEl.style.display = "block";
+
+        // 로드뷰 먼저 전개
+        applyModeUI(true);
 
         // 로드뷰 시작 위치
         moveStreetViewToIndex(
@@ -377,6 +501,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (remoteControl) remoteControl.style.display = "flex";
         if (remoteLabel) remoteLabel.style.display = "block";
 
+        // 로드뷰 <-> 지도 전환 버튼 보이기
+        const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
+        if (btnRoadviewToggle) btnRoadviewToggle.style.display = "block";
+
         // 첵갈피 숨기기
         const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
         const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
@@ -391,7 +519,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // 첫 진입 멘트
         const idx = (typeof window.remoteIndex === "number") ? window.remoteIndex : 0;
-        window.requestRemotePromptAnswer?.(idx);
+        if (typeof window.requestRemotePromptAnswer === "function") {
+          window.requestRemotePromptAnswer(idx);
+        }
 
         const mapBtnImg = document.querySelector("#mapBtn img");
         if (mapBtnImg) mapBtnImg.src = "../media/textures/cube-sea.png";
@@ -401,16 +531,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
 
       function hideStreetViewOverlay() {
-        // 로드뷰 화면 숨김(객체 파괴까지는 안 하고 display만 끔)
-        const streetViewStageEl = document.getElementById("streetViewStage");
-        const streetViewEl = document.getElementById("streetView");
-        if (streetViewStageEl) streetViewStageEl.style.display = "none";
-        if (streetViewEl) streetViewEl.style.display = "none";
-
         // 오버레이용 캐릭터 OFF
         const mv = document.getElementById("dudu3d");
         if (mv) mv.style.display = "none";
         window.hasStreetDuduPlaced = false;
+
+        // 로드뷰 화면 숨김
+        const streetViewStageEl = document.getElementById("streetViewStage");
+        if (streetViewStageEl) streetViewStageEl.style.display = "none";
 
         // 거리뷰 말풍선도 닫기
         const streetLabelEl = document.getElementById("dudu-street-view-label");
@@ -425,12 +553,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (remoteControl) remoteControl.style.display = "none";
         if (remoteLabel) remoteLabel.style.display = "none";
 
+        // 로드뷰 <-> 지도 전환 버튼 숨기기
+        const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
+        if (btnRoadviewToggle) btnRoadviewToggle.style.display = "none";
+
         // 책갈피 보이기
         const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
         const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
         if (collegeDescriptionBtn) collegeDescriptionBtn.style.display = "block";
         if (departmentDescriptionBtn) departmentDescriptionBtn.style.display = "block";
-        
+
+        // 캐릭터 토글 보이기
+        const charGroupEl = document.querySelector(".char-toggle-group");
+        if (charGroupEl) charGroupEl.style.display = "inline-flex";
+
 
         // TTS 중단 + 투명도 원복
         if (window.speechSynthesis) {
@@ -452,6 +588,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (mapBtnImg) mapBtnImg.src = "../media/textures/map-logo.png";
 
         streetViewVisible = false;
+
+        window.isKakaoMapMode = false;
+        window.hasStreetDuduPlaced = false;
       }
 
       function toggleStreetViewOverlay() {
@@ -502,7 +641,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         setOverlayModelByIndex(index);
       }
 
-      // chat.js 에서 쓸 수 있게 전역으로 노출
+      // app.js 에서 쓸 수 있게 전역으로 노출
       window.switchDuduCharacter = switchCharacter;
 
 
@@ -621,9 +760,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
         const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
 
-        const remoteControl = document.getElementById("remoteControl");
-        const remoteLabel = document.getElementById("remoteControlLabel");
-
         const mapBtn = document.getElementById("mapBtn");
 
 
@@ -661,9 +797,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // 로드뷰 종료
         const streetViewStageEl = document.getElementById("streetViewStage");
-        const streetViewEl = document.getElementById("streetView");
         if (streetViewStageEl) streetViewStageEl.style.display = "none";
-        if (streetViewEl) streetViewEl.style.display = "none";
 
 
         streetViewVisible = false;
@@ -690,6 +824,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         const mapBtn = document.getElementById("mapBtn");
 
+        const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
+
 
 
         updateHoldingPhoneVisibility(false);
@@ -712,6 +848,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (remoteLabel) remoteLabel.style.display = "none";
 
         if (mapBtn) mapBtn.style.display = "none";
+
+        if (btnRoadviewToggle) btnRoadviewToggle.style.display = "none";
 
 
         const mv = document.getElementById("dudu3d");
@@ -764,9 +902,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // 로드뷰 종료
         const streetViewStageEl = document.getElementById("streetViewStage");
-        const streetViewEl = document.getElementById("streetView");
         if (streetViewStageEl) streetViewStageEl.style.display = "none";
-        if (streetViewEl) streetViewEl.style.display = "none";
 
         streetViewVisible = false;
         window.hasStreetDuduPlaced = false;
@@ -795,7 +931,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         const char1Toggle = document.getElementById("char1Toggle");
         const char2Toggle = document.getElementById("char2Toggle");
-        const char3Toggle = document.getElementById("char3Toggle");
+        const char3Toggle = document.getElementById("ㅍ");
 
         const collegeDescriptionBtn = document.getElementById("collegeDescriptionBtn");
         const departmentDescriptionBtn = document.getElementById("departmentDescriptionBtn");
@@ -804,6 +940,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const remoteLabel = document.getElementById("remoteControlLabel");
 
         const mapBtn = document.getElementById("mapBtn");
+
+        const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
 
 
 
@@ -829,6 +967,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (remoteLabel) remoteLabel.style.display = "none";
 
         if (mapBtn) mapBtn.style.display = "none";
+
+        if (btnRoadviewToggle) btnRoadviewToggle.style.display = "none";
 
 
         const mv = document.getElementById("dudu3d");
