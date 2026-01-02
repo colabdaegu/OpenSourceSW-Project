@@ -411,13 +411,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // function getHeadLocalPos() {
       //   switch (currentCharIndex) {
       //     case 0: // 캐릭터 1
-      //       return vec3.fromValues(-0.055, 0.40, 0);
+      //       return vec3.fromValues(0, 0.80, 0);
       //     case 1: // 캐릭터 2
-      //       return vec3.fromValues(0.03, 0.40, 0);   
+      //       return vec3.fromValues(0, 0.80, 0);   
       //     case 2: // 캐릭터 3
-      //       return vec3.fromValues(0.03, 0.40, 0); 
+      //       return vec3.fromValues(0, 0.80, 0); 
       //     default:
-      //       return vec3.fromValues(0, 0.40, 0);
+      //       return vec3.fromValues(0, 0.80, 0);
       //   }
       // }
 
@@ -805,7 +805,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const m = mat4.clone(matrix);
 
         /** Y축으로 아래로 내리기 (값 조절 포인트) **/
-        mat4.translate(m, m, [0, 0.4, 0]);
+        mat4.translate(m, m, [0, 0.0, 0]);
 
         arObject.matrix = m;
         currentDudu = arObject;

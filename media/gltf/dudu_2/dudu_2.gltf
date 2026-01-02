@@ -15,13 +15,18 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Mesh_0"
+			"name":"Mesh_0.001",
+			"translation":[
+				-0.10000000149011612,
+				1,
+				0
+			]
 		}
 	],
 	"materials":[
 		{
 			"doubleSided":true,
-			"name":"Material_0",
+			"name":"Material_0.001",
 			"normalTexture":{
 				"index":0
 			},
@@ -37,7 +42,7 @@
 	],
 	"meshes":[
 		{
-			"name":"Mesh_0",
+			"name":"Mesh_0.001",
 			"primitives":[
 				{
 					"attributes":{
