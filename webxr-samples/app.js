@@ -15,7 +15,6 @@ if (
     duduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
-    console.log("🎙 선택된 AI 음성:", duduVoice?.name, duduVoice?.lang);
   }
 
   // 크롬은 비동기로 로드됨

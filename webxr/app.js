@@ -15,7 +15,6 @@ if (
     duduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
-    console.log("🎙 선택된 AI 음성:", duduVoice?.name, duduVoice?.lang);
   }
 
   // 크롬은 비동기로 로드됨
@@ -35,10 +34,12 @@ if (
 
     mv.style.opacity = isSpeaking ? "0.9" : "0.65";
   }
+  window.setDuduOpacity = setDuduOpacity;
 
   // listening / listeningOn 변수는 아래에서 이미 선언되니,
   // 함수 안에서만 사용(호이스팅으로 접근 가능)
   function speakDudu(text) {
+    if (window.isKakaoMapMode) return;
     if (!synth) return;          // 지원 안 하는 브라우저
     if (typeof text !== "string" || !text.trim()) return;           // 입력되지 않음
     if (typeof listeningOn !== "undefined" && !listeningOn) return; // 음소거 버튼으로 끔
@@ -264,6 +265,10 @@ if (
   }
 
   function showBubbleText(text) {
+    if (window.isKakaoMapMode) {
+      hideAllBubbles();
+      return;
+    }
     const wrap = (t, maxChars, maxSpaces) =>
       (typeof window.autoWrapText === "function")
         ? window.autoWrapText(t, maxChars, maxSpaces)
@@ -1078,6 +1083,28 @@ if (
 
       if (typeof window.toggleStreetViewOverlay === "function") {
             window.toggleStreetViewOverlay();
+      }
+    });
+  }
+
+
+  // =======================
+  // 로드뷰 <-> 지도 토글 버튼 리스너
+  // =======================
+  const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
+
+  if (btnRoadviewToggle && !btnRoadviewToggle.__bound) {
+    btnRoadviewToggle.__bound = true;
+
+    btnRoadviewToggle.addEventListener("click", () => {
+      playUiSound(2);
+
+      // 말풍선/tts 정리
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (typeof window.setDuduOpacity === "function") window.setDuduOpacity(false);
+
+      if (typeof window.toggleRoadviewMapMode === "function") {
+        window.toggleRoadviewMapMode();
       }
     });
   }
