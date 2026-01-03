@@ -151,7 +151,7 @@ canvas, .a-canvas {
   position: fixed;
   top: calc(50% - 160px); 
   left: 20px;
-  z-index: 20000;
+  z-index: 19990;
 
   width: 60px;
   height: 60px;
@@ -183,7 +183,7 @@ canvas, .a-canvas {
   position: fixed;
   top: calc(50% - 30px); 
   left: 20px;
-  z-index: 20000;
+  z-index: 19990;
 
   width: 60px;
   height: 60px;
@@ -216,7 +216,7 @@ canvas, .a-canvas {
   position: fixed;
   top: calc(50% + 100px); 
   left: 20px;
-  z-index: 20000;
+  z-index: 19990;
 
   width: 60px;
   height: 60px;
