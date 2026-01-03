@@ -1,5 +1,5 @@
 /* AR 인식 전 안내용(holding-phone) 3D 오버레이 */
-#holding-phone-3d{
+#holding-phone-3d {
   position: fixed;
   left: 50%;
   top: 50%;
@@ -18,7 +18,7 @@
   transition: opacity 1300ms ease, transform 1300ms ease;
   will-change: transform, opacity;
 }
-#holding-phone-3d.is-visible{
+#holding-phone-3d.is-visible {
   /* 정중앙으로 복귀 */
   transform: translate3d(-50%, -50%, 0);
   opacity: 0.75;
@@ -29,7 +29,7 @@
   display: none !important;
 }
 /* 로드뷰용 3D 캐릭터 모델 */
-#dudu3d{
+#dudu3d {
   position: fixed;
   left: calc(50% + 5px);
   top: 50%;
@@ -72,7 +72,7 @@
   will-change: transform, top, left;
 }
 
-#dudu-street-view-label{
+#dudu-street-view-label {
   position: fixed;
   left: 50%;
   top: calc(50% - 70px);
@@ -96,7 +96,7 @@
 }
 
 /* 대화 로그 */
-#log{
+#log {
   position: fixed;
   left: 0;
   right: 0;
@@ -116,82 +116,78 @@
 
   transition: max-height 0.2s ease;
 }
-#log p{ margin:.25rem 0 } 
+#log p { margin:.25rem 0 } 
 
 /* 하단 채팅 바 */
-#chatbar{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
-  background:rgba(0,0,0,.55);
-  padding:8px;
+#chatbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,.55);
+  padding: 8px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  display:flex;
-  gap:8px;
-  align-items:center;
-  z-index:20000;
-  box-sizing:border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 20000;
+  box-sizing: border-box;
 }
 
 /* 입력창 */
-#msg{
-  flex:1 1 auto;
-  min-width:0;
-  resize:none;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(0,0,0,.75);
-  color:#fff;
-  padding:8px 10px;
-  font:14px/1.4 system-ui;
-  max-height:80px;
-  overflow-y:auto;
+#msg {
+  flex: 1 1 auto;
+  min-width: 0;
+  resize: none;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.25);
+  background: rgba(0,0,0,.75);
+  color: #fff;
+  padding: 8px 10px;
+  font: 14px/1.4 system-ui;
+  max-height: 80px;
+  overflow-y: auto;
 }
 
 /* 보내기/마이크 버튼 */
-#send, #mic{
-  flex:0 0 auto;
-  height:40px;
-  padding:0 14px;
-  border-radius:999px;
-  border:0;
-  cursor:pointer;
-  font:14px system-ui;
+#send, #mic {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  font: 14px system-ui;
 }
-#send{
-  background:#19c37d;
-  color:#08110b;
+#send {
+  background: #19c37d;
+  color: #08110b;
 }
-#mic{
-  background:#2d7eff;
-  color:#fff;
+#mic {
+  background: #2d7eff;
+  color: #fff;
 }
 
 /* A-Frame 씬 전체화면 */
-a-scene{
-  position:fixed;
-  inset:0;
-  width:100vw;
-  height:100vh !important; /* 100dvh → 100vh */
+a-scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh !important; 
 }
 
 /* 캔버스도 전체화면 */
-canvas, .a-canvas{
-  width:100vw !important;
-  height:100vh !important;  /* 100dvh → 100vh */
-  display:block;
+canvas, .a-canvas {
+  width: 100vw !important;
+  height: 100vh !important;  
+  display: block;
 }
 
-
 /* 말하는 중일 때 마이크 버튼이 살짝 강조 */
-#mic.recording{
+#mic.recording {
   opacity: 0.8;
   transform: scale(1.05);
 }
-
-
-
 
 /* 왼쪽 위: 채팅창 열기/닫기 버튼 */
 .chat-toggle-btn {
@@ -315,7 +311,7 @@ canvas, .a-canvas{
 
 
 
-/* 개별 세그먼트 버튼(더 큼) */
+/* 개별 세그먼트 버튼 */
 .char-toggle-btn {
   position: relative;
   flex: 1 1 auto;
@@ -329,7 +325,7 @@ canvas, .a-canvas{
 
   background: transparent;
   color: #444;
-  font-size: 24px;       /* 크게 */
+  font-size: 24px;
   font-weight: 600;
 
   display: flex;
@@ -346,14 +342,14 @@ canvas, .a-canvas{
     transform 0.1s ease;
 }
 
-/* 세그먼트 사이 세로 구분선 (더 길고 비율 유지) */
+/* 세그먼트 사이 세로 구분선 */
 .char-toggle-btn + .char-toggle-btn::before {
   content: "";
   position: absolute;
   left: 0;
   top: 8px;
-  bottom: 8px;     /* 높이 자동 조정 → 60px 버전에 맞게 */
-  width: 2px;      /* 두께 증가 */
+  bottom: 8px; 
+  width: 2px;   
   background: rgba(255, 255, 255, 0.75);
 }
 
@@ -378,7 +374,7 @@ canvas, .a-canvas{
 
 
 
-/* 대화 로그만 숨기기 (입력창은 그대로) */
+/* 대화 로그만 숨기기 */
 .chat-log-hidden #log {
   display: none;
 }
@@ -468,7 +464,7 @@ canvas, .a-canvas{
 
 
 
-:root{
+:root {
   --remote-right: 20px;
   --remote-width: 60px;
   --keyboard-offset: 0px; /* 키보드 겹침 보정값 */
@@ -574,7 +570,7 @@ canvas, .a-canvas{
 
 
 /* 우측 상단 지도 버튼 */
-.map-btn{
+.map-btn {
   position: fixed;
   top: 10px;
   right: 10px;
@@ -599,14 +595,14 @@ canvas, .a-canvas{
   outline: none;
 }
 
-.map-btn:active{
+.map-btn:active {
   transform: scale(0.97) translateY(0.5px);
   box-shadow:
     0 2px 6px rgba(0,0,0,0.25),
     inset 0 2px 4px rgba(0,0,0,0.15);
 }
 
-.map-btn img{
+.map-btn img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -628,7 +624,7 @@ canvas, .a-canvas{
 
 
 /* ===== 카카오 로드뷰/지도 토글 컨테이너 ===== */
-#streetViewStage{
+#streetViewStage {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -639,34 +635,34 @@ canvas, .a-canvas{
 }
 
 /* 토글 컨테이너 */
-#kakaoContainer{
+#kakaoContainer {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
 /* 두 래퍼는 동일 위치 */
-#mapWrapper, #rvWrapper{
+#mapWrapper, #rvWrapper {
   position: absolute;
   inset: 0;
 }
 
 /* 내부 맵/로드뷰 채우기 */
-#kakaoMap, #streetView{
+#kakaoMap, #streetView {
   width: 100%;
   height: 100%;
 }
 
 /* 기본: 로드뷰가 위 */
-#kakaoContainer.view_roadview #rvWrapper{ z-index: 10; }
-#kakaoContainer.view_roadview #mapWrapper{ z-index: 0; }
+#kakaoContainer.view_roadview #rvWrapper { z-index: 10; }
+#kakaoContainer.view_roadview #mapWrapper { z-index: 0; }
 
 /* 지도 모드: 지도가 위 */
-#kakaoContainer.view_map #mapWrapper{ z-index: 10; }
-#kakaoContainer.view_map #rvWrapper{ z-index: 0; }
+#kakaoContainer.view_map #mapWrapper { z-index: 10; }
+#kakaoContainer.view_map #rvWrapper { z-index: 0; }
 
 /* 왼쪽 상단 토글 버튼 */
-#btnRoadviewToggle{
+#btnRoadviewToggle {
   position: absolute;
   top: 15px;
   left: 15px;
@@ -685,7 +681,11 @@ canvas, .a-canvas{
   z-index: 30;
 }
 
-#btnRoadviewToggle:hover{
+#btnRoadviewToggle:hover {
   background-color: #fcfcfc;
   border: 1px solid #c1c1c1;
 }
+
+
+
+
