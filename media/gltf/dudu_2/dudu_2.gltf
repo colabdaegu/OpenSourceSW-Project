@@ -18,8 +18,8 @@
 			"name":"Mesh_0.001",
 			"translation":[
 				-0.10000000149011612,
-				1,
-				0
+				0.9700000286102295,
+				0.029999999329447746
 			]
 		}
 	],
@@ -91,9 +91,9 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":219127,
+			"count":216145,
 			"max":[
-				0.9033219814300537,
+				0.7227240204811096,
 				0.9516379833221436,
 				0.551065981388092
 			],
@@ -107,45 +107,45 @@
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":219127,
+			"count":216145,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":219127,
+			"count":216145,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5125,
-			"count":1174365,
+			"count":1158387,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":2629524,
+			"byteLength":2593740,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":2629524,
-			"byteOffset":2629524,
+			"byteLength":2593740,
+			"byteOffset":2593740,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":1753016,
-			"byteOffset":5259048,
+			"byteLength":1729160,
+			"byteOffset":5187480,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":4697460,
-			"byteOffset":7012064,
+			"byteLength":4633548,
+			"byteOffset":6916640,
 			"target":34963
 		}
 	],
@@ -157,7 +157,7 @@
 	],
 	"buffers":[
 		{
-			"byteLength":11709524,
+			"byteLength":11550188,
 			"uri":"dudu_2.bin"
 		}
 	]

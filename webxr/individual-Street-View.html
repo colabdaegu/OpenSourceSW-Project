@@ -299,6 +299,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         mv.setAttribute("src", next);
       }
 
+      /* 로드뷰 - 3D 모델 캐릭터 X좌표 및 말풍선 X좌표 조절 */
+      const STREET_X = [
+        { char:  0, bubble:  -18 },  // 캐릭터 1
+        { char:  0, bubble:  16 },  // 캐릭터 2
+        { char:  0, bubble: 4 },  // 캐릭터 3
+      ];
+
+      function updateStreetViewPosition() {
+        const charEl   = document.getElementById("dudu3d");
+        const bubbleEl = document.getElementById("dudu-street-view-label");
+
+        const pos = STREET_X[currentCharIndex] || STREET_X[0];
+
+        // 캐릭터 이동
+        if (charEl) {
+          charEl.style.left = `calc(50% + ${pos.char}px)`;
+        }
+
+        // 말풍선 이동
+        if (bubbleEl) {
+          bubbleEl.style.left = `calc(50% + ${pos.bubble}px)`;
+        }
+      }
+
 
       // 로드뷰/지도 생성 & 토글
       function ensureStreetViewCreated() {
@@ -445,6 +469,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         arObject.addNode(dudu);
 
         setOverlayModelByIndex(index);
+
+        updateStreetViewPosition();
       }
 
       // app.js 에서 쓸 수 있게 전역으로 노출
@@ -585,9 +611,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }, 300);
 
         const mv = document.getElementById("dudu3d");
+        updateStreetViewPosition();
         if (mv) mv.style.display = "block";
+
         window.hasStreetDuduPlaced = true;
-        // 로드뷰 켜지는 순간 AR 라벨은 즉시 OFF
+
+        // AR 관련 설정 OFF
         window.hasDuduPlaced = false;
         currentDudu = null;
 
@@ -864,10 +893,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // 로드뷰 켜져 있으면 reticle 업데이트 자체를 스킵
         if (!arSwitch) {
-          scene.startFrame();
           session.requestAnimationFrame(onXRFrame);
-          scene.drawXRFrame(frame, pose);
-          scene.endFrame();
           return;
         }
 
