@@ -347,6 +347,12 @@ if (
       if (isHidden) {
         // 로그 보이기
         logEl.style.display = "block";
+
+        // 로그 메시지 스크롤 최신화
+        logEl.scrollTop = logEl.scrollHeight;
+        requestAnimationFrame(() => {
+          logEl.scrollTop = logEl.scrollHeight;
+        });
       } else {
         // 로그 숨기기
         logEl.style.display = "none";

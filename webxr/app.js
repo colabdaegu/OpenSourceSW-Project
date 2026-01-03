@@ -520,6 +520,12 @@ if (
       if (isHidden) {
         // 로그 보이기
         logEl.style.display = "block";
+
+        // 로그 메시지 스크롤 최신화
+        logEl.scrollTop = logEl.scrollHeight;
+        requestAnimationFrame(() => {
+          logEl.scrollTop = logEl.scrollHeight;
+        });
       } else {
         // 로그 숨기기
         logEl.style.display = "none";
@@ -1082,7 +1088,7 @@ if (
       setDuduOpacity(false);
 
       if (typeof window.toggleStreetViewOverlay === "function") {
-            window.toggleStreetViewOverlay();
+        window.toggleStreetViewOverlay();
       }
     });
   }
@@ -1099,9 +1105,9 @@ if (
     btnRoadviewToggle.addEventListener("click", () => {
       playUiSound(2);
 
-      // 말풍선/tts 정리
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      if (typeof window.setDuduOpacity === "function") window.setDuduOpacity(false);
+      // cancelPendingChat();
+      synth.cancel();
+      setDuduOpacity(false);
 
       if (typeof window.toggleRoadviewMapMode === "function") {
         window.toggleRoadviewMapMode();

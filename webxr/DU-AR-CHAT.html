@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <html>
   <head>
     <meta charset='utf-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no, interactive-widget=overlays-content'>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <link rel='icon' type='image/png' sizes='32x32' href='../media/favicon/favicon-32x32.png'>
@@ -218,7 +218,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         { lat: 35.856763661667046, lng: 128.57581822048442  },  // 11 - 글로컬라이프대학
         { lat: 35.85529917541896, lng: 128.5765142795892  },  // 12 - 간호대학
       ];
-
       
 
 
@@ -312,6 +311,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (mv.getAttribute("src") === next) return;
 
         mv.setAttribute("src", next);
+      }
+
+      /* 로드뷰 - 3D 모델 캐릭터 X좌표 및 말풍선 X좌표 조절 */
+      const STREET_X = [
+        { char:  0, bubble:  -18 },  // 캐릭터 1
+        { char:  0, bubble:  16 },  // 캐릭터 2
+        { char:  0, bubble: 4 },  // 캐릭터 3
+      ];
+
+      function updateStreetViewPosition() {
+        const charEl   = document.getElementById("dudu3d");
+        const bubbleEl = document.getElementById("dudu-street-view-label");
+
+        const pos = STREET_X[currentCharIndex] || STREET_X[0];
+
+        // 캐릭터 이동
+        if (charEl) {
+          charEl.style.left = `calc(50% + ${pos.char}px)`;
+        }
+
+        // 말풍선 이동
+        if (bubbleEl) {
+          bubbleEl.style.left = `calc(50% + ${pos.bubble}px)`;
+        }
       }
 
 
@@ -482,6 +505,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         // 오버레이용 캐릭터 ON
         const mv = document.getElementById("dudu3d");
+        updateStreetViewPosition();
         if (mv) mv.style.display = "block";
 
         window.hasStreetDuduPlaced = true;
@@ -639,6 +663,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         arObject.addNode(dudu);
 
         setOverlayModelByIndex(index);
+
+        updateStreetViewPosition();
       }
 
       // app.js 에서 쓸 수 있게 전역으로 노출
@@ -1090,11 +1116,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           holdingPhoneShown = false;
           reticleMissingSince = null;
 
-          // 로드뷰 켜져 있으면 reticle 업데이트 자체를 스킵
-          scene.startFrame();
           session.requestAnimationFrame(onXRFrame);
-          scene.drawXRFrame(frame, pose);
-          scene.endFrame();
           return;
         }
 
