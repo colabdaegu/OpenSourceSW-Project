@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 <html>
   <head>
     <meta charset='utf-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover'>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
     <link rel='icon' type='image/png' sizes='32x32' href='../media/favicon/favicon-32x32.png'>
@@ -86,25 +86,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
     <!-- ====== 채팅 UI ====== -->
-    <!-- 대화 로그 영역 -->
-    <div id="log"></div>
+    <div id="chatShell">
+      <!-- 대화 로그 영역 -->
+      <div id="log"></div>
 
-    <!-- 하단 채팅 바 -->
-    <div id="chatbar">
-      <input
-        id="msg"
-        type="text"
-        autocomplete="off"
-        placeholder="메시지를 입력하세요..."
-      />
-      <button id="mic" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">
-        <img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>
-      </button>
-      <button id="send" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">전송</button>
+      <!-- 하단 채팅 바 -->
+      <div id="chatbar">
+        <input id="msg" name="chat_msg" type="search" placeholder="메시지를 입력하세요..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="send" />
+        <button id="mic" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">
+          <img src="../media/textures/microphone-button.png" alt="🎙" width="24" height="24"/>
+        </button>
+        <button id="send" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">전송</button>
+      </div>
     </div>
 
     
     <script src="/ngrok-address.js"></script>
+    <script src="/js/mobile-keyboard.js"></script>
     <script src="app.js"></script>
 
 
@@ -424,6 +422,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (collegeDescriptionBtn)    collegeDescriptionBtn.style.display    = "none";
         if (departmentDescriptionBtn)    departmentDescriptionBtn.style.display    = "none";
 
+        const hp = document.getElementById("holding-phone-3d");
+        if (hp) hp.style.display = "none";
 
         // 배경음악 중단
         if (window.duBgm) {
@@ -510,6 +510,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         if (collegeDescriptionBtn)   collegeDescriptionBtn.style.display   = "none";
         if (departmentDescriptionBtn)   departmentDescriptionBtn.style.display   = "none";
+
+        const hp = document.getElementById("holding-phone-3d");
+        if (hp) hp.style.display = "none";
 
 
         // 위에 설명 박스 다시 보이게
