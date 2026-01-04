@@ -57,7 +57,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 64px;
+  bottom: calc(64px + var(--keyboard-offset) + env(safe-area-inset-bottom, 0px));
 
   height: auto;   
   max-height: 23vh; 
@@ -80,10 +80,9 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom, 0px));
   background: rgba(0,0,0,.55);
   padding: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   display: flex;
   gap: 8px;
   align-items: center;
