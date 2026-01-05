@@ -1,3 +1,4 @@
+/* Viewport 사이즈 변경 감지 -> 채팅 관련 오버레이 bottom 재설정 */
 visualViewport.addEventListener("resize", () => {
   const offset = window.innerHeight - visualViewport.height;
 
@@ -7,6 +8,7 @@ visualViewport.addEventListener("resize", () => {
   );
 });
 
+/* 브라우저별 Focus 차이점으로 인한 키보드 버그들 보완 */
 (() => {
     const root = document.documentElement;
     const vv = window.visualViewport;
