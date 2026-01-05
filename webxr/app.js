@@ -507,6 +507,7 @@ if (
     }
   });
 
+  let isHiddenWithLog = false;
   // 왼쪽 위 '채팅창 열고닫기' 버튼 → 로그만 숨기기/보이기
   if (chatToggle) {
     chatToggle.addEventListener("click", () => {
@@ -514,12 +515,10 @@ if (
       const logEl = document.getElementById("log");
       if (!logEl) return;
 
-      // 현재 상태 판단
-      const isHidden = logEl.style.display === "none";
-
-      if (isHidden) {
+      if (isHiddenWithLog) {
         // 로그 보이기
         logEl.style.display = "block";
+        isHiddenWithLog = false;
 
         // 로그 메시지 스크롤 최신화
         logEl.scrollTop = logEl.scrollHeight;
@@ -529,6 +528,7 @@ if (
       } else {
         // 로그 숨기기
         logEl.style.display = "none";
+        isHiddenWithLog = true;
       }
     });
   }
