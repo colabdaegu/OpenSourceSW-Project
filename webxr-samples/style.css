@@ -57,10 +57,10 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(64px + var(--keyboard-offset) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(64px + var(--keyboard-offset) + env(safe-area-inset-bottom, 0px) + 2.25vh);
 
   height: auto;   
-  max-height: 23vh; 
+  max-height: 21vh; 
   overflow-y: auto; 
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -74,13 +74,17 @@
   transition: max-height 0.2s ease;
 }
 #log p { margin:.25rem 0 }
+/* 키보드 열려있는 동안 log 숨김 */
+.kb-hide-log #log {
+  display: none !important;
+}
 
 /* 하단 채팅 바 */
 #chatbar {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom, 0px) + 2.25vh);
   background: rgba(0,0,0,.55);
   padding: 8px;
   display: flex;
@@ -88,6 +92,18 @@
   align-items: center;
   z-index: 20000;
   box-sizing: border-box;
+}
+
+/* 하단 블록 */
+#block {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--keyboard-offset) + env(safe-area-inset-bottom, 0px));
+  height: 2.25vh;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+  z-index: 20000; 
 }
 
 /* 입력창 */

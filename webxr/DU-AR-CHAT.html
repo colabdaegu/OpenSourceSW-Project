@@ -83,7 +83,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </button>
 
     <style>
-      #dudu3d, #dudu-label, #dudu-street-view-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn, #streetViewStage, #btnRoadviewToggle,
+      #dudu3d, #dudu-label, #dudu-street-view-label, #log, #chatbar, #block, #chatToggle, #listeningBtn, #guitarBtn, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn, #streetViewStage, #btnRoadviewToggle,
       .char-toggle-group {
         display: none; 
       }
@@ -140,6 +140,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         </button>
         <button id="send" type="button" style="display:flex;align-items:center;justify-content:center;font-weight:700;">전송</button>
       </div>
+
+      <div id="block" aria-hidden="true"></div>
     </div>
     
     <script src="/ngrok-address.js"></script>
@@ -250,7 +252,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn, #streetViewStage, #btnRoadviewToggle';
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #block, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #collegeDescriptionBtn, #departmentDescriptionBtn, #remoteControl, #remoteControlLabel, #mapBtn, #streetViewStage, #btnRoadviewToggle';
       
 
       window.addEventListener('pointerdown', (ev) => {
@@ -771,6 +773,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         /* AR 진입 시 UI 표시 */
         document.getElementById("log").style.display = "block";   
         document.getElementById("chatbar").style.display = "flex";  
+        document.getElementById("block").style.display = "block";  
 
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
@@ -830,6 +833,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         document.getElementById("log").style.display = "none";    
         document.getElementById("chatbar").style.display = "none";   
+        document.getElementById("block").style.display = "none";   
 
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
@@ -951,6 +955,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // 채팅창 제거
         const log = document.getElementById("log");
         const chatbar = document.getElementById("chatbar");
+        const block = document.getElementById("block");
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
         const guitarBtn = document.getElementById("guitarBtn");
@@ -977,6 +982,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";
+        if (block) block.style.display = "none";
         if (chatToggle)  chatToggle.style.display  = "none";
         if (listeningBtn)listeningBtn.style.display= "none";
         if (guitarBtn)   guitarBtn.style.display   = "none";
