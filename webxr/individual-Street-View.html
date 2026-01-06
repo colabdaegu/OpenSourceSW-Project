@@ -25,8 +25,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover'>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
-    <link rel='icon' type='image/png' sizes='32x32' href='../media/favicon/favicon-32x32.png'>
-    <link rel='icon' type='image/png' sizes='96x96' href='../media/favicon/favicon-96x96.png'>
+    <link rel='icon' type='image/png' sizes='32x32' href='../media/logo/dodu-32x32.png'>
+    <link rel='icon' type='image/png' sizes='96x96' href='../media/logo/dodu-96x96.png'>
     <link rel='stylesheet' href='../css/common.css'>
 
     <link rel="stylesheet" href="style.css">
@@ -45,7 +45,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     </header>
 
     <!-- 로드뷰(고정 캐릭터) 전용 말풍선 -->
-    <div id="dudu-street-view-label"></div>
+    <div id="dodu-street-view-label"></div>
 
 
     <button id="chatToggle" class="chat-toggle-btn" type="button">💬</button>
@@ -75,14 +75,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
     <style>
-      #dudu3d, #dudu-street-view-label, #log, #chatbar, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel, #streetViewStage, #btnRoadviewToggle,
+      #dodu3d, #dodu-street-view-label, #log, #chatbar, #block, #chatToggle, #listeningBtn, #guitarBtn, #remoteControl, #remoteControlLabel, #streetViewStage, #btnRoadviewToggle,
        .char-toggle-group {
         display: none; 
       }
     </style>
     <model-viewer
-      id="dudu3d"
-      src="../media/gltf/dudu/dudu.gltf"
+      id="dodu3d"
+      src="../media/gltf/dodu/dodu.gltf"
       autoplay
       disable-zoom
       exposure="1"
@@ -146,8 +146,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
       // 캐릭터 생성되지 않음
-      window.hasDuduPlaced = false;
-      window.hasStreetDuduPlaced = false;
+      window.hasDoduPlaced = false;
+      window.hasStreetDoduPlaced = false;
 
       // 로드뷰 전역 객체
       let streetView = null;
@@ -163,6 +163,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       // AR용 reticle 표시여부
       let arSwitch = false;
+
+      // 음성인식 중 AR인식 차단
+      window.__uiPointerBlockSelect = false;
 
       // =======================
       // 로드뷰 좌표 테이블 (0~12)
@@ -238,7 +241,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #block, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #remoteControl, #remoteControlLabel, #streetViewStage, #btnRoadviewToggle';
+      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #mic, #send, #block, #ui-box, #char1Toggle, #char2Toggle, #char3Toggle, #remoteControl, #remoteControlLabel, #streetViewStage, #btnRoadviewToggle';
       
 
       window.addEventListener('pointerdown', (ev) => {
@@ -250,9 +253,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           lastUiTapTime = performance.now();
           // console.log('UI tapped, suppress next XR select');
         }
-      });
+      }, { capture: true });
 
-      
+      window.addEventListener("pointerup", () => {
+        window.__uiPointerBlockSelect = false;
+      }, { capture: true });
+
+      window.addEventListener("pointercancel", () => {
+        window.__uiPointerBlockSelect = false;
+      }, { capture: true });
 
 
       /* =========================
@@ -279,16 +288,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       // ==== 3D 모델 캐릭터(두두) 기본 모델들 ====
       const CHARACTER_URLS = [
-        '../media/gltf/dudu/dudu.gltf',       // char1
-        '../media/gltf/dudu_2/dudu_2.gltf',   // char2
-        '../media/gltf/dudu_3/dudu_3.gltf',   // char3
+        '../media/gltf/dodu/dodu.gltf',       // char1
+        '../media/gltf/dodu_2/dodu_2.gltf',   // char2
+        '../media/gltf/dodu_3/dodu_3.gltf',   // char3
       ];
 
-      let currentCharIndex = 0; // 0: dudu, 1: dudu_2, 2: dudu_3
+      let currentCharIndex = 0; // 0: dodu, 1: dodu_2, 2: dodu_3
 
 
       function setOverlayModelByIndex(index) {
-        const mv = document.getElementById("dudu3d");
+        const mv = document.getElementById("dodu3d");
         if (!mv) return;
         if (index < 0 || index >= CHARACTER_URLS.length) return;
 
@@ -306,8 +315,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       ];
 
       function updateStreetViewPosition() {
-        const charEl   = document.getElementById("dudu3d");
-        const bubbleEl = document.getElementById("dudu-street-view-label");
+        const charEl   = document.getElementById("dodu3d");
+        const bubbleEl = document.getElementById("dodu-street-view-label");
 
         const pos = STREET_X[currentCharIndex] || STREET_X[0];
 
@@ -370,8 +379,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         const btnRoadviewToggle = document.getElementById("btnRoadviewToggle");
         if (btnRoadviewToggle) btnRoadviewToggle.textContent = isRoadview ? "지도" : "로드뷰";
 
-        const mv = document.getElementById("dudu3d");
-        const streetLabelEl = document.getElementById("dudu-street-view-label");
+        const mv = document.getElementById("dodu3d");
+        const streetLabelEl = document.getElementById("dodu-street-view-label");
         const charGroupEl = document.querySelector(".char-toggle-group");
 
         if (charGroupEl) {
@@ -380,11 +389,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         if (isRoadview) {
           if (mv) mv.style.display = "block";
-          window.hasStreetDuduPlaced = true;
+          window.hasStreetDoduPlaced = true;
           window.isKakaoMapMode = false;
         } else {
           if (mv) mv.style.display = "none";
-          window.hasStreetDuduPlaced = false;
+          window.hasStreetDoduPlaced = false;
 
           if (streetLabelEl) {
             streetLabelEl.style.display = "none";
@@ -450,9 +459,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         return node;
       }
 
-      // 기본 dudu는 char1 (index 0)
-      let dudu = createCharacterNode(currentCharIndex);
-      arObject.addNode(dudu);
+      // 기본 dodu는 char1 (index 0)
+      let dodu = createCharacterNode(currentCharIndex);
+      arObject.addNode(dodu);
 
       // 버튼에서 호출할 캐릭터 교체 함수
       function switchCharacter(index) {
@@ -461,11 +470,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         currentCharIndex = index;
 
         // 기본 arObject 안의 모델 교체
-        if (dudu) {
-          arObject.removeNode(dudu);
+        if (dodu) {
+          arObject.removeNode(dodu);
         }
-        dudu = createCharacterNode(index);
-        arObject.addNode(dudu);
+        dodu = createCharacterNode(index);
+        arObject.addNode(dodu);
 
         setOverlayModelByIndex(index);
 
@@ -473,7 +482,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       }
 
       // app.js 에서 쓸 수 있게 전역으로 노출
-      window.switchDuduCharacter = switchCharacter;
+      window.switchDoduCharacter = switchCharacter;
 
 
       let reticle = new Gltf2Node({url: '../media/gltf/reticle/reticle.gltf'});
@@ -486,10 +495,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       vec3.set(shadow.scale, 0.15, 0.15, 0.15);
       arObject.addNode(shadow);
 
-      const MAX_DUDUS = 1;
-      let dudus = [];
+      const MAX_DODUS = 1;
+      let dodus = [];
 
-      let currentDudu = null;   // 현재 씬에 있는 3D 모델 캐릭터 하나 기억
+      let currentDodu = null;   // 현재 씬에 있는 3D 모델 캐릭터 하나 기억
 
       // Ensure the background is transparent for AR.
       scene.clear = false;
@@ -584,7 +593,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         moveStreetViewToIndex(
           (typeof window.remoteIndex === "number") ? window.remoteIndex : 0
         );
-        setDuduOpacity(false);
+        setDoduOpacity(false);
 
         // try {
         //   const streetViewContainer = document.getElementById('streetView'); //로드뷰를 표시할 div
@@ -600,7 +609,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         //   // 시작 시 0번으로 이동
         //   moveStreetViewToIndex(0);
-        //   setDuduOpacity(false);
+        //   setDoduOpacity(false);
         // } catch (e) {
         //   console.warn("로드뷰 초기화 실패:", e);
         // }
@@ -609,15 +618,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           window.requestRemotePromptAnswer?.(0);
         }, 300);
 
-        const mv = document.getElementById("dudu3d");
+        const mv = document.getElementById("dodu3d");
         updateStreetViewPosition();
         if (mv) mv.style.display = "block";
 
-        window.hasStreetDuduPlaced = true;
+        window.hasStreetDoduPlaced = true;
 
         // AR 관련 설정 OFF
-        window.hasDuduPlaced = false;
-        currentDudu = null;
+        window.hasDoduPlaced = false;
+        currentDodu = null;
 
         /* 진입 시 UI 표시 */
         document.getElementById("log").style.display = "block";   
@@ -663,7 +672,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // TTS 중단
         if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
           window.speechSynthesis.cancel();
-          setDuduOpacity(false);
+          setDoduOpacity(false);
         }
 
         // 로드뷰 종료
@@ -705,9 +714,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (btnRoadviewToggle) btnRoadviewToggle.style.display = "none";
 
 
-        const mv = document.getElementById("dudu3d");
+        const mv = document.getElementById("dodu3d");
         if (mv) mv.style.display = "none";
-        window.hasStreetDuduPlaced = false;
+        window.hasStreetDoduPlaced = false;
         window.isKakaoMapMode = false;
 
         // 배경음악 중단
@@ -727,10 +736,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         xrButton.domElement.style.display = 'inline-flex';
         document.getElementById('ui-box').style.display = 'block';
 
-        currentDudu = null;
-        window.hasDuduPlaced = false;
+        currentDodu = null;
+        window.hasDoduPlaced = false;
 
-        const streetLabelEl = document.getElementById("dudu-street-view-label");
+        const streetLabelEl = document.getElementById("dodu-street-view-label");
         if (streetLabelEl) {
           streetLabelEl.style.display = "none";
           streetLabelEl.textContent = "";
@@ -745,7 +754,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         // TTS 중단
         if (window.speechSynthesis && typeof window.speechSynthesis.cancel === "function") {
           window.speechSynthesis.cancel();
-          setDuduOpacity(false);
+          setDoduOpacity(false);
         }
 
         // 로드뷰 종료
@@ -802,9 +811,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         if (btnRoadviewToggle) btnRoadviewToggle.style.display = "none";
 
 
-        const mv = document.getElementById("dudu3d");
+        const mv = document.getElementById("dodu3d");
         if (mv) mv.style.display = "none";
-        window.hasStreetDuduPlaced = false;
+        window.hasStreetDoduPlaced = false;
         window.isKakaoMapMode = false;
 
 
@@ -816,10 +825,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           xrButton.domElement.style.display = 'inline-flex';
         }
 
-        currentDudu = null;
-        window.hasDuduPlaced = false;
+        currentDodu = null;
+        window.hasDoduPlaced = false;
 
-        const streetLabelEl = document.getElementById("dudu-street-view-label");
+        const streetLabelEl = document.getElementById("dodu-street-view-label");
         if (streetLabelEl) {
           streetLabelEl.style.display = "none";
           streetLabelEl.textContent = "";
@@ -840,27 +849,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         mat4.translate(m, m, [0, 0.0, 0]);
 
         arObject.matrix = m;
-        currentDudu = arObject;
+        currentDodu = arObject;
       
 
         // 필요하면 배열에 한 번만 넣어둠
-        if (!dudus.includes(arObject)) {
-          dudus.push(arObject);
+        if (!dodus.includes(arObject)) {
+          dodus.push(arObject);
         }
 
         if (typeof window.playUiSound === "function") {
           window.playUiSound(5);
         }
 
-        window.hasDuduPlaced = true;
+        window.hasDoduPlaced = true;
 
 
         // For performance reasons if we add too many objects start
         // removing the oldest ones to keep the scene complexity
         // from growing too much.
-        if (dudus.length > MAX_DUDUS) {
-          let oldDudu = dudus.shift();
-          scene.removeNode(oldDudu);
+        if (dodus.length > MAX_DODUS) {
+          let oldDodu = dodus.shift();
+          scene.removeNode(oldDodu);
         }
       }
 
@@ -871,6 +880,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           reticle.visible = false;
           return;
         }
+
+        // 마이크 버튼 - AR 배치 금지
+        if (window.__uiPointerBlockSelect) return;
+        const now = performance.now();
+        if (now - lastUiTapTime < UI_TAP_IGNORE_WINDOW) return;
 
         if (reticle.visible) {
           // 최근에 UI를 탭했다면 이 select는 무시

@@ -15,18 +15,18 @@
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Mesh_0",
+			"name":"Mesh_0.001",
 			"translation":[
-				0.1599999964237213,
-				1,
-				0
+				-0.10000000149011612,
+				0.9700000286102295,
+				0.029999999329447746
 			]
 		}
 	],
 	"materials":[
 		{
 			"doubleSided":true,
-			"name":"Material_0",
+			"name":"Material_0.001",
 			"normalTexture":{
 				"index":0
 			},
@@ -42,7 +42,7 @@
 	],
 	"meshes":[
 		{
-			"name":"Mesh_0",
+			"name":"Mesh_0.001",
 			"primitives":[
 				{
 					"attributes":{
@@ -91,61 +91,61 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":239673,
+			"count":216145,
 			"max":[
-				0.7488620281219482,
-				0.9518769979476929,
-				0.7704560160636902
+				0.7227240204811096,
+				0.9516379833221436,
+				0.551065981388092
 			],
 			"min":[
-				-0.7379419803619385,
-				-0.9520450234413147,
-				-0.7703530192375183
+				-0.8840410113334656,
+				-0.9520630240440369,
+				-0.5630260109901428
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":239673,
+			"count":216145,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":239673,
+			"count":216145,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5125,
-			"count":1296366,
+			"count":1158387,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":2876076,
+			"byteLength":2593740,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":2876076,
-			"byteOffset":2876076,
+			"byteLength":2593740,
+			"byteOffset":2593740,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":1917384,
-			"byteOffset":5752152,
+			"byteLength":1729160,
+			"byteOffset":5187480,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5185464,
-			"byteOffset":7669536,
+			"byteLength":4633548,
+			"byteOffset":6916640,
 			"target":34963
 		}
 	],
@@ -157,8 +157,8 @@
 	],
 	"buffers":[
 		{
-			"byteLength":12855000,
-			"uri":"dudu.bin"
+			"byteLength":11550188,
+			"uri":"dodu_2.bin"
 		}
 	]
 }
