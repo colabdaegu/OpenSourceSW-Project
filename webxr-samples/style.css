@@ -1,3 +1,7 @@
+:root {
+  --keyboard-offset: 0px; 
+}
+
 /* AR 인식 전 안내용(holding-phone) 3D 오버레이 */
 #holding-phone-3d {
   position: fixed;
