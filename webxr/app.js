@@ -6,13 +6,13 @@ if (
   //  TTS (Web Speech)
   // =======================
   const synth = window.speechSynthesis || null;
-  let duduVoice = null;
+  let doduVoice = null;
 
   function pickKoreanVoice() {
     if (!synth) return;
     const voices = synth.getVoices();
     // lang 이 ko 로 시작하는 음성 찾기
-    duduVoice =
+    doduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
   }
@@ -25,20 +25,20 @@ if (
 
 
   // TTS시 캐릭터 강조(거리뷰 전용)
-  function setDuduOpacity(isSpeaking) {
-    const mv = document.getElementById("dudu3d");
+  function setDoduOpacity(isSpeaking) {
+    const mv = document.getElementById("dodu3d");
     if (!mv) return;
 
     // 거리뷰 캐릭터가 떠 있을 때만 적용하고 싶으면 아래 조건 유지
-    if (!window.hasStreetDuduPlaced) return;
+    if (!window.hasStreetDoduPlaced) return;
 
     mv.style.opacity = isSpeaking ? "0.9" : "0.65";
   }
-  window.setDuduOpacity = setDuduOpacity;
+  window.setDoduOpacity = setDoduOpacity;
 
   // listening / listeningOn 변수는 아래에서 이미 선언되니,
   // 함수 안에서만 사용(호이스팅으로 접근 가능)
-  function speakDudu(text) {
+  function speakDodu(text) {
     if (window.isKakaoMapMode) return;
     if (!synth) return;          // 지원 안 하는 브라우저
     if (typeof text !== "string" || !text.trim()) return;           // 입력되지 않음
@@ -46,11 +46,11 @@ if (
     if (typeof listening !== "undefined" && listening) return;      // 내가 말하는 동안은 읽지 않기
 
     synth.cancel(); // 이전 말 끊기
-    setDuduOpacity(false);
+    setDoduOpacity(false);
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ko-KR";
-    if (duduVoice) utter.voice = duduVoice;
+    if (doduVoice) utter.voice = doduVoice;
 
     // 말투 세부 조절
     utter.rate = 1.0;   // 말속도 (0.1 ~ 10)
@@ -58,9 +58,9 @@ if (
     utter.volume = 1.0; // 볼륨
 
     /** TTS 시작/종료에 따라 투명도 변경 **/
-    utter.onstart = () => setDuduOpacity(true);
-    utter.onend = () => setDuduOpacity(false);
-    utter.onerror = () => setDuduOpacity(false);
+    utter.onstart = () => setDoduOpacity(true);
+    utter.onend = () => setDoduOpacity(false);
+    utter.onerror = () => setDoduOpacity(false);
 
     synth.speak(utter);
   }
@@ -103,7 +103,7 @@ if (
   // 프롬프트 로드 (프론트에서 읽기)
   // =======================
   const PROMPT_URLS = {
-    base: "/media/prompt/dudu-system-prompt.txt",
+    base: "/media/prompt/dodu-system-prompt.txt",
     college: "/media/prompt/college-info.txt",
     dept: "/media/prompt/dept-info.txt",
 
@@ -185,8 +185,8 @@ if (
   const chatToggle = document.getElementById("chatToggle");
   const listeningBtn = document.getElementById("listeningBtn");
   const guitarBtn = document.getElementById("guitarBtn");
-  const duduLabel = document.getElementById("dudu-label");
-  const streetDuduLabel = document.getElementById("dudu-street-view-label");
+  const doduLabel = document.getElementById("dodu-label");
+  const streetDoduLabel = document.getElementById("dodu-street-view-label");
 
   let currentCharNum = 0;
   const char1Toggle = document.getElementById("char1Toggle");
@@ -254,13 +254,13 @@ if (
   let bubbleHideTimerId = null;
 
   function hideAllBubbles() {
-    if (duduLabel) {
-      duduLabel.style.display = "none";
-      duduLabel.textContent = "";
+    if (doduLabel) {
+      doduLabel.style.display = "none";
+      doduLabel.textContent = "";
     }
-    if (streetDuduLabel) {
-      streetDuduLabel.style.display = "none";
-      streetDuduLabel.textContent = "";
+    if (streetDoduLabel) {
+      streetDoduLabel.style.display = "none";
+      streetDoduLabel.textContent = "";
     }
   }
 
@@ -281,34 +281,34 @@ if (
     const wrappedForStreet = text;
 
     // AR 라벨: AR에 3D 모델 캐릭터가 배치되었을 때만
-    if (duduLabel) {
-      if (window.hasStreetDuduPlaced) {
-        duduLabel.style.display = "none";
-        duduLabel.textContent = "";
-      } else if (window.hasDuduPlaced) {
-        duduLabel.textContent = wrappedForAR;
-        duduLabel.style.display = "block";
+    if (doduLabel) {
+      if (window.hasStreetDoduPlaced) {
+        doduLabel.style.display = "none";
+        doduLabel.textContent = "";
+      } else if (window.hasDoduPlaced) {
+        doduLabel.textContent = wrappedForAR;
+        doduLabel.style.display = "block";
       } else {
-        duduLabel.style.display = "none";
-        duduLabel.textContent = "";
+        doduLabel.style.display = "none";
+        doduLabel.textContent = "";
       }
     }
 
     // 거리뷰 라벨: 거리뷰 오버레이 캐릭터가 배치되었을 때만
-    if (streetDuduLabel) {
-      if (window.hasStreetDuduPlaced) {
-        streetDuduLabel.textContent = wrappedForStreet;
-        streetDuduLabel.style.display = "block";
+    if (streetDoduLabel) {
+      if (window.hasStreetDoduPlaced) {
+        streetDoduLabel.textContent = wrappedForStreet;
+        streetDoduLabel.style.display = "block";
       } else {
-        streetDuduLabel.style.display = "none";
-        streetDuduLabel.textContent = "";
+        streetDoduLabel.style.display = "none";
+        streetDoduLabel.textContent = "";
       }
     }
   }
 
   // "현재 캐릭터가 활성화되어 있을 때만" 기준으로 TTS 읽기
   function canSpeakNow() {
-    return !!((window.hasDuduPlaced || window.hasStreetDuduPlaced));
+    return !!((window.hasDoduPlaced || window.hasStreetDoduPlaced));
   }
 
   // 로컬 기본 응답 (서버 실패 시)
@@ -473,8 +473,8 @@ if (
       showBubbleText(reply);
 
       // 캐릭터가 말해주기 (AR 우선, 없으면 거리뷰 캐릭터 기준)
-      if (canSpeakNow() && typeof speakDudu === "function") {
-        speakDudu(reply);
+      if (canSpeakNow() && typeof speakDodu === "function") {
+        speakDodu(reply);
       }
     } catch (err) {
       if (err && err.name === "AbortError") return;
@@ -624,10 +624,11 @@ if (
 
     // 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
     mic.addEventListener("pointerdown", (ev) => {
+      window.__uiPointerBlockSelect = true;
       // TTS 중단
       if (synth) {
         synth.cancel();
-        setDuduOpacity(false);
+        setDoduOpacity(false);
       } 
 
       // 마우스면 왼쪽 버튼만 허용
@@ -698,7 +699,7 @@ if (
     listeningBtn.addEventListener("click", () => {
       if (listeningOn) {
         synth.cancel();
-        setDuduOpacity(false);
+        setDoduOpacity(false);
 
         listeningBtn.textContent = "🔈";
         if (!bgm.paused) {
@@ -789,25 +790,25 @@ if (
     // TTS도 중지
     if (synth) {
       synth.cancel();
-      setDuduOpacity(false);
+      setDoduOpacity(false);
     } 
 
     // 말풍선 완전히 닫기
-    if (duduLabel) {
-      duduLabel.style.display = "none";
-      duduLabel.textContent = "";
+    if (doduLabel) {
+      doduLabel.style.display = "none";
+      doduLabel.textContent = "";
     }
 
-    if (streetDuduLabel) {
-      streetDuduLabel.style.display = "none";
-      streetDuduLabel.textContent = "";
+    if (streetDoduLabel) {
+      streetDoduLabel.style.display = "none";
+      streetDoduLabel.textContent = "";
     }
 
     // 실제 3D 캐릭터 교체 (AR 모듈에서 정의)
-    if (typeof window.switchDuduCharacter === "function") {
-      window.switchDuduCharacter(index);
+    if (typeof window.switchDoduCharacter === "function") {
+      window.switchDoduCharacter(index);
     } else {
-      console.warn("switchDuduCharacter 가 아직 준비되지 않았습니다.");
+      console.warn("switchDoduCharacter 가 아직 준비되지 않았습니다.");
     }
   }
 
@@ -1000,14 +1001,14 @@ if (
     btnUp.addEventListener("click", () => {
       if (remoteLocked) return;
 
-      if (streetDuduLabel) {
-      streetDuduLabel.style.display = "none";
-      streetDuduLabel.textContent = "";
+      if (streetDoduLabel) {
+      streetDoduLabel.style.display = "none";
+      streetDoduLabel.textContent = "";
       }
       // TTS도 중지
       if (synth) {
         synth.cancel();
-        setDuduOpacity(false);
+        setDoduOpacity(false);
       }
 
       lockRemoteTemporarily();
@@ -1032,14 +1033,14 @@ if (
     btnDown.addEventListener("click", () => {
       if (remoteLocked) return;
 
-      if (streetDuduLabel) {
-      streetDuduLabel.style.display = "none";
-      streetDuduLabel.textContent = "";
+      if (streetDoduLabel) {
+      streetDoduLabel.style.display = "none";
+      streetDoduLabel.textContent = "";
       }
       // TTS도 중지
       if (synth) {
         synth.cancel();
-        setDuduOpacity(false);
+        setDoduOpacity(false);
       }
 
       lockRemoteTemporarily();
@@ -1085,7 +1086,7 @@ if (
 
       cancelPendingChat();
       synth.cancel();
-      setDuduOpacity(false);
+      setDoduOpacity(false);
 
       if (typeof window.toggleStreetViewOverlay === "function") {
         window.toggleStreetViewOverlay();
@@ -1107,7 +1108,7 @@ if (
 
       // cancelPendingChat();
       synth.cancel();
-      setDuduOpacity(false);
+      setDoduOpacity(false);
 
       if (typeof window.toggleRoadviewMapMode === "function") {
         window.toggleRoadviewMapMode();

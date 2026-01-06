@@ -6,13 +6,13 @@ if (
   //  TTS (Web Speech)
   // =======================
   const synth = window.speechSynthesis || null;
-  let duduVoice = null;
+  let doduVoice = null;
 
   function pickKoreanVoice() {
     if (!synth) return;
     const voices = synth.getVoices();
     // lang 이 ko 로 시작하는 음성 찾기
-    duduVoice =
+    doduVoice =
       voices.find(v => v.lang && v.lang.startsWith("ko")) ||
       voices.find(v => v.lang && v.lang.toLowerCase().includes("ko"));
   }
@@ -25,7 +25,7 @@ if (
 
   // listening / listeningOn 변수는 아래에서 이미 선언되니,
   // 함수 안에서만 사용(호이스팅으로 접근 가능)
-  function speakDudu(text) {
+  function speakDodu(text) {
     if (!synth) return;          // 지원 안 하는 브라우저
     if (typeof text !== "string" || !text.trim()) return;           // 입력되지 않음
     if (typeof listeningOn !== "undefined" && !listeningOn) return; // 음소거 버튼으로 끔
@@ -35,7 +35,7 @@ if (
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ko-KR";
-    if (duduVoice) utter.voice = duduVoice;
+    if (doduVoice) utter.voice = doduVoice;
 
     // 말투 세부 조절
     utter.rate = 1.0;   // 말속도 (0.1 ~ 10)
@@ -89,7 +89,7 @@ if (
     "모든 답변은 무조건 20글자 이상으로 대답해.\n";
 
   // const PROMPT_URLS = {
-  //   base: "/media/prompt/dudu-system-prompt.txt",
+  //   base: "/media/prompt/dodu-system-prompt.txt",
   // };
 
   // const promptCache = {
@@ -123,7 +123,7 @@ if (
   const chatToggle = document.getElementById("chatToggle");
   const listeningBtn = document.getElementById("listeningBtn");
   const guitarBtn = document.getElementById("guitarBtn");
-  const duduLabel = document.getElementById("dudu-label");
+  const doduLabel = document.getElementById("dodu-label");
 
 
   // 지금 인식된 AR 대상(마커) 이름/설명
@@ -293,17 +293,17 @@ if (
 
 
       // 캐릭터가 말해주기
-      if (window.hasDuduPlaced && typeof speakDudu === "function") {
-        speakDudu(reply);
+      if (window.hasDoduPlaced && typeof speakDodu === "function") {
+        speakDodu(reply);
       }
       
       // AR 라벨: AR에 3D 모델 캐릭터가 배치되었을 때만
-      if (duduLabel) {
-        if (window.hasDuduPlaced) {
-          duduLabel.textContent = reply;
-          duduLabel.style.display = "block";
+      if (doduLabel) {
+        if (window.hasDoduPlaced) {
+          doduLabel.textContent = reply;
+          doduLabel.style.display = "block";
         } else {
-          duduLabel.style.display = "none";
+          doduLabel.style.display = "none";
         }
       }
     } catch (err) {
@@ -440,6 +440,7 @@ if (
 
     // 한 번 누르면 시작, 다시 누르면 종료 (PC+모바일 공통)
     mic.addEventListener("pointerdown", (ev) => {
+      window.__uiPointerBlockSelect = true;
       // TTS 중단
       if (synth) synth.cancel();
 
