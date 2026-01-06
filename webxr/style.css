@@ -2,7 +2,6 @@
   --remote-right: 20px;
   --remote-width: 60px;
   --keyboard-offset: 0px; 
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 
@@ -570,8 +569,8 @@ canvas, .a-canvas {
 #toast {
   position: fixed;              
   left: 50%;                    
-  /*top: 15%;*/
-  bottom: 15%;    
+  top: 15%;
+  /*bottom: 15%;   */ 
   transform: translateX(-50%);  
 
   background: #EDF1FA;

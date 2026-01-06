@@ -37,7 +37,7 @@ function append(role, text) {
   const p = document.createElement("p");
 
   if (role === "user") {
-    p.textContent = "🧑 " + text;
+    p.textContent = "🎓 " + text;
     p.classList.add("msg-user");
   } else {
     p.textContent = "🟢 두두: " + text;
