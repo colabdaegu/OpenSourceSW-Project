@@ -966,15 +966,25 @@ if (
   window.requestRemotePromptAnswer = requestRemotePromptAnswer;
 
   // 숫자를 잠깐 보여주는 토스트 함수
+  let toastHideTimer = null;
   function showToastNumber(index) {
     const toast = document.getElementById("toast");
     if (!toast) return;
 
+    // 이전에 걸려있던 타이머가 있으면 취소
+    if (toastHideTimer) {
+      clearTimeout(toastHideTimer);
+      toastHideTimer = null;
+    }
+
+    // 토스트 내용/표시 갱신
     toast.textContent = REMOTE_SPOTS[index] + " 이동 중...";
     toast.style.display = "block";
 
-    setTimeout(function () {
+    // 새로 1초 뒤 숨김 타이머 설정
+    toastHideTimer = setTimeout(() => {
       toast.style.display = "none";
+      toastHideTimer = null;
     }, 1000);
   }
 
