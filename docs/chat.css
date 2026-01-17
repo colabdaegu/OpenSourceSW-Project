@@ -163,7 +163,7 @@ canvas, .a-canvas{
   display: none;
 }
 
-/* 🔸 오른쪽 위: '학과 소개' 플로팅 버튼 */
+/* 🔹 오른쪽 위: '학과 소개' 플로팅 버튼 */
 .floating-dept-btn {
   position: fixed;
   top: 12px;
@@ -180,7 +180,29 @@ canvas, .a-canvas{
   cursor: pointer;
 }
 
+/* 🔸 나가기 버튼: 학과 소개 바로 아래 */
+.floating-exit-btn{
+  position: fixed;
+  top: 56px;     
+  right: 12px;
+  z-index: 1001;
+
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+
+  background: #ef4444;
+  color: #ffffff;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
 .floating-dept-btn:active,
+.floating-exit-btn:active,
 .chat-toggle-btn:active {
   transform: translateY(1px);
   box-shadow: 0 1px 3px rgba(0,0,0,0.25);

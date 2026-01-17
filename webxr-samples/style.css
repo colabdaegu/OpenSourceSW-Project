@@ -2,6 +2,22 @@
   --keyboard-offset: 0px; 
 }
 
+/* 뒤로가기 타이틀 */
+#title-overlay{
+  position: fixed;
+  top: 7px;
+  left: 17px;
+  display: none;
+  pointer-events: auto;
+}
+
+#title-overlay a.title img{
+  width: 200px;
+  height: auto;
+  display: block;
+}
+
+
 /* AR 인식 전 안내용(holding-phone) 3D 오버레이 */
 #holding-phone-3d {
   position: fixed;
