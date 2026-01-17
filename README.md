@@ -4,17 +4,8 @@
 > OpenAr : DU AR-CHAT
 
 ----------------------
-# 주요 경로 설명
-- `docs/` — (초안)Chat-Bot 테스트의 디렉터리
-- `js/` — WebXR용 모듈
-- `media/gltf/` — 3D 모델 리소스
-- `media/prompt/` — 챗봇 프롬프트
-- `webxr/` — DU AR-CHAT의 디렉터리 [메인]
-- `webxr-samples/` — 샘플 캐릭터 AR의 디렉터리
-- `index.html` — 엔트리 포인트
-- `local-server.cjs` — 백엔드 중앙 관리
-- `ngrok-address.js` — ngrok 서버 지정
-- `.env` — API 환경 변수
+# 시연 영상
+[![Play Video](https://img.youtube.com/vi/u2MV_9HZyDw/0.jpg)](https://youtu.be/u2MV_9HZyDw)
 
 ----------------------
 # 개발 환경 세팅 (https://nobeoka.tistory.com/4)
@@ -55,3 +46,16 @@ ngrok http 8000
 ----------------------
 ### [자세한 사용 가이드는 블로그 참고]
 #### https://nobeoka.tistory.com/4 
+
+----------------------
+# 주요 경로 설명
+- `docs/` — (초안)Chat-Bot 테스트의 디렉터리
+- `js/` — WebXR용 모듈
+- `media/gltf/` — 3D 모델 리소스
+- `media/prompt/` — 챗봇 프롬프트
+- `webxr/` — DU AR-CHAT의 디렉터리 [메인]
+- `webxr-samples/` — 샘플 캐릭터 AR의 디렉터리
+- `index.html` — 엔트리 포인트
+- `local-server.cjs` — 백엔드 중앙 관리
+- `ngrok-address.js` — ngrok 서버 지정
+- `.env` — API 환경 변수
