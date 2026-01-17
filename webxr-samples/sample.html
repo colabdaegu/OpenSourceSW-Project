@@ -44,6 +44,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </details>
     </header>
 
+    <div id="title-overlay">
+      <a class="title" href="/">
+        <img src="../media/logo/daegu-title.png">
+      </a>
+    </div>
+
     <!-- 3D 모델 캐릭터 머리 위에 띄울 텍스트 -->
     <div id="dodu-label">안녕하세요! AR 테스트 샘플 캐릭터입니다!</div>
 
@@ -54,7 +60,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
     <style>
-      #dodu-label, #log, #chatbar, #block, #chatToggle, #listeningBtn, #guitarBtn {
+      #title-overlay, #dodu-label, #log, #chatbar, #block, #chatToggle, #listeningBtn, #guitarBtn {
         display: none; 
       }
     </style>
@@ -166,7 +172,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       const UI_TAP_IGNORE_WINDOW = 300; // 밀리초 (0.3초 안에 select 들어오면 무시)
 
       // "UI로 취급할 영역" 셀렉터: 여기 들어간 애들 눌렀을 땐 AR 배치 무시
-      const UI_ROOT_SELECTOR = '#chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #mic, #send, #block, #ui-box';
+      const UI_ROOT_SELECTOR = '#title-overlay, #chatToggle, #listeningBtn, #guitarBtn, #log, #chatbar, #mic, #send, #block, #ui-box';
 
       window.addEventListener('pointerdown', (ev) => {
         const target = ev.target;
@@ -316,11 +322,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         });
 
         /* AR 진입 시 UI 표시 */
-
-
         document.getElementById("log").style.display = "block";   
         document.getElementById("chatbar").style.display = "flex";  
-        document.getElementById("block").style.display = "block";   
+        document.getElementById("block").style.display = "block";  
+        
+        const titleOverlay = document.getElementById("title-overlay");
 
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
@@ -330,6 +336,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         holdingPhoneShown = false;
         reticleMissingSince = null;
+
+        if (titleOverlay) titleOverlay.style.display = "block";
 
         if (chatToggle)   chatToggle.style.display   = "block";
         if (listeningBtn) listeningBtn.style.display = "block";
@@ -347,10 +355,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         }
 
         /* AR 종료 시 UI 숨김 */
-
         document.getElementById("log").style.display = "none";    
         document.getElementById("chatbar").style.display = "none";   
         document.getElementById("block").style.display = "none"; 
+
+        const titleOverlay = document.getElementById("title-overlay");
 
         const chatToggle = document.getElementById("chatToggle");
         const listeningBtn = document.getElementById("listeningBtn");
@@ -361,6 +370,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         updateHoldingPhoneVisibility(false);
         holdingPhoneShown = false;
         reticleMissingSince = null;
+
+        if (titleOverlay) titleOverlay.style.display = "none";
 
         if (chatToggle)   chatToggle.style.display   = "none";
         if (listeningBtn) listeningBtn.style.display = "none";
@@ -421,7 +432,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           guitarBtnEl.textContent = "🎵";  // 아이콘 원래대로
         }
 
-        // 채팅창 제거
+        const titleOverlay = document.getElementById("title-overlay");
+
         const log = document.getElementById("log");
         const chatbar = document.getElementById("chatbar");
         const block = document.getElementById("block");
@@ -434,6 +446,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         updateHoldingPhoneVisibility(false);
         holdingPhoneShown = false;
         reticleMissingSince = null;
+
+        if (titleOverlay) titleOverlay.style.display = "none";
 
         if (log) log.style.display = "none";
         if (chatbar) chatbar.style.display = "none";

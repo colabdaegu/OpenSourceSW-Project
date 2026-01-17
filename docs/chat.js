@@ -22,6 +22,7 @@ const msg  = document.getElementById("msg");
 const send = document.getElementById("send");
 const mic  = document.getElementById("mic");
 const deptBtn = document.getElementById("deptInfoBtn");
+const exitBtn = document.getElementById("exitBtn");
 const chatToggle = document.getElementById("chatToggle");
 
 // 지금 인식된 AR 대상(마커) 이름/설명
@@ -164,13 +165,20 @@ if (chatToggle) {
   });
 }
 
-// 🔸 오른쪽 위 '학과 소개' 버튼 → 숨겨진 질문으로 학과 설명 받기
+// 🔹 오른쪽 위 '학과 소개' 버튼 → 숨겨진 질문으로 학과 설명 받기
 if (deptBtn) {
   deptBtn.addEventListener("click", () => {
     sendMessage(DEPT_SUMMARY_PROMPT, {
       skipUserLog: true,      // 유저 질문은 로그에 안 보이게
       ignoreARTarget: true,   // AR 마커 문구도 붙이지 않게
     });
+  });
+}
+
+// 🔸 학과 소개 바로 밑 → 나가기 버튼
+if (exitBtn) {
+  exitBtn.addEventListener("click", () => {
+    window.location.href = "/";
   });
 }
 
