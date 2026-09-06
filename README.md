@@ -1,7 +1,6 @@
 # OpenSourceSW-Project
-> 오픈소스SW - 팀 프로젝트
-> 
-> OpenAr : DU AR-CHAT
+> WebXR 기반 AR과 대화형 AI 챗봇을 결합한 대구대학교 소개 프로그램 개발
+> WebXR과 ngrok 서버를 활용해 설치 없이 웹 접속만으로 이용 가능
 
 ----------------------
 # 시연 영상
